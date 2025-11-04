@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: DEPLOYMENT_NAME
+  namespace: OPENSHIFT_NAMESPACE
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: DEPLOYMENT_NAME
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      name: DEPLOYMENT_NAME
+      labels:
+        app: DEPLOYMENT_NAME
+        version: v1
+    spec:
+      containers:
+        - name: DEPLOYMENT_NAME
+          image: DOCKER_REPO:IMAGE_VERSION
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaysSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 200m
+              memory: 1G
+            requests:
+              cpu: 70m
+              memory: 200M
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - name: rest
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: CONFIG_MAP

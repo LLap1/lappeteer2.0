@@ -1,0 +1,31 @@
+.build-image:
+  stage: build
+  image: 
+    name: "${KANIKO_BUILD_IMAGE}"
+    entrypoint:
+      - ''
+  script:
+    - NEW_IMAGE_NAME="${DOCKER_TEAM_REGISTRY}/overlays-${MICROSERVICE}-${ENV}:${VERSION}"
+    - echo "Checking if image ${NEW_IMAGE_NAME} exist in the registry..."
+    - if docker pull ${NEW_IMAGE_NAME} 2>/dev/null; then
+    - echo "${NEW_IMAGE_NAME} already exists in the registry. Skipping build."
+    - else
+    - echo "Image ${NEW_IMAGE_NAME} does not exist in the registry. Proceeding with build..."
+    - echo "new_image_name=${NEW_IMAGE_NAME}"
+    - echo "${CI_PROJECT_DIR}/apps/${MICROSERVICE}/"
+
+    - echo "{\"auths\":{\"${ARTIFACTORY_DOMAIN}\":{\"auth\":\"$(printf "%s:%s" "$ARTIFACTORY_USERNAME" "$ARTIFACTORY_API_KEY" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor \
+        --use-new-run \
+        --snapshot-mode=redo \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/Dockerfile" \
+        --build-arg BASE_IMG=${BASE_IMG} \
+        --build-arg NPM_REGISTRY=${NPM_REGISTRY} \
+        --build-arg SERVICE=${MICROSERVICE} \
+        --destination "${NEW_IMAGE_NAME}" \
+        --insecure-pull \
+        --skip-tls-verify
+    - fi
+    

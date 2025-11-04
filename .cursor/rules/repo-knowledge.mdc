@@ -1,0 +1,26 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This project is a monorepo that is using turborepo and pnpm workspaces to manage the monorepo.
+
+I will now list the main apps and packages in the workspace so that you know which project i am referring to:
+
+# API
+- This project is the API and main backend of the project, is is stored in "apps/api". This is a TypeScript project using Express, tRPC and MongoDB.
+
+# Web/Frontend
+- This is the main frontend UI for the project, it is stored in "apps/web" and is a React+Vite application with shadcn/ui for the ui, @tanstack/react-router for the router.
+
+# UI
+- This is the main UI package for common ui components, all shadcn/ui components will be installed and stored there. it is stored in "packages/ui".
+
+# Configuration
+- Eslint and TypeScript live in "packages/eslint-config" and "packages/typescript-config" accordingly.
+
+
+-------
+
+- The project name is Zohan, and all dependencies will be imported with "@zohan" in front. For example when i am importing the button from the ui lib i will do it from "@zohan/ui".
+- All package exports will be listed in the `exports` field of the `package.json` file of this specific package/app

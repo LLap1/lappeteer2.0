@@ -1,0 +1,10 @@
+@import './fonts.css';
+
+:root {
+  --header-height: 64px;
+}
+
+html {
+  font-family: 'Ploni', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+}

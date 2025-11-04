@@ -1,0 +1,10 @@
+{
+  "extends": "@zohan/typescript-config/react.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@zohan/logs": ["./logs/index.ts"],
+      "@zohan/types": ["./types/index.ts"]
+    }
+  }
+}

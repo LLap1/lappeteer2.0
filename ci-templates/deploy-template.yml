@@ -1,0 +1,23 @@
+.deploy-openshift: &deploy-openshift
+  script:
+    - echo Logging into Openshift
+    - oc login --server="${OPENSHIFT_HOST}" --username="${USERNAME}" --password="${PASS}" --insecure-skip-tls-verify -n "${OPENSHIFT_NAMESPACE}"
+    - echo Deploying yaml files
+    - oc apply -f ./helm/app-chart/templates/service.yml
+    - oc apply -f ./helm/app-chart/templates/deployment.yml
+
+.fix-yamls: &fix-yamls
+  before_script:
+    - echo Fixing yaml files
+    - sed -i -e 's@DOCKER_REPO@'"${DOCKER_TEAM_REGISTRY}/overlays-${MICROSERVICE}-${ENV}"'@g' -e 's/IMAGE_VERSION/'"${APP_VERSION}"'/g' -e 's/CONFIG_MAP/'"overlays-${MICROSERVICE}-${ENV}-config"'/g' ./helm/app-chart/templates/deployment.yml
+    - sed -i -e 's@SERVICE_NAME@'"${OPENSHIFT_PROJECT_NAME}-service"'@g' ./helm/app-chart/templates/service.yml
+    - sed -i -s -e 's/OPENSHIFT_NAMESPACE/'"${OPENSHIFT_NAMESPACE}"'/g' -e 's@DEPLOYMENT_NAME@'"${OPENSHIFT_PROJECT_NAME}"'@g' ./helm/app-chart/templates/*.yml
+    - cat ./helm/app-chart/templates/service.yml
+    - cat ./helm/app-chart/templates/deployment.yml
+
+.deploy-image:
+  stage: deploy
+  image:
+    name: '${JENKINS_DEPLOY_IMAGE}'
+  variables:
+  <<: [*fix-yamls, *deploy-openshift]
