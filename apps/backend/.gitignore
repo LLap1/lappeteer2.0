@@ -13,6 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 
 
+pnpm-lock.yaml
 package-lock.json
 
 # OS
