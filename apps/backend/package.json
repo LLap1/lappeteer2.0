@@ -1,0 +1,42 @@
+{
+  "name": "@overlays/backend",
+  "version": "1.10.2",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "preview": "nest build && unbuild --stub && node dist/main.mjs",
+    "start:prod": "node dist/index.js",
+    "dev": "nest start --watch",
+    "type:check": "tsc --noEmit"
+  },
+  "exports": {
+    "./router/root": "./src/routers/root.router.ts"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/common": "^11.1.7",
+    "@nestjs/core": "^11.1.7",
+    "@nestjs/schematics": "^11.0.9",
+    "@orpc/contract": "^1.10.2",
+    "@orpc/openapi": "^1.10.2",
+    "@orpc/openapi-client": "^1.10.2",
+    "@orpc/zod": "^1.10.2",
+    "@types/node": "^22.15.30",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "unbuild": "^3.6.1",
+    "zod": "^4.1.12"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/platform-express": "^11.1.8",
+    "@orpc/client": "^1.10.2",
+    "@orpc/server": "^1.10.2",
+    "@orpc/tanstack-query": "^1.10.3",
+    "@scalar/fastify-api-reference": "^1.38.1",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.1",
+    "ts-loader": "^9.5.4"
+  }
+}
