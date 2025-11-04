@@ -36,6 +36,19 @@ build-web-integ:
         - apps/web/**/*
         - packages/**/*
 
+build-backend-integ:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'integ'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'backend'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/backend/**/*
+        - packages/**/*
+
 build-api-prod:
   stage: build
   extends: .build-image
@@ -60,6 +73,19 @@ build-web-prod:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - apps/web/**/*
+        - packages/**/*
+
+build-backend-prod:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'prod'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'backend'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/backend/**/*
         - packages/**/*
 
 deploy-api-integ:

@@ -1,11 +1,12 @@
 {
-  "name": "@zohan/backend",
+  "name": "@overlays/backend",
   "version": "1.10.2",
   "description": "",
   "private": true,
   "scripts": {
     "build": "nest build",
     "preview": "nest build && unbuild --stub && node dist/main.mjs",
+    "start:prod": "node dist/index.js",
     "dev": "nest start --watch",
     "type:check": "tsc --noEmit"
   },

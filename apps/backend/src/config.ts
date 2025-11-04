@@ -11,7 +11,7 @@ export const configSchema = z.object({
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
-    port: Number(process.env.PORT) || 3000,
+    port: Number(process.env.PORT) || 8080,
   },
 };
 
