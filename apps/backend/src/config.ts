@@ -1,0 +1,18 @@
+import { z } from 'zod';
+import { config as loadDotenv } from 'dotenv';
+
+loadDotenv();
+
+export const configSchema = z.object({
+  server: z.object({
+    port: z.number(),
+  }),
+});
+
+const templatedConfig: z.infer<typeof configSchema> = {
+  server: {
+    port: Number(process.env.PORT) || 3000,
+  },
+};
+
+export const config = configSchema.parse(templatedConfig);
