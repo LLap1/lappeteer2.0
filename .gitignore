@@ -8,6 +8,7 @@ lerna-debug.log*
 
 .turbo/
 
+patches
 pnpm-lock.yaml
 node_modules
 dist
