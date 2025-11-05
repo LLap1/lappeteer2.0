@@ -7,4 +7,3 @@ coverage
 *.min.css
 package-lock.json
 yarn.lock 
-patches/*
