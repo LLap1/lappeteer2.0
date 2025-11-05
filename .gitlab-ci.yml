@@ -84,7 +84,7 @@ deploy-backend-integ:
     ENV: 'integ'
     MICROSERVICE: 'backend'
     OPENSHIFT_PROJECT_NAME: overlays-integ-backend
-    OPENSHIFT_HOST: 'https://backend.${DEPLOYMENT_MAIN_ENV}:6443'
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
@@ -114,7 +114,7 @@ deploy-backend-prod:
     ENV: 'prod'
     MICROSERVICE: 'backend'
     OPENSHIFT_PROJECT_NAME: overlays-prod-backend
-    OPENSHIFT_HOST: 'https://backend.${DEPLOYMENT_MAIN_ENV}:6443'
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
