@@ -10,19 +10,6 @@ include:
   - local: /ci-templates/build-template.yml
   - local: /ci-templates/deploy-template.yml
 
-build-api-integ:
-  stage: build
-  extends: .build-image
-  variables:
-    ENV: 'integ'
-    VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'api'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - apps/api/**/*
-        - packages/**/*
-
 build-web-integ:
   stage: build
   extends: .build-image
@@ -47,19 +34,6 @@ build-backend-integ:
     - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
         - apps/backend/**/*
-        - packages/**/*
-
-build-api-prod:
-  stage: build
-  extends: .build-image
-  variables:
-    ENV: 'prod'
-    VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'api'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - apps/api/**/*
         - packages/**/*
 
 build-web-prod:
@@ -88,21 +62,6 @@ build-backend-prod:
         - apps/backend/**/*
         - packages/**/*
 
-deploy-api-integ:
-  stage: deploy
-  extends: .deploy-image
-  variables:
-    ENV: 'integ'
-    MICROSERVICE: 'api'
-    OPENSHIFT_PROJECT_NAME: overlays-integ-api
-    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
-    APP_VERSION: '${CI_PIPELINE_IID}'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - apps/api/**/*
-        - packages/**/*
-
 deploy-web-integ:
   stage: deploy
   extends: .deploy-image
@@ -125,27 +84,12 @@ deploy-backend-integ:
     ENV: 'integ'
     MICROSERVICE: 'backend'
     OPENSHIFT_PROJECT_NAME: overlays-integ-backend
-    OPENSHIFT_HOST: 'https://backend.${DEPLOYMENT_MAIN_ENV}:6443'
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
         - apps/backend/**/*
-        - packages/**/*
-
-deploy-api-prod:
-  stage: deploy
-  extends: .deploy-image
-  variables:
-    ENV: 'prod'
-    MICROSERVICE: 'api'
-    OPENSHIFT_PROJECT_NAME: overlays-prod-api
-    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
-    APP_VERSION: '${CI_PIPELINE_IID}'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      changes:
-        - apps/api/**/*
         - packages/**/*
 
 deploy-web-prod:
@@ -170,7 +114,7 @@ deploy-backend-prod:
     ENV: 'prod'
     MICROSERVICE: 'backend'
     OPENSHIFT_PROJECT_NAME: overlays-prod-backend
-    OPENSHIFT_HOST: 'https://backend.${DEPLOYMENT_MAIN_ENV}:6443'
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
