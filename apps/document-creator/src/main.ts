@@ -43,12 +43,19 @@ const openApiHandler = new OpenAPIHandler(root, {
   ],
 });
 
+server.get('/health', async (req, reply) => {
+  reply.status(200).send({
+    status: 'ok',
+  });
+});
+
 server.all('/api/*', async (req, reply) => {
   req.headers['accept-encoding'] = 'df';
   const { matched } = await openApiHandler.handle(req, reply, {
     context: {
-      headers: req.headers as Record<string, string>,
+      reply,
     },
+
     prefix: '/api',
   });
 
@@ -67,7 +74,7 @@ const rpcHandler = new RPCHandler(root, {
 server.all('/rpc/*', async (req, reply) => {
   const { matched } = await rpcHandler.handle(req, reply, {
     context: {
-      headers: req.headers as Record<string, string>,
+      reply,
     },
     prefix: '/rpc',
   });

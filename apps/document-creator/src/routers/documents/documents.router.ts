@@ -2,7 +2,9 @@ import { CreateDocumentInputSchema, CreateDocumentOutputSchema } from 'src/route
 import { nest } from 'src/main';
 import { os } from '@orpc/server';
 import { DocumentCreatorService } from 'src/logic/document-creator/document-creator.model';
-const base = os;
+import type { FastifyReply } from 'fastify';
+
+const base = os.$context<{ reply: FastifyReply }>();
 
 const create = base
   .route({
@@ -13,9 +15,9 @@ const create = base
   })
   .input(CreateDocumentInputSchema)
   .output(CreateDocumentOutputSchema)
-  .handler(async ({ input }) => {
-    console.log(nest.get(DocumentCreatorService));
-    return nest.get(DocumentCreatorService).createDocument(input);
+  .handler(async ({ input, context }) => {
+    const document = await nest.get(DocumentCreatorService).createDocument(input);
+    return document;
   });
 
 const router = {
