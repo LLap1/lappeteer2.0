@@ -1,11 +1,18 @@
-import { CreateDocumentInput } from 'src/routers/documents/documents.router.schema';
-import { delay, forkJoin, map, Observable, of, pipe, switchMap, tap } from 'rxjs';
+import { CreateDocumentInput, CreateDocumentOutput } from 'src/routers/documents/documents.router.schema';
 import { Page } from 'puppeteer';
 import { Geometry } from 'geojson';
+import { base64ToFile, zipFiles } from './file.model';
 
-export async function createScreenshot(page: Page) {
+export async function createDocuments(page: Page, inputs: CreateDocumentInput): Promise<CreateDocumentOutput> {
   await page.goto('http://localhost:8080');
+  await runWindowFunction<{ poolSize: number }>(page, 'setPoolSize', {
+    poolSize: inputs.length,
+  });
+  const files = await Promise.all(inputs.map((input, index) => createDocument(page, input, index + 1)));
+  return zipFiles(files);
+}
 
+export async function createDocument(page: Page, input: CreateDocumentInput[number], index: number) {
   await runWindowFunction<{ id: string; url: string }>(page, 'addTileLayer', {
     id: 'tile-layer',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -24,6 +31,7 @@ export async function createScreenshot(page: Page) {
       ],
     },
   });
+
   await runWindowFunction<{ center: [number, number]; zoom?: number }>(page, 'setView', {
     center: [51.505, -0.09],
     zoom: 13,
@@ -37,14 +45,11 @@ export async function createScreenshot(page: Page) {
   await runWindowFunction<undefined, void>(page, 'waitForTilelayersToLoad');
 
   const screenshotDataUrl = await runWindowFunction<undefined, string>(page, 'exportMap');
-  const base64 = screenshotDataUrl.split(',')[1];
-  const buffer = Buffer.from(base64, 'base64');
-  const blob = new Blob([buffer], { type: 'image/png' });
-  const screenshot = new File([blob], 'screenshot.png', { type: 'image/png' });
-  return screenshot;
+  return base64ToFile(screenshotDataUrl, input.filename);
 }
 
 async function runWindowFunction<T, R = any>(page: Page, windowFunctionName: string, params?: T): Promise<R> {
+  console.log('Running window function:', windowFunctionName, params);
   const result = await page.evaluate(
     (windowFunctionName, params) => {
       console.log(windowFunctionName, params);

@@ -27,17 +27,17 @@ export const configSchema = z.object({
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
-    port: Number(process.env.PORT) || 8080,
+    port: Number(process.env.PORT ?? 8080),
   },
   documentCreator: {
-    type: (process.env.DOCUMENT_CREATOR_TYPE as DocumentCreatorType) || 'puppeteer',
+    type: (process.env.DOCUMENT_CREATOR_TYPE as DocumentCreatorType) ?? 'puppeteer',
   },
   puppeteerDocumentCreateor: {
     launchOptions: {
-      concurrency: Number(process.env.PUPPETEER_CONCURRENCY) || Cluster.CONCURRENCY_PAGE,
-      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY) || 8,
+      concurrency: Number(process.env.PUPPETEER_CONCURRENCY ?? Cluster.CONCURRENCY_PAGE),
+      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY ?? 8),
       puppeteerOptions: {
-        headless: process.env.PUPPETEER_HEADLESS === 'true',
+        headless: Boolean(process.env.PUPPETEER_HEADLESS),
       },
     },
   },
