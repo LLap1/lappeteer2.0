@@ -1,4 +1,4 @@
-import { Geometry } from 'geojson';
+import { type Feature, type MultiPolygon, type Polygon } from 'geojson';
 import L from 'leaflet';
 
 export type WindowFunction<T, R> = {
@@ -27,11 +27,11 @@ export const setView: WindowFunction<{ map: L.Map; center: [number, number]; zoo
     }),
 };
 
-export const addGeoJsonLayer: WindowFunction<{ map: L.Map; geojson: Geometry }, void> = {
+export const addGeoJsonLayer: WindowFunction<{ map: L.Map; geojson: Feature<Polygon> }, void> = {
   type: 'addGeoJsonLayer',
   handler: ({ map, geojson }) =>
     new Promise<void>(resolve => {
-      const geoJsonLayer = L.geoJSON(geojson);
+      const geoJsonLayer = L.geoJSON(geojson, { style: { color: 'red', fillColor: 'red', fillOpacity: 0.5 } });
       geoJsonLayer.addTo(map);
       resolve();
     }),

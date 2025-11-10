@@ -1,4 +1,55 @@
 import archiver from 'archiver';
+import { z } from 'zod/v4';
+
+export const ZipFileSchema = z
+  .file()
+  .refine(file => file.type === 'application/zip', {
+    message: 'File must be a zip file',
+  })
+  .refine(file => file.name.endsWith('.zip'), {
+    message: 'File name must end with .zip',
+  });
+
+export const ImageFileSchema = z
+  .file()
+  .refine(file => file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg', {
+    message: 'File must be an image file',
+  })
+  .refine(file => file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.jpeg'), {
+    message: 'File name must end with .png, .jpg, or .jpeg',
+  });
+  
+export const PowerpointTemplateSchema = z
+  .file()
+  .refine(
+    file =>
+      file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      file.type === 'application/vnd.ms-powerpoint',
+    {
+      message: 'File must be a PowerPoint file (.pptx or .ppt)',
+    },
+  )
+  .refine(file => file.name.endsWith('.pptx') || file.name.endsWith('.ppt'), {
+    message: 'File name must end with .pptx or .ppt',
+  });
+
+export const saveFile = async (filePath: string, file: File): Promise<void> => {
+  const arrayBuffer = await file.arrayBuffer();
+  await Bun.write(filePath, arrayBuffer);
+};
+
+export const loadFile = async (filePath: string, filename: string, mimeType: string): Promise<File> => {
+  const bunFile = Bun.file(filePath);
+  const exists = await bunFile.exists();
+
+  if (!exists) {
+    throw new Error(`File not found: ${filePath}`);
+  }
+
+  const arrayBuffer = await bunFile.arrayBuffer();
+  const blob = new Blob([arrayBuffer], { type: mimeType });
+  return new File([blob], filename, { type: mimeType });
+};
 
 export const base64ToFile = (dataUrl: string, filename: string = 'screenshot.png'): File => {
   const base64 = dataUrl.split(',')[1];

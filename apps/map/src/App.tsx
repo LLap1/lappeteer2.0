@@ -1,6 +1,10 @@
-import 'leaflet/dist/leaflet.css';
-import { ExportMapPool } from './ExportMapPool';
+import { DocumentMapPool } from './DocumentMapPool';
+import { DocumentPoolProvider } from './context/document-pool.context';
 
 export const App = () => {
-  return <ExportMapPool />;
+  return (
+    <DocumentPoolProvider>
+      <DocumentMapPool />
+    </DocumentPoolProvider>
+  );
 };

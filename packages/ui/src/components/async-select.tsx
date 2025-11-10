@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { useDebounce } from '@zohan/ui/hooks/use-debounce';
+import { useDebounce } from '@overlays/ui/hooks/use-debounce';
 
-import { cn } from '@zohan/ui/lib/utils';
-import { Button } from '@zohan/ui/components/button';
+import { cn } from '@overlays/ui/lib/utils';
+import { Button } from '@overlays/ui/components/button';
 import {
   Command,
   CommandEmpty,
@@ -11,8 +11,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@zohan/ui/components/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@zohan/ui/components/popover';
+} from '@overlays/ui/components/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@overlays/ui/components/popover';
 
 export interface Option {
   value: string;

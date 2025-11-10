@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { type Logger, type Log, type Project } from '@zohan/types/logs';
+import { type Logger, type Log, type Project } from '@overlays/types/logs';
 
 export type UseLogOptions = {
   project: Project;

@@ -1,10 +1,10 @@
 {
-  "extends": "@zohan/typescript-config/react.json",
+  "extends": "@overlays/typescript-config/react.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@zohan/logs": ["./logs/index.ts"],
-      "@zohan/types": ["./types/index.ts"]
+      "@overlayslogs": ["./logs/index.ts"],
+      "@overlays/types": ["./types/index.ts"]
     }
   }
 }

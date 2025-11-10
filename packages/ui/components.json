@@ -11,10 +11,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@zohan/ui/components",
-    "utils": "@zohan/ui/lib/utils",
-    "hooks": "@zohan/ui/hooks",
-    "lib": "@zohan/ui/lib",
-    "ui": "@zohan/ui/components"
+    "components": "@overlays/ui/components",
+    "utils": "@overlays/ui/lib/utils",
+    "hooks": "@overlays/ui/hooks",
+    "lib": "@overlays/ui/lib",
+    "ui": "@overlays/ui/components"
   }
 }

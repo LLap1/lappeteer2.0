@@ -1,5 +1,5 @@
-import { Button } from '@zohan/ui/components/button';
-import { Checkbox } from '@zohan/ui/components/checkbox';
+import { Button } from '@overlays/ui/components/button';
+import { Checkbox } from '@overlays/ui/components/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -7,9 +7,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@zohan/ui/components/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@zohan/ui/components/popover';
-import { cn } from '@zohan/ui/lib/utils';
+} from '@overlays/ui/components/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@overlays/ui/components/popover';
+import { cn } from '@overlays/ui/lib/utils';
 import { ArrowRightIcon, ChevronRightIcon, FilterIcon } from 'lucide-react';
 import { isValidElement, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import React from 'react';

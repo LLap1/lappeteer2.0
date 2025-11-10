@@ -4,17 +4,18 @@ import { Cluster } from 'puppeteer-cluster';
 
 loadDotenv();
 
-const documentCreatorTypeSchema = z.enum(['puppeteer']);
-type DocumentCreatorType = z.infer<typeof documentCreatorTypeSchema>;
+const documentDataCreatorTypeSchema = z.enum(['puppeteer']);
+type DocumentDataCreatorType = z.infer<typeof documentDataCreatorTypeSchema>;
 
 export const configSchema = z.object({
   server: z.object({
     port: z.number(),
   }),
-  documentCreator: z.object({
-    type: documentCreatorTypeSchema,
+  documentDataCreator: z.object({
+    type: documentDataCreatorTypeSchema,
   }),
   puppeteerDocumentCreateor: z.object({
+    mapPoolUrl: z.string().url(),
     launchOptions: z.object({
       concurrency: z.number().min(Cluster.CONCURRENCY_PAGE).max(Cluster.CONCURRENCY_CONTEXT),
       maxConcurrency: z.number(),
@@ -29,10 +30,11 @@ const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT ?? 8080),
   },
-  documentCreator: {
-    type: (process.env.DOCUMENT_CREATOR_TYPE as DocumentCreatorType) ?? 'puppeteer',
+  documentDataCreator: {
+    type: (process.env.DOCUMENT_DATA_CREATOR_TYPE as DocumentDataCreatorType) ?? 'puppeteer',
   },
   puppeteerDocumentCreateor: {
+    mapPoolUrl: process.env.MAP_POOL_URL ?? 'http://localhost:8080',
     launchOptions: {
       concurrency: Number(process.env.PUPPETEER_CONCURRENCY ?? Cluster.CONCURRENCY_PAGE),
       maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY ?? 8),

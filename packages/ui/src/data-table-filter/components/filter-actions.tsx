@@ -1,5 +1,5 @@
-import { Button } from '@zohan/ui/components/button';
-import { cn } from '@zohan/ui/lib/utils';
+import { Button } from '@overlays/ui/components/button';
+import { cn } from '@overlays/ui/lib/utils';
 import { FilterXIcon } from 'lucide-react';
 import { memo } from 'react';
 import type { DataTableFilterActions } from '../core/types';

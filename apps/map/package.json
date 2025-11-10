@@ -10,6 +10,7 @@
     "type:check": "tsc --noEmit"
   },
   "dependencies": {
+    "@overlays/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/geojson": "^7946.0.16",
     "dotenv": "^17.2.3",

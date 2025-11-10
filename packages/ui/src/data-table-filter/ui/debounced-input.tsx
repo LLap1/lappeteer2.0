@@ -1,4 +1,4 @@
-import { Input } from '@zohan/ui/components/input';
+import { Input } from '@overlays/ui/components/input';
 import { useCallback, useEffect, useState } from 'react';
 import { debounce } from '../lib/debounce';
 

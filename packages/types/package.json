@@ -1,5 +1,5 @@
 {
-  "name": "@zohan/types",
+  "name": "@overlays/types",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,8 +8,8 @@
   },
   "scripts": {},
   "devDependencies": {
-    "@zohan/eslint-config": "workspace:*",
-    "@zohan/typescript-config": "workspace:*"
+    "@overlays/eslint-config": "workspace:*",
+    "@overlays/typescript-config": "workspace:*"
   },
   "dependencies": {
     "@trpc/client": "^11.5.1",

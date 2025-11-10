@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { config } from '../config';
 import { ConfigModule } from '@nestjs/config';
-import { DocumentCreatorModule } from './document-creator/document-creator.module';
+import { DocumentModule } from './document/document.module';
+import { DocumentTemplateStorageModule } from './document-template-storage/document-template-storage.module';
 
 @Module({
   imports: [
@@ -9,7 +10,8 @@ import { DocumentCreatorModule } from './document-creator/document-creator.modul
       isGlobal: true,
       validate: () => config,
     }),
-    DocumentCreatorModule,
+    DocumentModule,
+    DocumentTemplateStorageModule,
   ],
 })
 export class AppModule {}

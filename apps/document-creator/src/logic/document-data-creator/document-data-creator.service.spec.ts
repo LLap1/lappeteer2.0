@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PuppeteerDocumentCreatorService } from './puppeteer-document-creator.service';
+import { DocumentDataCreatorService } from './document-data-creator.service';
 import { ConfigService } from '@nestjs/config';
 import { Cluster } from 'puppeteer-cluster';
 import { Page } from 'puppeteer';
@@ -9,11 +9,12 @@ jest.mock('puppeteer-cluster');
 jest.mock('src/models/puppeteer.model');
 
 describe('PuppeteerDocumentCreatorService', () => {
-  let service: PuppeteerDocumentCreatorService;
+  let service: DocumentDataCreatorService;
   let configService: ConfigService;
   let mockCluster: jest.Mocked<Cluster>;
 
   const mockConfig = {
+    mapUrl: 'http://localhost:8080',
     launchOptions: {
       concurrency: 1,
       maxConcurrency: 2,
@@ -33,7 +34,7 @@ describe('PuppeteerDocumentCreatorService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PuppeteerDocumentCreatorService,
+        DocumentDataCreatorService,
         {
           provide: ConfigService,
           useValue: {
@@ -43,7 +44,7 @@ describe('PuppeteerDocumentCreatorService', () => {
       ],
     }).compile();
 
-    service = module.get<PuppeteerDocumentCreatorService>(PuppeteerDocumentCreatorService);
+    service = module.get<DocumentDataCreatorService>(DocumentDataCreatorService);
     configService = module.get<ConfigService>(ConfigService);
   });
 
@@ -71,7 +72,10 @@ describe('PuppeteerDocumentCreatorService', () => {
   });
 
   describe('createDocument', () => {
-    const mockInput = [{}, {}];
+    const mockInput = [
+      { filename: 'test-1.png', center: [51.505, -0.09] as [number, number] },
+      { filename: 'test-2.png', center: [48.8566, 2.3522] as [number, number], zoom: 12 },
+    ];
     const mockZipFile = new File([new Blob(['test'])], 'documents.zip', { type: 'application/zip' });
 
     beforeEach(async () => {
@@ -81,7 +85,7 @@ describe('PuppeteerDocumentCreatorService', () => {
     it('should execute cluster with correct data and handler', async () => {
       mockCluster.execute.mockResolvedValue(mockZipFile);
 
-      const result = await service.createDocument(mockInput);
+      const result = await service.create(mockInput);
 
       expect(mockCluster.execute).toHaveBeenCalledWith(mockInput, expect.any(Function));
       expect(result).toBe(mockZipFile);
@@ -95,7 +99,7 @@ describe('PuppeteerDocumentCreatorService', () => {
         return handler({ page: mockPage, data });
       });
 
-      await service.createDocument(mockInput);
+      await service.create(mockInput);
 
       expect(createDocuments).toHaveBeenCalledWith(mockPage, mockInput);
     });
@@ -104,13 +108,13 @@ describe('PuppeteerDocumentCreatorService', () => {
       const error = new Error('Cluster execution failed');
       mockCluster.execute.mockRejectedValue(error);
 
-      await expect(service.createDocument(mockInput)).rejects.toThrow('Cluster execution failed');
+      await expect(service.create(mockInput)).rejects.toThrow('Cluster execution failed');
     });
 
     it('should return the zip file from createDocuments', async () => {
       mockCluster.execute.mockResolvedValue(mockZipFile);
 
-      const result = await service.createDocument(mockInput);
+      const result = await service.create(mockInput);
 
       expect(result).toBeInstanceOf(File);
       expect(result.type).toBe('application/zip');
