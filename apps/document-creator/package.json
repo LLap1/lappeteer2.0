@@ -1,5 +1,5 @@
 {
-  "name": "@overlays/document-creator",
+  "name": "@auto-doucment/document-creator",
   "version": "0.0.0",
   "description": "",
   "private": true,
@@ -14,7 +14,7 @@
     "./router/root": "./src/routers/root.router.ts"
   },
   "devDependencies": {
-    "@overlays/map": "workspace:*",
+    "@auto-doucment/map": "workspace:*",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/common": "^11.1.7",
     "@nestjs/core": "^11.1.7",
@@ -26,6 +26,7 @@
     "@types/archiver": "^7.0.0",
     "@types/bun": "^1.3.2",
     "@types/node": "^22.15.30",
+    "leaflet": "^1.9.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",

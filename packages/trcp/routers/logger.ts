@@ -1,4 +1,4 @@
-import { LogSchema, type Log, type Logger } from '@overlays/types/logs';
+import { LogSchema, type Log, type Logger } from '@auto-doucment/types/logs';
 import { type TRPCRootObject } from '@trpc/server';
 
 export function loggerRouter<TContext extends object, TMeta extends object>(

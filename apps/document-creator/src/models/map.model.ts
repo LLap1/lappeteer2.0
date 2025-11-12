@@ -1,6 +1,7 @@
 import { Page } from 'puppeteer';
 import { PuppeteerFunctionCaller } from './puppeteer.model';
-import { Geometry } from 'geojson';
+import { Feature, Geometry } from 'geojson';
+import type { PathOptions } from 'leaflet';
 
 export class MapFunctionCaller extends PuppeteerFunctionCaller {
   constructor(page: Page, private readonly mapId: string) {
@@ -17,7 +18,7 @@ export class MapFunctionCaller extends PuppeteerFunctionCaller {
     return this.runMapFunction('waitForTilelayersToLoad');
   }
 
-  async addGeoJsonLayer(geojson: Geometry) {
+  async addGeoJsonLayer(geojson: Feature<Geometry, { style: PathOptions }>) {
     return this.runMapFunction('addGeoJsonLayer', {
       geojson,
     });

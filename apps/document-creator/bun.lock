@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@overlays/document-creator",
+      "name": "@auto-doucment/document-creator",
       "dependencies": {
         "@fastify/multipart": "^9.3.0",
         "@jest/globals": "^30.2.0",

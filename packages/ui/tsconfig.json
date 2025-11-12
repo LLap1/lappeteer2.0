@@ -1,10 +1,10 @@
 {
-  "extends": "@overlays/typescript-config/react.json",
+  "extends": "@auto-doucment/typescript-config/react.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@overlayslogs": ["./logs/index.ts"],
-      "@overlays/types": ["./types/index.ts"]
+      "@auto-doucmentlogs": ["./logs/index.ts"],
+      "@auto-doucment/types": ["./types/index.ts"]
     }
   }
 }

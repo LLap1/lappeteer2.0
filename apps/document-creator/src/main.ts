@@ -57,6 +57,7 @@ server.all('/api/*', async (req, reply) => {
   }
 });
 
+
 server.all('/rpc/*', async (req, reply) => {
   const { matched } = await rpcHandler.handle(req, reply, {
     context: {

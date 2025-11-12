@@ -1,5 +1,5 @@
 {
-  "extends": "@overlays/typescript-config/react.json",
+  "extends": "@auto-doucment/typescript-config/react.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

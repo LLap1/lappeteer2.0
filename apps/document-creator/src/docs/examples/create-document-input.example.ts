@@ -1,7 +1,7 @@
 import { CreateDocumentsInput } from 'src/orpc/routers/documents/documents.router.schema';
 import { Feature, MultiPolygon, Polygon } from 'geojson';
-
-const londonBoundary = {
+import type { PathOptions } from 'leaflet';
+const londonBoundary: Feature<MultiPolygon, { style: PathOptions }> = {
   type: 'Feature',
   geometry: {
     type: 'MultiPolygon',
@@ -17,12 +17,10 @@ const londonBoundary = {
       ],
     ],
   },
-  properties: {
-    name: 'London Area',
-  },
-} as Feature<MultiPolygon>;
+  properties: { style: { color: 'red', weight: 2, opacity: 1 } },
+};
 
-const parisBoundary = {
+const parisBoundary: Feature<Polygon, { style: PathOptions }> = {
   type: 'Feature',
   geometry: {
     type: 'Polygon',
@@ -36,13 +34,10 @@ const parisBoundary = {
       ],
     ],
   },
-  properties: {
-    name: 'Louvre District',
-    description: 'Historic district around the Louvre Museum',
-  },
-} as Feature<Polygon>;
+  properties: { style: { color: 'green', weight: 2, opacity: 1 } },
+};
 
-const newYorkBoundary = {
+const newYorkBoundary: Feature<Polygon, { style: PathOptions }> = {
   type: 'Feature',
   geometry: {
     type: 'Polygon',
@@ -56,11 +51,8 @@ const newYorkBoundary = {
       ],
     ],
   },
-  properties: {
-    name: 'Central Park',
-    description: 'Major urban park in Manhattan',
-  },
-} as Feature<Polygon>;
+  properties: { style: { color: 'red', weight: 2, opacity: 1 } },
+};
 
 export const createDocumentInputExample: CreateDocumentsInput = {
   templateFileName: 'sample.pptx',
@@ -76,7 +68,7 @@ export const createDocumentInputExample: CreateDocumentsInput = {
             height: 300,
             center: [40.77365, -73.95755],
             zoom: 13,
-            geojson: [newYorkBoundary.geometry],
+            geojson: [newYorkBoundary],
           },
         },
         {
@@ -87,7 +79,7 @@ export const createDocumentInputExample: CreateDocumentsInput = {
             height: 300,
             center: [51.51514699034075, -0.09142390018325841],
             zoom: 13,
-            geojson: [londonBoundary.geometry],
+            geojson: [londonBoundary],
           },
         },
         {
@@ -98,7 +90,7 @@ export const createDocumentInputExample: CreateDocumentsInput = {
             height: 300,
             center: [48.8566, 2.3422],
             zoom: 13,
-            geojson: [parisBoundary.geometry],
+            geojson: [parisBoundary],
           },
         },
       ],

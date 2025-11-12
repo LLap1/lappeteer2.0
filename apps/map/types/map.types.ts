@@ -1,5 +1,6 @@
 import { type Geometry, type Feature, type FeatureCollection, type GeoJsonObject } from 'geojson';
-import L from 'leaflet';
+import * as L from 'leaflet';
+import type { PathOptions } from 'leaflet';
 
 export type WindowFunction<T, R> = {
   type: string;
@@ -27,11 +28,18 @@ export const setView: WindowFunction<{ map: L.Map; center: [number, number]; zoo
     }),
 };
 
-export const addGeoJsonLayer: WindowFunction<{ map: L.Map; geojson: Geometry | Feature | FeatureCollection }, void> = {
+export const addGeoJsonLayer: WindowFunction<
+  {
+    map: L.Map;
+    geojson: Feature<Geometry, { style: PathOptions }>;
+    style: L.PathOptions;
+  },
+  void
+> = {
   type: 'addGeoJsonLayer',
   handler: ({ map, geojson }) =>
     new Promise<void>(resolve => {
-      const geoJsonLayer = L.geoJSON(geojson as GeoJsonObject);
+      const geoJsonLayer = L.geoJSON(geojson.geometry as GeoJsonObject, { style: geojson.properties?.style });
       geoJsonLayer.addTo(map);
       resolve();
     }),

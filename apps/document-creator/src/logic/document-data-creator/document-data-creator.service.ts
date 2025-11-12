@@ -92,6 +92,7 @@ export class DocumentDataCreatorService {
     await Promise.all(geojsonLayersPromises ?? []);
     await mapFunctionCaller.waitForTilelayersToLoad();
 
+    await mapFunctionCaller.wait(10);
     const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
     const base64 = screenshotDataUrl.split(',')[1];
     return base64;

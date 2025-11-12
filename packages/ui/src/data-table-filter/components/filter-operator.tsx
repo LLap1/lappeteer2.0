@@ -1,4 +1,4 @@
-import { Button } from '@overlays/ui/components/button';
+import { Button } from '@auto-doucment/ui/components/button';
 import {
   Command,
   CommandEmpty,
@@ -6,8 +6,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@overlays/ui/components/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@overlays/ui/components/popover';
+} from '@auto-doucment/ui/components/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@auto-doucment/ui/components/popover';
 import { useState } from 'react';
 import {
   dateFilterOperators,
