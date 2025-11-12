@@ -1,5 +1,5 @@
 """
-Script to replace an image in a PowerPoint presentation using python-pptx
+Script to replace placeholders in PowerPoint presentations with images and text
 """
 from pptx import Presentation
 from pptx.util import Inches
@@ -10,187 +10,163 @@ from io import BytesIO
 import struct
 import json
 import re
+import base64
 
 
-def ensure_stream(data):
-    if isinstance(data, BytesIO):
-        data.seek(0)
-        return data
-    if isinstance(data, (bytes, bytearray)):
-        return BytesIO(data)
-    if isinstance(data, str):
-        return data
-    if hasattr(data, "read"):
-        data.seek(0)
-        return data
-    return data
-
-
-def find_and_replace_image(pptx_data, new_image_data, placeholders=None, output_buffer=None):
+def replace_placeholders(pptx_data, parse_data):
     """
-    Replace the first image found in the first slide with a new image.
+    Replace placeholders in the presentation with images and text.
     
     Args:
         pptx_data: BytesIO buffer or file path for the input PowerPoint file
-        new_image_data: BytesIO buffer or file path for the new image
-        placeholders: Dict of placeholder strings to replacement values
-        output_buffer: If provided, writes to buffer; otherwise writes to stdout
+        parse_data: Dict containing:
+            - map: { type: 'map', key: string, value: string }
+            - strings: [{ type: 'string', key: string, value: string }]
+            - filename: string
     
     Returns:
         BytesIO buffer containing the modified presentation
     """
     # Load the presentation
-    pptx_stream = ensure_stream(pptx_data)
-    prs = Presentation(pptx_stream)
+    if isinstance(pptx_data, str):
+        prs = Presentation(pptx_data)
+    else:
+        pptx_data.seek(0)
+        prs = Presentation(pptx_data)
     
     print(f"Loaded presentation with {len(prs.slides)} slides", file=sys.stderr)
     
-    slide = prs.slides[0]
-    image_stream = ensure_stream(new_image_data)
+    # Build placeholder mappings
+    string_placeholders = {}
+    for string_item in parse_data.get('strings', []):
+        key = string_item['key']
+        value = string_item['value']
+        string_placeholders[key] = value
+        print(f"String placeholder: {{ {key} }} -> {value}", file=sys.stderr)
     
-    # Find and replace images in the slide
-    image_found = False
-    for shape in slide.shapes:
-        # Check if shape is a picture
-        if shape.shape_type == 13:  # MSO_SHAPE_TYPE.PICTURE
-            image_found = True
-            print(f"Found image: {shape.name}", file=sys.stderr)
+    map_data = parse_data.get('map')
+
+    map_placeholders = {}
+    for map_item in map_data:
+        map_key = map_item['key']
+        map_value = map_item['value']
+        map_placeholders[map_key] = BytesIO(base64.b64decode(map_value))
+    
+    # Pattern to match {{ key }}
+    placeholder_pattern = re.compile(
+        r'\{\{\s*([a-zA-Z_][a-zA-Z0-9_\s\.]*|[\u0590-\u05FF_][\u0590-\u05FF0-9_\s]*)\s*\}\}'
+    )    
+    # Process all slides
+    for slide_idx, slide in enumerate(prs.slides):
+        print(f"\nProcessing slide {slide_idx}...", file=sys.stderr)
+        
+        # Need to collect shapes to remove first to avoid modifying collection during iteration
+        shapes_to_remove = []
+        images_to_add = []
+        
+        for shape in slide.shapes:
+            # Check if shape has text
+            if hasattr(shape, 'text') and shape.text:
+                original_text = shape.text
+                found_placeholders = placeholder_pattern.findall(original_text)
+                
+                if found_placeholders:
+                    print(f"  Found placeholders in shape: {found_placeholders}", file=sys.stderr)
+                    
+                    # Check if this is a map placeholder
+                    for placeholder_key in found_placeholders:
+                        clean_key = placeholder_key.strip()
+                        
+                        if clean_key in map_placeholders:
+                            print(f"  Replacing {{ {clean_key} }} with image", file=sys.stderr)
+                            # Store shape info for image replacement
+                            images_to_add.append({
+                                'left': shape.left,
+                                'top': shape.top,
+                                'width': shape.width,
+                                'height': shape.height,
+                                'image': map_placeholders[clean_key],
+                                'key': clean_key
+                            })
+                            # Mark shape for removal
+                            shapes_to_remove.append(shape)
+                            break  # Don't process other replacements for this shape
+                    else:
+                        # This is a text-only shape, replace text placeholders
+                        if hasattr(shape, 'text_frame') and shape.text_frame:
+                            replace_text_in_text_frame(shape.text_frame, string_placeholders, placeholder_pattern)
+                        elif hasattr(shape, 'text'):
+                            # Simple text shape
+                            new_text = placeholder_pattern.sub(
+                                lambda m: string_placeholders.get(m.group(1).strip(), m.group(0)),
+                                shape.text
+                            )
+                            if new_text != original_text:
+                                print(f"  Replaced text: '{original_text}' -> '{new_text}'", file=sys.stderr)
+                                shape.text = new_text
             
-            # Store the position and size of the original image
-            left = shape.left
-            top = shape.top
-            width = shape.width
-            height = shape.height
-            
-            # Remove the old image
+        
+        # Remove marked shapes
+        for shape in shapes_to_remove:
             sp = shape.element
             sp.getparent().remove(sp)
-            
-            # Add the new image with the same position and size
-            if hasattr(image_stream, "seek"):
-                image_stream.seek(0)
-                slide.shapes.add_picture(
-                  image_stream,
-                  left,
-                  top,
-                  width=width,
-                  height=height
-                )
-            else:
-                slide.shapes.add_picture(
-                  image_stream,
-                  left,
-                  top,
-                  width=width,
-                  height=height
-                )
-            
-            print(f"Replaced image at position ({left}, {top}) with size ({width}, {height})", file=sys.stderr)
-            break
-    
-    if not image_found:
-        print("No images found in slide 0", file=sys.stderr)
-        print("Adding new image to center of slide...", file=sys.stderr)
-        # Add image to center of slide
-        left = Inches(2)
-        top = Inches(2)
-        if hasattr(image_stream, "seek"):
-            image_stream.seek(0)
-            slide.shapes.add_picture(image_stream, left, top, width=Inches(4))
-        else:
-            slide.shapes.add_picture(image_stream, left, top, width=Inches(4))
-    
-    placeholders = placeholders or {}
-    placeholder_pattern = re.compile(r'\{\{\s*([^\}]+?)\s*\}\}')
-    
-    def replace_text(text: str) -> str:
-        if not text:
-            return text
+            print(f"  Removed shape for image replacement", file=sys.stderr)
         
-        def replacer(match):
-            key = match.group(1).strip()
-            return placeholders.get(key, match.group(0))
-        
-        return placeholder_pattern.sub(replacer, text)
-    
-    def replace_in_shape(shape):
-        if hasattr(shape, "text_frame") and shape.text_frame:
-            for paragraph in shape.text_frame.paragraphs:
-                for run in paragraph.runs:
-                    run.text = replace_text(run.text)
-        if hasattr(shape, "text") and shape.text:
-            shape.text = replace_text(shape.text)
-        if shape.has_table:
-            for row in shape.table.rows:
-                for cell in row.cells:
-                    cell.text = replace_text(cell.text)
-    
-    if placeholders:
-        print(f"Applying placeholders: {placeholders}", file=sys.stderr)
-        for slide in prs.slides:
-            for shape in slide.shapes:
-                replace_in_shape(shape)
+        # Add images
+        for image_info in images_to_add:
+            print(f"  Adding image for key: {image_info['key']}", file=sys.stderr)
+            image_info['image'].seek(0)
+            image_size_bytes = len(image_info['image'].getbuffer())
+            image_size_kb = image_size_bytes / 1024
+            slide.shapes.add_picture(
+                image_info['image'],
+                image_info['left'],
+                image_info['top'],
+                width=image_info['width'],
+                height=image_info['height']
+            )
+
+            print(f"  Added image at position ({image_size_kb} kb - {image_info['left']}, {image_info['top']}) with size ({image_info['width']}, {image_info['height']})", file=sys.stderr)
     
     # Save to buffer
-    if output_buffer is None:
-        output_buffer = BytesIO()
-    
+    output_buffer = BytesIO()
     prs.save(output_buffer)
     output_buffer.seek(0)
     
     return output_buffer
 
 
-def list_images_in_presentation(pptx_path):
+def replace_text_in_text_frame(text_frame, placeholders, pattern):
     """
-    List all images found in the presentation with their details.
-    
-    Args:
-        pptx_path (str): Path to the PowerPoint file
+    Replace placeholders in a text frame while preserving formatting.
     """
-    prs = Presentation(pptx_path)
-    
-    print(f"Analyzing presentation: {pptx_path}")
-    print(f"Total slides: {len(prs.slides)}\n")
-    
-    total_images = 0
-    
-    for slide_idx, slide in enumerate(prs.slides):
-        print(f"Slide {slide_idx}:")
-        
-        images = [shape for shape in slide.shapes if shape.shape_type == 13]
-        
-        if images:
-            for img in images:
-                print(f"  - Image: {img.name}")
-                print(f"    Position: ({img.left}, {img.top})")
-                print(f"    Size: {img.width} x {img.height}")
-                total_images += 1
-        else:
-            print("  No images found")
-        print()
-    
-    print(f"Total images in presentation: {total_images}")
+    for paragraph in text_frame.paragraphs:
+        for run in paragraph.runs:
+            if run.text:
+                new_text = pattern.sub(
+                    lambda m: placeholders.get(m.group(1).strip(), m.group(0)),
+                    run.text
+                )
+                if new_text != run.text:
+                    print(f"    Replaced in run: '{run.text}' -> '{new_text}'", file=sys.stderr)
+                    run.text = new_text
 
 
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
-        description='Replace images in PowerPoint presentations',
+        description='Replace placeholders in PowerPoint presentations with images and text',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # List all images in a presentation
-  python replace_image.py input.pptx --list
+  python parse.py input.pptx --list
 
-  # Replace first image from files and save to file
-  python replace_image.py input.pptx -o output.pptx -i new_image.png
-
-  # Replace first image from files and output to stdout
-  python replace_image.py input.pptx -i new_image.png > output.pptx
-
-  # Replace using stdin (length-prefixed: 8 bytes size + template + image)
-  python replace_image.py --stdin > output.pptx
+  # Replace placeholders using stdin (length-prefixed protocol)
+  python parse.py --stdin > output.pptx
+  
+  # Replace placeholders from files
+  python parse.py input.pptx -o output.pptx --data data.json
         """
     )
     
@@ -208,33 +184,15 @@ Examples:
     )
     
     parser.add_argument(
-        '-i', '--image',
-        help='Path to the new image file (optional - uses stdin if not provided)',
+        '--data',
+        help='Path to JSON file containing placeholder data',
         default=None
     )
     
     parser.add_argument(
         '--stdin',
         action='store_true',
-        help='Read both template and image data from stdin (length-prefixed protocol)'
-    )
-    
-    parser.add_argument(
-        '--placeholder',
-        '-p',
-        action='append',
-        help='Placeholder replacement in KEY=VALUE format (can be specified multiple times)'
-    )
-    
-    parser.add_argument(
-        '--placeholder-json',
-        help='Path to JSON file containing placeholder mappings'
-    )
-    
-    parser.add_argument(
-        '--stdout',
-        action='store_true',
-        help='Output the modified presentation to stdout as binary'
+        help='Read template and data from stdin (length-prefixed protocol)'
     )
     
     parser.add_argument(
@@ -254,21 +212,11 @@ Examples:
     if not args.stdin and not args.input:
         print("Error: Input file path is required when not using --stdin", file=sys.stderr)
         sys.exit(1)
-    
-    # List mode - just show images and exit
-    if args.list:
-        list_images_in_presentation(args.input)
-        return
-    
-    # For replacement operations, validate required arguments
-    if not args.stdin and not args.image:
-        print("Error: Either --image (-i) or --stdin is required for image replacement", file=sys.stderr)
-        print("Use --list to only view images without modifying", file=sys.stderr)
-        sys.exit(1)
-    
-    # Get template and image data
+
+    # Get template and parse data
     if args.stdin:
-        print("Reading template and image from stdin...", file=sys.stderr)
+        print("Reading template and data from stdin...", file=sys.stderr)
+        
         # Read length-prefixed data
         # First 8 bytes: template size
         template_size_bytes = sys.stdin.buffer.read(8)
@@ -282,61 +230,28 @@ Examples:
         template_data = BytesIO(sys.stdin.buffer.read(template_size))
         print(f"Template data read: {len(template_data.getvalue())} bytes", file=sys.stderr)
         
-        # Next 8 bytes: map size
-        map_size_bytes = sys.stdin.buffer.read(8)
-        if len(map_size_bytes) < 8:
-            print("Error: Unable to read map size", file=sys.stderr)
+        # Next 8 bytes: parse data size
+        parse_data_size_bytes = sys.stdin.buffer.read(8)
+        if len(parse_data_size_bytes) < 8:
+            print("Error: Unable to read parse data size", file=sys.stderr)
             sys.exit(1)
-        map_size = struct.unpack('>Q', map_size_bytes)[0]
-        print(f"Map size: {map_size} bytes", file=sys.stderr)
+        parse_data_size = struct.unpack('>Q', parse_data_size_bytes)[0]
+        print(f"Parse data size: {parse_data_size} bytes", file=sys.stderr)
         
-        # Read map data
-        image_data = BytesIO(sys.stdin.buffer.read(map_size))
-        print(f"Image data read: {len(image_data.getvalue())} bytes", file=sys.stderr)
+        # Read parse data
+        parse_data_bytes = sys.stdin.buffer.read(parse_data_size)
+        print(f"Parse data read: {len(parse_data_bytes)} bytes", file=sys.stderr)
         
-        # Next 8 bytes: placeholders JSON size
-        placeholders_size_bytes = sys.stdin.buffer.read(8)
-        if len(placeholders_size_bytes) < 8:
-            print("Error: Unable to read placeholders size", file=sys.stderr)
+        try:
+            parse_data = json.loads(parse_data_bytes.decode('utf-8'))
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to parse JSON data: {e}", file=sys.stderr)
             sys.exit(1)
-        placeholders_size = struct.unpack('>Q', placeholders_size_bytes)[0]
-        print(f"Placeholders JSON size: {placeholders_size} bytes", file=sys.stderr)
-        
-        placeholders = {}
-        if placeholders_size > 0:
-            placeholders_json = sys.stdin.buffer.read(placeholders_size).decode('utf-8')
-            placeholders = json.loads(placeholders_json)
-            print(f"Placeholders loaded: {placeholders}", file=sys.stderr)
-        else:
-            print("No placeholders provided", file=sys.stderr)
-    else:
-        # Validate files exist
-        if not os.path.exists(args.input):
-            print(f"Error: Template file '{args.input}' not found", file=sys.stderr)
-            sys.exit(1)
-        
-        if not os.path.exists(args.image):
-            print(f"Error: Image file '{args.image}' not found", file=sys.stderr)
-            sys.exit(1)
-        
-        template_data = args.input
-        image_data = args.image
-        placeholders = {}
-        if args.placeholder_json:
-            with open(args.placeholder_json, 'r') as f:
-                placeholders.update(json.load(f))
-        if args.placeholder:
-            for entry in args.placeholder:
-                if '=' not in entry:
-                    print(f"Warning: Ignoring invalid placeholder '{entry}'. Expected format KEY=VALUE", file=sys.stderr)
-                    continue
-                key, value = entry.split('=', 1)
-                placeholders[key.strip()] = value
-    
-    # Perform the requested operation
+    # Perform the replacement operation
     try:
-        print(f"Replacing image...", file=sys.stderr)
-        buffer = find_and_replace_image(template_data, image_data, placeholders)
+        print(f"Parse data: {parse_data.keys()}", file=sys.stderr)
+        print(f"\nReplacing placeholders...", file=sys.stderr)
+        buffer = replace_placeholders(template_data, parse_data.get('data'))
         
         if args.output:
             # Save to file
@@ -348,10 +263,11 @@ Examples:
             sys.stdout.buffer.write(buffer.read())
     
     except Exception as e:
+        import traceback
         print(f"Error: {str(e)}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
-

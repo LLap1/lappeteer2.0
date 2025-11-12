@@ -3,6 +3,7 @@ import { ParseDocumentTemplateInput, ParseDocumentTemplateOutput } from './docum
 import path from 'path';
 import { spawn } from 'bun';
 import { CreateDocumentsDataOutput } from '../document-data-creator/document-data-creator.model';
+import { base64ToFile, fileToBase64 } from 'src/models/file.model';
 
 @Injectable()
 export class DocumentTemplateParserService {
@@ -37,25 +38,9 @@ export class DocumentTemplateParserService {
   }
 
   async parse(input: ParseDocumentTemplateInput): Promise<ParseDocumentTemplateOutput> {
-    return this.replace(input.templateFile, input.data.map.map, input.data.strings, input.data.filename);
-  }
-
-  private async replace(
-    templateFile: File,
-    mapFile: File,
-    placeholders: {
-      type: 'string';
-      key: string;
-      value: string;
-    }[],
-    documentFileName: string,
-  ): Promise<File> {
     const pythonPath = path.join(__dirname, 'python-pptx-handler', 'parse.py');
-    const templateBuffer = await templateFile.arrayBuffer();
-    const mapBuffer = await mapFile.arrayBuffer();
-    const normalizedPlaceholders = Object.fromEntries(
-      Object.entries(placeholders ?? {}).map(([key, value]) => [key.trim(), value]),
-    );
+    const templateBuffer = await input.templateFile.arrayBuffer();
+
     const proc = spawn(['python3', pythonPath, '--stdin'], {
       stdin: 'pipe',
       stdout: 'pipe',
@@ -71,26 +56,13 @@ export class DocumentTemplateParserService {
     // 2. Template data
     proc.stdin.write(new Uint8Array(templateBuffer));
 
-    // 3. Map size (8 bytes, big-endian)
-    const mapSize = new DataView(new ArrayBuffer(8));
-    mapSize.setBigUint64(0, BigInt(mapBuffer.byteLength), false);
-    proc.stdin.write(new Uint8Array(mapSize.buffer));
+    // 3. Parse Data
+    const parseData = new TextEncoder().encode(JSON.stringify(input));
+    const parseDataSize = new DataView(new ArrayBuffer(8));
+    parseDataSize.setBigUint64(0, BigInt(parseData.byteLength), false);
+    proc.stdin.write(new Uint8Array(parseDataSize.buffer));
+    proc.stdin.write(parseData);
 
-    // 4. Map data
-    proc.stdin.write(new Uint8Array(mapBuffer));
-
-    // 5. Placeholder
-
-    const placeholdersJson =
-      Object.keys(normalizedPlaceholders).length > 0 ? JSON.stringify(normalizedPlaceholders) : '';
-    const placeholdersBuffer = placeholdersJson ? new TextEncoder().encode(placeholdersJson) : undefined;
-
-    if (placeholdersBuffer) {
-      const placeholdersSize = new DataView(new ArrayBuffer(8));
-      placeholdersSize.setBigUint64(0, BigInt(placeholdersBuffer.byteLength), false);
-      proc.stdin.write(new Uint8Array(placeholdersSize.buffer));
-      proc.stdin.write(placeholdersBuffer);
-    }
     proc.stdin.end();
 
     const buffer = await new Response(proc.stdout).arrayBuffer();
@@ -105,7 +77,7 @@ export class DocumentTemplateParserService {
 
     console.log('Python script stderr:', stderr);
 
-    return new File([buffer], documentFileName, {
+    return new File([buffer], input.data.filename, {
       type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });
   }

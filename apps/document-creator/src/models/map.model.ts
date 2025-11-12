@@ -30,15 +30,14 @@ export class MapFunctionCaller extends PuppeteerFunctionCaller {
     });
   }
 
-  async exportMap() {
-    return this.runMapFunction('exportMap');
+  async wait(seconds: number) {
+    return this.runMapFunction('wait', {
+      seconds,
+    });
   }
 
-  async setMapSize({ width, height }: { width: number; height: number }) {
-    return this.runMapFunction('setMapSize', {
-      width,
-      height,
-    });
+  async exportMap() {
+    return this.runMapFunction('exportMap');
   }
 
   private async runMapFunction<T, R = any>(windowFunctionName: string, params?: T): Promise<R> {

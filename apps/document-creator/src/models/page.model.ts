@@ -11,7 +11,7 @@ export class PageFucntionCaller extends PuppeteerFunctionCaller {
     return this.page.goto(url);
   }
 
-  async createMapPool(ids: string[]) {
-    return this.runWindowFunction('createMapPool', { ids });
+  async createMapPool(inputs: { id: string; width: number; height: number }[]) {
+    return this.runWindowFunction('createMapPool', inputs);
   }
 }

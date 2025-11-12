@@ -28,7 +28,7 @@ export const configSchema = z.object({
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
-    port: Number(process.env.PORT ?? 8080),
+    port: Number(process.env.PORT ?? 3000),
   },
   documentDataCreator: {
     type: (process.env.DOCUMENT_DATA_CREATOR_TYPE as DocumentDataCreatorType) ?? 'puppeteer',

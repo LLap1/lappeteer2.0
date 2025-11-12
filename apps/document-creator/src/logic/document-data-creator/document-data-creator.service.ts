@@ -3,7 +3,7 @@ import puppeteer, { Browser, Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
 import { ConfigService } from '@nestjs/config';
 import { Config } from 'src/config';
-import { base64ToFile } from 'src/models/file.model';
+import { base64ToFile, fileToBase64 } from 'src/models/file.model';
 import { MapFunctionCaller } from 'src/models/map.model';
 import { PageFucntionCaller } from 'src/models/page.model';
 import { config } from 'src/config';
@@ -33,33 +33,67 @@ export class DocumentDataCreatorService {
   private async createDocumentData(page: Page, inputs: CreateDocumentsDataInput): Promise<CreateDocumentsDataOutput> {
     const pageFunctionCaller = new PageFucntionCaller(page);
     await pageFunctionCaller.goto(config.puppeteerDocumentCreateor.mapPoolUrl);
-    const ids = inputs.map(() => uuidv4());
-    await pageFunctionCaller.createMapPool(ids);
-    const files = await Promise.all(inputs.map((input, index) => this.createDocument(page, input, ids[index])));
-    return files;
+    const pool = inputs
+      .map(input =>
+        input.map.map(mapData => {
+          return {
+            id: uuidv4(),
+            width: mapData.creationData.width,
+            height: mapData.creationData.height,
+          };
+        }),
+      )
+      .flat();
+    await pageFunctionCaller.createMapPool(pool);
+    const results = inputs.map(input => ({
+      filename: input.filename,
+      map: new Array<{ type: 'map'; key: string; value: string }>(input.map.length),
+      strings: input.strings,
+    }));
+
+    let poolCursor = 0;
+    const mapTasks: Promise<void>[] = [];
+
+    inputs.forEach((input, inputIndex) => {
+      input.map.forEach((map, mapIndex) => {
+        const poolEntry = pool[poolCursor++];
+        mapTasks.push(
+          this.createDocument(page, map.creationData, poolEntry.id).then(value => {
+            results[inputIndex].map[mapIndex] = {
+              type: 'map',
+              key: map.key,
+              value,
+            };
+          }),
+        );
+      });
+    });
+
+    await Promise.all(mapTasks);
+
+    return results;
   }
 
   private async createDocument(
     page: Page,
-    input: CreateDocumentsDataInput[number],
+    input: {
+      center: [number, number];
+      zoom?: number | undefined;
+      geojson?: any[] | undefined;
+    },
     id: string,
-  ): Promise<CreateDocumentsDataOutput[number]> {
+  ): Promise<string> {
     const mapFunctionCaller = new MapFunctionCaller(page, id);
+    await mapFunctionCaller.setView({ center: input.center, zoom: input.zoom });
     await mapFunctionCaller.addTileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-    input.map.value.geojson?.forEach(geojson => mapFunctionCaller.addGeoJsonLayer(geojson));
-    await mapFunctionCaller.setView({ center: input.map.value.center, zoom: input.map.value.zoom });
-    await mapFunctionCaller.setMapSize({ width: 600, height: 600 });
+    console.log('input.geojson', input.geojson);
+    const geojsonLayersPromises = input.geojson?.map(geojson => mapFunctionCaller.addGeoJsonLayer(geojson));
+
+    await Promise.all(geojsonLayersPromises ?? []);
     await mapFunctionCaller.waitForTilelayersToLoad();
-    const screenshotDataUrl = await mapFunctionCaller.exportMap();
-    const file = base64ToFile(screenshotDataUrl, input.map.value.filename);
-    return {
-      filename: input.map.value.filename,
-      map: {
-        type: 'map',
-        key: input.map.key,
-        map: file,
-      },
-      strings: input.strings,
-    };
+
+    const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
+    const base64 = screenshotDataUrl.split(',')[1];
+    return base64;
   }
 }

@@ -9,10 +9,8 @@ export class PuppeteerFunctionCaller {
   constructor(protected readonly page: Page) {}
 
   protected async runWindowFunction<T, R = any>(windowFunctionName: string, params?: T): Promise<R> {
-    console.log('Running window function:', windowFunctionName, params);
     const result = await this.page.evaluate(
       (windowFunctionName, params) => {
-        console.log(windowFunctionName, params);
         return window[windowFunctionName](params);
       },
       windowFunctionName,

@@ -3,20 +3,24 @@ import { ZipFileSchema } from 'src/models/file.model';
 import { eventIteratorToStream } from '@orpc/client';
 
 export const CreateDocumentsDataMapInputSchema = z.object({
-  filename: z.string(),
   center: z.tuple([z.number(), z.number()]),
   zoom: z.number().min(1).max(20).optional(),
   geojson: z.array(z.any()).optional(),
+  width: z.number(),
+  height: z.number(),
 });
 export const CreateDocumentsDataStringInputSchema = z.string();
 
 export const CreateDocumentsDataInputSchema = z.array(
   z.object({
-    map: z.object({
-      type: z.literal('map'),
-      key: z.string(),
-      value: CreateDocumentsDataMapInputSchema,
-    }),
+    filename: z.string(),
+    map: z.array(
+      z.object({
+        type: z.literal('map'),
+        key: z.string(),
+        creationData: CreateDocumentsDataMapInputSchema,
+      }),
+    ),
     strings: z.array(
       z.object({
         type: z.literal('string'),

@@ -3,11 +3,13 @@ import { z } from 'zod';
 export const CreateDocumentsDataOutputSchema = z.array(
   z.object({
     filename: z.string(),
-    map: z.object({
-      type: z.literal('map'),
-      key: z.string(),
-      map: z.instanceof(File),
-    }),
+    map: z.array(
+      z.object({
+        type: z.literal('map'),
+        key: z.string(),
+        value: z.base64(),
+      }),
+    ),
     strings: z.array(
       z.object({
         type: z.literal('string'),

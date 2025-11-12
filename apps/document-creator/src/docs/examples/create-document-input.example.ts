@@ -8,10 +8,11 @@ const londonBoundary = {
     coordinates: [
       [
         [
-          [51.516653629684214, -0.09490097131637754],
-          [51.51364035099729, -0.08794682905013929],
-          [51.516653629684214, -0.08794682905013929],
-          [51.516653629684214, -0.09490097131637754],
+          [-0.09490097131637754, 51.516653629684214],
+          [-0.08794682905013929, 51.516653629684214],
+          [-0.08794682905013929, 51.51364035099729],
+          [-0.09490097131637754, 51.51364035099729],
+          [-0.09490097131637754, 51.516653629684214],
         ],
       ],
     ],
@@ -27,11 +28,11 @@ const parisBoundary = {
     type: 'Polygon',
     coordinates: [
       [
-        [48.8606, 2.3376],
-        [48.8606, 2.3468],
-        [48.8526, 2.3468],
-        [48.8526, 2.3376],
-        [48.8606, 2.3376],
+        [2.3376, 48.8606],
+        [2.3468, 48.8606],
+        [2.3468, 48.8526],
+        [2.3376, 48.8526],
+        [2.3376, 48.8606],
       ],
     ],
   },
@@ -47,11 +48,11 @@ const newYorkBoundary = {
     type: 'Polygon',
     coordinates: [
       [
-        [40.7829, -73.9654],
-        [40.7829, -73.9497],
-        [40.7644, -73.9497],
-        [40.7644, -73.9654],
-        [40.7829, -73.9654],
+        [-73.9654, 40.7829],
+        [-73.9497, 40.7829],
+        [-73.9497, 40.7644],
+        [-73.9654, 40.7644],
+        [-73.9654, 40.7829],
       ],
     ],
   },
@@ -61,150 +62,56 @@ const newYorkBoundary = {
   },
 } as Feature<Polygon>;
 
-const areaOfInterestBoundary = {
-  type: 'Feature',
-  geometry: {
-    type: 'Polygon',
-    coordinates: [
-      [
-        [51.516653629684214, -0.09490097131637754],
-        [51.51364035099729, -0.08794682905013929],
-        [51.516653629684214, -0.08794682905013929],
-        [51.516653629684214, -0.09490097131637754],
-      ],
-    ],
-  },
-  properties: {
-    name: 'Area of Interest',
-    description: 'A polygon marking an important area',
-  },
-} as Feature<Polygon>;
-
 export const createDocumentInputExample: CreateDocumentsInput = {
   templateFileName: 'sample.pptx',
   data: [
     {
-      map: {
-        type: 'map',
-        key: 'london-map',
-        value: {
-          filename: 'london-map.png',
-          center: [51.505, -0.09],
-          zoom: 13,
-          geojson: [londonBoundary],
-        },
-      },
-      strings: [
+      filename: 'world_maps.pptx',
+      map: [
         {
-          type: 'string',
-          key: 'location-name',
-          value: 'London',
+          type: 'map',
+          key: 'new_york_map',
+          creationData: {
+            width: 300,
+            height: 300,
+            center: [40.77365, -73.95755],
+            zoom: 13,
+            geojson: [newYorkBoundary.geometry],
+          },
         },
         {
-          type: 'string',
-          key: 'תיאור',
-          value: 'המרכז של לונדון',
+          type: 'map',
+          key: 'london_map',
+          creationData: {
+            width: 300,
+            height: 300,
+            center: [51.51514699034075, -0.09142390018325841],
+            zoom: 13,
+            geojson: [londonBoundary.geometry],
+          },
+        },
+        {
+          type: 'map',
+          key: 'paris_map',
+          creationData: {
+            width: 300,
+            height: 300,
+            center: [48.8566, 2.3422],
+            zoom: 13,
+            geojson: [parisBoundary.geometry],
+          },
         },
       ],
-    },
-    {
-      map: {
-        type: 'map',
-        key: 'paris-map',
-        value: {
-          filename: 'paris-map.png',
-          center: [48.8566, 2.3522],
-          zoom: 12,
-          geojson: [parisBoundary],
-        },
-      },
       strings: [
         {
           type: 'string',
-          key: 'location-name',
-          value: 'Paris',
+          key: 'title',
+          value: 'World Maps',
         },
         {
           type: 'string',
-          key: 'תיאור',
-          value: 'Historic district around the Louvre Museum',
-        },
-      ],
-    },
-    {
-      map: {
-        type: 'map',
-        key: 'new-york-map',
-        value: {
-          filename: 'newyork-map.png',
-          center: [40.7128, -74.006],
-          zoom: 11,
-          geojson: [newYorkBoundary],
-        },
-      },
-      strings: [
-        {
-          type: 'string',
-          key: 'location-name',
-          value: 'New York',
-        },
-        {
-          type: 'string',
-          key: 'תיאור',
-          value: 'סנטרל פארק במנהטן',
-        },
-      ],
-    },
-  ],
-};
-
-export const createDocumentInputMinimalExample: CreateDocumentsInput = {
-  templateFileName: 'sample.pptx',
-  data: [
-    {
-      map: {
-        type: 'map',
-        key: 'default-map',
-        value: {
-          filename: 'map-document.png',
-          center: [51.505, -0.09],
-        },
-      },
-      strings: [
-        {
-          type: 'string',
-          key: 'location-name',
-          value: 'Default Location',
-        },
-      ],
-    },
-  ],
-};
-
-export const createDocumentInputWithGeoJsonExample: CreateDocumentsInput = {
-  templateFileName: 'sample.pptx',
-  data: [
-    {
-      map: {
-        type: 'map',
-        key: 'area-of-interest',
-        value: {
-          filename: 'area-of-interest.png',
-          center: [51.505, -0.09],
-          zoom: 13,
-          geojson: [areaOfInterestBoundary],
-        },
-      },
-      strings: [
-        {
-          type: 'string',
-          key: 'location-name',
-          value: 'Area of Interest',
-        },
-        {
-          type: 'string',
-          key: 'תיאור',
-          value: 'שטח מודגש',
+          key: 'description',
+          value: 'This is a description of the world maps',
         },
       ],
     },
