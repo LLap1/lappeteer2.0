@@ -1,4 +1,4 @@
-import { useIsMobile } from '@zohan/ui/hooks/use-mobile';
+import { useIsMobile } from '@overlays/ui/hooks/use-mobile';
 import type { Column, DataTableFilterActions, FilterStrategy, FiltersState } from '../core/types';
 import type { Locale } from '../lib/i18n';
 import { ActiveFilters, ActiveFiltersMobileContainer } from './active-filters';

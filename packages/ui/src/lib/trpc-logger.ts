@@ -1,6 +1,6 @@
-import { type Log, Logger, type LogSchema } from '@zohan/types/logs';
+import { type Log, Logger, type LogSchema } from '@overlays/types/logs';
 import type { TRPCClient } from '@trpc/client';
-import type { LoggerRouter } from '@zohan/trpc/logger';
+import type { LoggerRouter } from '@overlays/trpc/logger';
 import type { z } from 'zod';
 
 export class TRPCLogger extends Logger {

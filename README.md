@@ -48,7 +48,7 @@ pnpm build
 
 - `apps/api`: Express+tRPC server, Drizzle-ready. Serves tRPC at `/trpc` and can serve static files from `public/`.
 - `apps/web`: React + Vite app. TanStack Router file-based routing is enabled via `@tanstack/router-vite-plugin`.
-- `packages/ui`: Shared UI library (shadcn/ui based) exposed under `@zohan/ui`.
+- `packages/ui`: Shared UI library (shadcn/ui based) exposed under `@overlays/ui`.
 - `packages/eslint-config`, `packages/typescript-config`: Shared config.
 
 ---
@@ -229,5 +229,5 @@ NODE_ENV=development
 ## Scripts (common)
 
 - Root: `pnpm dev`, `pnpm build`
-- API: `pnpm --filter @zohan/api dev | build`
-- Web: `pnpm --filter @zohan/web dev | build | preview`
+- API: `pnpm --filter @overlays/api dev | build`
+- Web: `pnpm --filter @overlays/web dev | build | preview`

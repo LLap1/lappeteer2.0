@@ -1,5 +1,5 @@
 {
-  "name": "@zohan/typescript-config",
+  "name": "@overlays/typescript-config",
   "version": "0.0.0",
   "private": true,
   "files": [

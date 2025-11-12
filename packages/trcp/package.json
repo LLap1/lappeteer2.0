@@ -1,5 +1,5 @@
 {
-  "name": "@zohan/trpc",
+  "name": "@overlays/trpc",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -10,7 +10,7 @@
     "./*": "./routers/*.ts"
   },
   "devDependencies": {
-    "@zohan/types": "workspace:*"
+    "@overlays/types": "workspace:*"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

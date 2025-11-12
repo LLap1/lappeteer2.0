@@ -1,3 +1,3 @@
-import reactConfig from '@zohan/eslint-config/react-app';
+import reactConfig from '@overlays/eslint-config/react-app';
 
 export default reactConfig;

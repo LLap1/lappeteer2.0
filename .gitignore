@@ -5,9 +5,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*pnpm-lock.yaml
 
 .turbo/
+patches/*
+.cursor
 
+patches
+pnpm-lock.yaml
 node_modules
 dist
 dist-ssr

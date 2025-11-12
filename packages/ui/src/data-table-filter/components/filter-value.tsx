@@ -1,6 +1,6 @@
-import { Button } from '@zohan/ui/components/button';
-import { Calendar } from '@zohan/ui/components/calendar';
-import { Checkbox } from '@zohan/ui/components/checkbox';
+import { Button } from '@overlays/ui/components/button';
+import { Calendar } from '@overlays/ui/components/calendar';
+import { Checkbox } from '@overlays/ui/components/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -9,16 +9,16 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@zohan/ui/components/command';
+} from '@overlays/ui/components/command';
 import {
   Popover,
   // PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
-} from '@zohan/ui/components/popover';
-import { Slider } from '@zohan/ui/components/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@zohan/ui/components/tabs';
-import { cn } from '@zohan/ui/lib/utils';
+} from '@overlays/ui/components/popover';
+import { Slider } from '@overlays/ui/components/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@overlays/ui/components/tabs';
+import { cn } from '@overlays/ui/lib/utils';
 import { isEqual } from 'date-fns';
 import { format } from 'date-fns';
 import { Ellipsis } from 'lucide-react';
