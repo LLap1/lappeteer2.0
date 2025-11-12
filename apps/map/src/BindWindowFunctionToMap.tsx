@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import { type WindowFunction } from '../types/window.types';
+import { type WindowFunction } from '../types/map.types';
 import { Map } from 'leaflet';
 
 type setWindowEventProps<T, R, D = any> = {
@@ -24,9 +24,7 @@ export function BindWindowFunctionToMap<T, R, D = any>({
         // @ts-ignores
         ...windowData,
       };
-      console.log(`${id}-${windowFunction.type} called with data:`, params);
-      const result = await windowFunction.handler(params as T & D & { map: Map });
-      return result;
+      return windowFunction.handler(params as T & D & { map: Map });
     };
   }, []);
 

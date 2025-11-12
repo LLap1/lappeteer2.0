@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "type:check": "tsc --noEmit"
   },
+  "exports": {
+    "/types": "src/types/*.types"
+  },
   "dependencies": {
     "@overlays/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.17",

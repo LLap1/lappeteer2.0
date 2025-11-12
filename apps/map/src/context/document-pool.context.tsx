@@ -1,27 +1,23 @@
-import { createContext, useContext, useState, useEffect, type ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, type ReactNode, useMemo } from 'react';
 
-interface DocumentPoolContextType {
-  ids: string[];
-}
+type DocumentPoolContextType = {
+  id: string;
+  width: number;
+  height: number;
+}[];
+
 const DocumentPoolContext = createContext<DocumentPoolContextType | undefined>(undefined);
 
 export const DocumentPoolProvider = ({ children }: { children: ReactNode }) => {
-  const [ids, setIds] = useState<string[]>([]);
+  const [pool, setPool] = useState<DocumentPoolContextType>([]);
 
-  const contextValue: DocumentPoolContextType = useMemo(
-    () => ({
-      ids,
-    }),
-    [ids],
-  );
+  const contextValue: DocumentPoolContextType = useMemo(() => pool, [pool]);
 
-  useEffect(() => {
-    // @ts-ignore
-    window['createMapPool'] = ({ ids }: { ids: string[] }) => {
-      setIds(ids);
-      return new Promise(resolve => setTimeout(resolve, 300));
-    };
-  }, []);
+  // @ts-ignore
+  window['createMapPool'] = (inputs: DocumentPoolContextType) => {
+    setPool(inputs);
+    return new Promise(resolve => setTimeout(resolve, 300));
+  };
 
   return <DocumentPoolContext.Provider value={contextValue}>{children}</DocumentPoolContext.Provider>;
 };

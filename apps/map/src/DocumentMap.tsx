@@ -3,18 +3,16 @@ import { MapContainer, GeoJSON } from 'react-leaflet';
 import {
   addGeoJsonLayer,
   addTileLayer,
+  closeMap,
   exportMap,
-  setMapSize,
   setView,
+  wait,
   waitForTilelayersToLoad,
-} from '../types/window.types';
+} from '../types/map.types';
 import { BindWindowFunctionToMap } from './BindWindowFunctionToMap';
 import 'leaflet/dist/leaflet.css';
 
-export const DocumentMap = ({ id }: { id: string }) => {
-  const [width, setWidth] = useState(600);
-  const [height, setHeight] = useState(600);
-
+export const DocumentMap = ({ id, width, height }: { id: string; width: number; height: number }) => {
   return (
     <MapContainer trackResize={true} zoomControl={false} style={{ width: `${width}px`, height: `${height}px` }}>
       <BindWindowFunctionToMap windowFunction={addTileLayer} id={id} />
@@ -22,7 +20,8 @@ export const DocumentMap = ({ id }: { id: string }) => {
       <BindWindowFunctionToMap windowFunction={setView} id={id} />
       <BindWindowFunctionToMap windowFunction={addGeoJsonLayer} id={id} />
       <BindWindowFunctionToMap windowFunction={waitForTilelayersToLoad} id={id} />
-      <BindWindowFunctionToMap windowFunction={setMapSize} dependencies={{ setWidth, setHeight }} id={id} />
+      <BindWindowFunctionToMap windowFunction={closeMap} id={id} />
+      <BindWindowFunctionToMap windowFunction={wait} id={id} />
     </MapContainer>
   );
 };

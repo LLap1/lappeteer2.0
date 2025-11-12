@@ -1,4 +1,4 @@
-import { type Feature, type MultiPolygon, type Polygon } from 'geojson';
+import { type Geometry, type Feature, type FeatureCollection, type GeoJsonObject } from 'geojson';
 import L from 'leaflet';
 
 export type WindowFunction<T, R> = {
@@ -27,28 +27,30 @@ export const setView: WindowFunction<{ map: L.Map; center: [number, number]; zoo
     }),
 };
 
-export const addGeoJsonLayer: WindowFunction<{ map: L.Map; geojson: Feature<Polygon> }, void> = {
+export const addGeoJsonLayer: WindowFunction<{ map: L.Map; geojson: Geometry | Feature | FeatureCollection }, void> = {
   type: 'addGeoJsonLayer',
   handler: ({ map, geojson }) =>
     new Promise<void>(resolve => {
-      const geoJsonLayer = L.geoJSON(geojson, { style: { color: 'red', fillColor: 'red', fillOpacity: 0.5 } });
+      const geoJsonLayer = L.geoJSON(geojson as GeoJsonObject);
       geoJsonLayer.addTo(map);
       resolve();
     }),
 };
 
-export const setMapSize: WindowFunction<
-  { map: L.Map; width: number; height: number; setWidth: (width: number) => void; setHeight: (height: number) => void },
-  void
-> = {
-  type: 'setMapSize',
-  handler: async ({ map, width, height, setWidth, setHeight }) => {
+export const closeMap: WindowFunction<{ map: L.Map }, void> = {
+  type: 'closeMap',
+  handler: async ({ map }) => {
     return new Promise<void>(resolve => {
-      setWidth(width);
-      setHeight(height);
-      setTimeout(() => map.invalidateSize(), 0);
+      map.remove();
       resolve();
     });
+  },
+};
+
+export const wait: WindowFunction<{ seconds: number }, void> = {
+  type: 'wait',
+  handler: async ({ seconds }) => {
+    await new Promise(resolve => setTimeout(resolve, seconds * 1000));
   },
 };
 
@@ -81,9 +83,12 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
   handler: async ({ map }) => {
     const mapContainer = map.getContainer()!;
     const tileLayers: L.TileLayer[] = [];
+    const vectorLayers: L.GeoJSON[] = [];
     map.eachLayer(layer => {
       if (layer instanceof L.TileLayer) {
         tileLayers.push(layer);
+      } else if (layer instanceof L.GeoJSON) {
+        vectorLayers.push(layer);
       }
     });
 
@@ -99,7 +104,7 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
 
     const mapRect = mapContainer.getBoundingClientRect();
 
-    const imagePromises = tileImages.map(tileImg => {
+    const tilePromises = tileImages.map(tileImg => {
       return new Promise<{ img: HTMLImageElement; rect: DOMRect }>((resolve, reject) => {
         const tileRect = tileImg.getBoundingClientRect();
         const relativeX = tileRect.left - mapRect.left;
@@ -120,10 +125,36 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
       });
     });
 
-    const loadedImages = await Promise.all(imagePromises);
-    loadedImages.forEach(({ img, rect }) => {
+    const loadedTileImages = await Promise.all(tilePromises);
+    loadedTileImages.forEach(({ img, rect }) => {
       ctx.drawImage(img, rect.x, rect.y, rect.width, rect.height);
     });
+
+    const overlayPane = map.getPanes()?.overlayPane;
+    const overlaySvg = overlayPane?.querySelector('svg');
+    if (overlaySvg) {
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(overlaySvg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      await new Promise<void>((resolve, reject) => {
+        const svgImage = new Image();
+        svgImage.onload = () => {
+          ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(svgUrl);
+          resolve();
+        };
+        svgImage.onerror = () => {
+          URL.revokeObjectURL(svgUrl);
+          reject(new Error('Failed to render GeoJSON overlay'));
+        };
+        svgImage.src = svgUrl;
+      }).catch(error => {
+        console.error('Failed to render GeoJSON overlay:', error);
+      });
+    }
+
     const dataURL = canvas.toDataURL('image/png', 1.0);
     return dataURL;
   },
