@@ -5,8 +5,12 @@ import { root } from 'src/orpc/routers/root.router';
 import packageJson from '../../package.json';
 import { createDocumentInputExample } from './examples/create-document-input.example';
 import { downloadTemplateExample } from './examples/download-template-input.example';
+import { uploadTemplateInputExample } from './examples/upload-template-input.example';
 import { CreateDocumentsInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
-import { DownloadTemplateInputSchema } from 'src/orpc/routers/templates/templates.router.schema';
+import {
+  DownloadTemplateInputSchema,
+  UploadTemplateOutputSchema,
+} from 'src/orpc/routers/templates/templates.router.schema';
 import { ZipFileSchema } from 'src/models/file.model';
 import { PowerpointTemplateSchema } from 'src/models/file.model';
 const openapiGenerator = new OpenAPIGenerator({

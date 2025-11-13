@@ -1,4 +1,3 @@
-import { CreateDocumentInput, CreateDocumentOutput } from 'src/orpc/routers/documents/documents.router.schema';
 import { Page } from 'puppeteer';
 import { Geometry } from 'geojson';
 import { base64ToFile, zipFiles } from './file.model';

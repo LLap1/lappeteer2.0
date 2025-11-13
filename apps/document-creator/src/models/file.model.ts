@@ -10,46 +10,16 @@ export const ZipFileSchema = z
     message: 'File name must end with .zip',
   });
 
-export const ImageFileSchema = z
-  .file()
-  .refine(file => file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg', {
-    message: 'File must be an image file',
-  })
-  .refine(file => file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.jpeg'), {
-    message: 'File name must end with .png, .jpg, or .jpeg',
-  });
+export const ImageFileSchema = z.instanceof(File);
 
 export const PowerpointTemplateSchema = z
-  .file()
-  .refine(
-    file =>
-      file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
-      file.type === 'application/vnd.ms-powerpoint',
-    {
-      message: 'File must be a PowerPoint file (.pptx or .ppt)',
-    },
-  )
-  .refine(file => file.name.endsWith('.pptx') || file.name.endsWith('.ppt'), {
-    message: 'File name must end with .pptx or .ppt',
+  .instanceof(File)
+  .refine(file => file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation', {
+    message: 'File must be a PowerPoint template',
+  })
+  .refine(file => file.name.endsWith('.pptx'), {
+    message: 'File name must end with .pptx',
   });
-
-export const saveFile = async (filePath: string, file: File): Promise<void> => {
-  const arrayBuffer = await file.arrayBuffer();
-  await Bun.write(filePath, arrayBuffer);
-};
-
-export const loadFile = async (filePath: string, filename: string, mimeType: string): Promise<File> => {
-  const bunFile = Bun.file(filePath);
-  const exists = await bunFile.exists();
-
-  if (!exists) {
-    throw new Error(`File not found: ${filePath}`);
-  }
-
-  const arrayBuffer = await bunFile.arrayBuffer();
-  const blob = new Blob([arrayBuffer], { type: mimeType });
-  return new File([blob], filename, { type: mimeType });
-};
 
 export async function fileToBase64(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();

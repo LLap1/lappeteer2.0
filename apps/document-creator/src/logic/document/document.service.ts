@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDocumentsInput, CreateDocumentsOutput } from 'src/orpc/routers/documents/documents.router.schema';
 
-import { DocumentDataCreatorService } from '../document-data-creator/document-data-creator.service';
-import { DocumentTemplateParserService } from '../document-template-parser/document-template-parser.service';
+import { DocumentMapCreatorService } from './document-map-creator/document-map-creator.service';
 import { zipFiles } from 'src/models/file.model';
-import { DocumentTemplateStorageService } from '../document-template-storage/document-template-storage.service';
+import { TemplateFileService } from '../template/template-file-storage/template-file-storage.service';
+import { TemplateMetadataStorageService } from '../template/template-metadata-storage/template-metadata-storage.service';
+import { DocumentGeneratorService } from './document-generator/document-generator.service';
+import { DocumentParamsCreatorService } from './document-params-creator/document-params-creator.service';
 
 @Injectable()
 export class DocumentService {
   constructor(
-    private readonly documentTemplateParserService: DocumentTemplateParserService,
-    private readonly documentDataCreatorService: DocumentDataCreatorService,
-    private readonly documentTemplateStorageService: DocumentTemplateStorageService,
+    private readonly documnetGenerator: DocumentGeneratorService,
+    private readonly documentDataCreatorService: DocumentMapCreatorService,
+    private readonly templateFileService: TemplateFileService,
+    private readonly templateMetadataStorageService: TemplateMetadataStorageService,
+    private readonly documentParamsCreatorService: DocumentParamsCreatorService,
   ) {}
 
-  async create(inputs: CreateDocumentsInput): Promise<CreateDocumentsOutput> {
-    const data = await this.documentDataCreatorService.create(inputs.data);
-    const templateFile = await this.documentTemplateStorageService.download(inputs.templateFileName);
-    const documents = await Promise.all(
-      data.map(d => this.documentTemplateParserService.parse({ templateFile, data: d })),
-    );
-    const zipedDocuments = await zipFiles(documents);
-    return zipedDocuments;
+  async create(input: CreateDocumentsInput): Promise<CreateDocumentsOutput> {
+    const templateFile = await this.templateFileService.download(input.templateFileName);
+    const metadata = await this.templateMetadataStorageService.getByName(input.templateFileName);
+    const params = await this.documentParamsCreatorService.create(input, metadata!.placeholders);
+    const maps = await this.documentDataCreatorService.create(params);
+    const documents = await Promise.all(data.map(d => this.documnetGenerator.generate({ templateFile, data: d })));
+    return zipFiles(documents);
   }
 }

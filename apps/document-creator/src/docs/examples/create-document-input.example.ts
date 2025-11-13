@@ -64,8 +64,6 @@ export const createDocumentInputExample: CreateDocumentsInput = {
           type: 'map',
           key: 'new_york_map',
           creationData: {
-            width: 300,
-            height: 300,
             center: [40.77365, -73.95755],
             zoom: 13,
             geojson: [newYorkBoundary],
@@ -75,8 +73,6 @@ export const createDocumentInputExample: CreateDocumentsInput = {
           type: 'map',
           key: 'london_map',
           creationData: {
-            width: 300,
-            height: 300,
             center: [51.51514699034075, -0.09142390018325841],
             zoom: 13,
             geojson: [londonBoundary],
@@ -86,8 +82,6 @@ export const createDocumentInputExample: CreateDocumentsInput = {
           type: 'map',
           key: 'paris_map',
           creationData: {
-            width: 300,
-            height: 300,
             center: [48.8566, 2.3422],
             zoom: 13,
             geojson: [parisBoundary],
