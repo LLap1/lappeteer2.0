@@ -21,6 +21,7 @@ export class TemplateService {
       path: filePath,
       placeholders,
     };
+    await this.templateMetadataStorageService.upload(templateMetadata);
     return templateMetadata;
   }
 

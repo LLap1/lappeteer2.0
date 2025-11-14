@@ -45,7 +45,7 @@ export class DocumentGeneratorService {
 
     console.log('Python script stderr:', stderr);
 
-    return new File([buffer], input.data.filename, {
+    return new File([buffer], input.filename, {
       type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });
   }

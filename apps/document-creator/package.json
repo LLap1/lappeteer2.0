@@ -8,6 +8,7 @@
     "preview": "bun build src/main.ts --outdir=dist --target=node && bun run dist/main.js",
     "start:prod": "bun run dist/main.js",
     "dev": "bun --watch run ./src/main.ts",
+    "debug": "bun --inspect=9230 --watch run ./src/main.ts",
     "type:check": "bun tsc --noEmit"
   },
   "exports": {

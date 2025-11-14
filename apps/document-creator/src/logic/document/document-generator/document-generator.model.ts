@@ -1,18 +1,11 @@
 export type GenerateDocumentInput = {
   templateFile: File;
+  filename: string;
   data: {
-    filename: string;
-    map: {
-      type: 'map';
-      key: string;
-      value: string;
-    }[];
-    strings: {
-      type: 'string';
-      value: string;
-      key: string;
-    }[];
-  };
+    type: 'map' | 'string';
+    key: string;
+    value: string;
+  }[];
 };
 
 export type GenerateDocumentOutput = File;

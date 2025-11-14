@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocumentMapCreatorService } from './document-map-creator.service';
+import { MapCreatorService } from './map-creator.service';
 import { ConfigService } from '@nestjs/config';
 import { Cluster } from 'puppeteer-cluster';
 import { Page } from 'puppeteer';
@@ -9,7 +9,7 @@ jest.mock('puppeteer-cluster');
 jest.mock('src/models/puppeteer.model');
 
 describe('PuppeteerDocumentCreatorService', () => {
-  let service: DocumentMapCreatorService;
+  let service: MapCreatorService;
   let configService: ConfigService;
   let mockCluster: jest.Mocked<Cluster>;
 
@@ -34,7 +34,7 @@ describe('PuppeteerDocumentCreatorService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        DocumentMapCreatorService,
+        MapCreatorService,
         {
           provide: ConfigService,
           useValue: {
@@ -44,7 +44,7 @@ describe('PuppeteerDocumentCreatorService', () => {
       ],
     }).compile();
 
-    service = module.get<DocumentMapCreatorService>(DocumentMapCreatorService);
+    service = module.get<MapCreatorService>(MapCreatorService);
     configService = module.get<ConfigService>(ConfigService);
   });
 

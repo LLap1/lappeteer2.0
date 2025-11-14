@@ -20,13 +20,15 @@ def replace_placeholders(pptx_data, parse_data):
     print(f"Loaded presentation with {len(prs.slides)} slides", file=sys.stderr)
     
     string_placeholders = {}
-    for string_item in parse_data.get('strings', []):
+    string_data = [item for item in parse_data if item.get('type') == 'string']
+    map_data = [item for item in parse_data if item.get('type') == 'map']
+
+    for string_item in string_data:
         key = string_item['key']
         value = string_item['value']
         string_placeholders[key] = value
         print(f"String placeholder: {{ {key} }} -> {value}", file=sys.stderr)
     
-    map_data = parse_data.get('map')
 
     map_placeholders = {}
     for map_item in map_data:

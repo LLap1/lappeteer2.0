@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build"
+    "build": "turbo run build",
+    "debug": "turbo run debug"
   },
   "dependencies": {
     "turbo": "^2.5.4"

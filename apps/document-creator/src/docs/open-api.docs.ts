@@ -6,7 +6,7 @@ import packageJson from '../../package.json';
 import { createDocumentInputExample } from './examples/create-document-input.example';
 import { downloadTemplateExample } from './examples/download-template-input.example';
 import { uploadTemplateInputExample } from './examples/upload-template-input.example';
-import { CreateDocumentsInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
+import { CreateDocumentInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
 import {
   DownloadTemplateInputSchema,
   UploadTemplateOutputSchema,
@@ -36,7 +36,7 @@ export async function generateOpenAPIDocument() {
   });
 }
 
-JSON_SCHEMA_REGISTRY.add(CreateDocumentsInputSchema, {
+JSON_SCHEMA_REGISTRY.add(CreateDocumentInputSchema, {
   examples: [createDocumentInputExample],
 });
 
