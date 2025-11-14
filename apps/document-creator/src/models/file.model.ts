@@ -13,7 +13,7 @@ export const ZipFileSchema = z
 export const ImageFileSchema = z.instanceof(File);
 
 export const PowerpointTemplateSchema = z
-  .instanceof(File)
+  .file()
   .refine(file => file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation', {
     message: 'File must be a PowerPoint template',
   })

@@ -5,10 +5,10 @@ import { root } from 'src/orpc/routers/root.router';
 import packageJson from '../../package.json';
 import { createDocumentInputExample } from './examples/create-document-input.example';
 import { downloadTemplateExample } from './examples/download-template-input.example';
-import { uploadTemplateInputExample } from './examples/upload-template-input.example';
-import { CreateDocumentInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
+import { CreateDocumentsInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
 import {
   DownloadTemplateInputSchema,
+  UploadTemplateInputSchema,
   UploadTemplateOutputSchema,
 } from 'src/orpc/routers/templates/templates.router.schema';
 import { ZipFileSchema } from 'src/models/file.model';
@@ -18,7 +18,7 @@ const openapiGenerator = new OpenAPIGenerator({
 });
 
 export async function generateOpenAPIDocument() {
-  return openapiGenerator.generate(root, {
+  const spec = await openapiGenerator.generate(root, {
     info: {
       title: packageJson.name,
       version: packageJson.version,
@@ -34,9 +34,33 @@ export async function generateOpenAPIDocument() {
     },
     servers: [{ url: '/api' }],
   });
+
+  if (spec.paths && spec.paths['/templates/upload'] && spec.paths['/templates/upload'].post) {
+    const uploadPath = spec.paths['/templates/upload'].post;
+    uploadPath.requestBody = {
+      required: true,
+      content: {
+        'multipart/form-data': {
+          schema: {
+            type: 'object',
+            properties: {
+              file: {
+                type: 'string',
+                format: 'binary',
+                description: 'PowerPoint template file (.pptx)',
+              },
+            },
+            required: ['file'],
+          },
+        },
+      },
+    };
+  }
+
+  return spec;
 }
 
-JSON_SCHEMA_REGISTRY.add(CreateDocumentInputSchema, {
+JSON_SCHEMA_REGISTRY.add(CreateDocumentsInputSchema, {
   examples: [createDocumentInputExample],
 });
 

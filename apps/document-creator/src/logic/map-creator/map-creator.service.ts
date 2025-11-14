@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
 import { ConfigService } from '@nestjs/config';
@@ -46,9 +46,10 @@ export class MapCreatorService {
     const mapFunctionCaller = new MapFunctionCaller(page, params.id);
     await mapFunctionCaller.setView({ center: params.center, zoom: params.zoom });
     await mapFunctionCaller.addTileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-    const geojsonLayersPromises = params.geojson?.map(geojson => mapFunctionCaller.addGeoJsonLayer(geojson));
-    await Promise.all(geojsonLayersPromises ?? []);
+
+    params.geojson.forEach(async geojson => await mapFunctionCaller.addGeoJsonLayer(geojson));
     await mapFunctionCaller.waitForTilelayersToLoad();
+    await mapFunctionCaller.wait(10);
     const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
     const base64 = screenshotDataUrl.split(',')[1];
     return {

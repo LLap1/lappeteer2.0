@@ -1,4 +1,9 @@
-import { DownloadTemplateInputSchema, DownloadTemplateOutputSchema } from './templates.router.schema';
+import {
+  DownloadTemplateInputSchema,
+  DownloadTemplateOutputSchema,
+  UploadTemplateInputSchema,
+  UploadTemplateOutputSchema,
+} from './templates.router.schema';
 import { os } from '@orpc/server';
 import { TemplateFileService } from 'src/logic/template/template-file-storage/template-file-storage.service';
 import type { FastifyReply } from 'fastify';
@@ -29,9 +34,12 @@ const upload = base
     path: '/templates/upload',
     summary: 'Upload a PowerPoint template',
     tags: ['Templates'],
+    description: 'Upload a PowerPoint template file via multipart form data',
   })
+  .input(UploadTemplateInputSchema)
+  .output(UploadTemplateOutputSchema)
   .handler(async ({ input, context }) => {
-    const file = Object.values(input as any)[0] as File;
+    const file = input.file;
     const metadata = await context.nest.get(TemplateService).upload(file);
     return metadata;
   });

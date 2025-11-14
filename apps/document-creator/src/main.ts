@@ -7,20 +7,51 @@ import { NestFactory } from '@nestjs/core';
 import openApiHandler from 'src/orpc/handlers/open-api.handler';
 import rpcHandler from 'src/orpc/handlers/rpc.handler';
 import { INestApplication } from '@nestjs/common';
+import multipart from '@fastify/multipart';
+import { readdir, readFile } from 'fs/promises';
+import { join } from 'path';
+import { TemplateService } from './logic/template/template.service';
 
 let nest: INestApplication;
 
-NestFactory.create(AppModule).then(appInstance => {
+const uploadTemplatesFromStorage = async () => {
+  try {
+    const storagePath = join(__dirname, '../storage/templates');
+    const files = await readdir(storagePath);
+    const pptxFiles = files.filter(file => file.endsWith('.pptx'));
+    const templateService = nest.get(TemplateService);
+    for (const filename of pptxFiles) {
+      try {
+        const filePath = join(storagePath, filename);
+        const fileBuffer = await readFile(filePath);
+        const file = new File([fileBuffer], filename, {
+          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        });
+
+        await templateService.upload(file);
+        console.log(`Uploaded template: ${filename}`);
+      } catch (error) {
+        console.error(`Error uploading template ${filename}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Error reading templates from storage:', error);
+  }
+};
+
+NestFactory.create(AppModule).then(async appInstance => {
   nest = appInstance;
-  nest.init();
+  await nest.init();
+  await uploadTemplatesFromStorage();
 });
 
 console.log('test');
 
 const server = Fastify();
 
+server.register(multipart);
+
 server.addContentTypeParser('*', (request, payload, done) => {
-  //using the orpc parsing
   done(null, undefined);
 });
 
@@ -56,7 +87,6 @@ server.all('/api/*', async (req, reply) => {
     reply.status(404).send('Not found');
   }
 });
-
 
 server.all('/rpc/*', async (req, reply) => {
   const { matched } = await rpcHandler.handle(req, reply, {

@@ -7,12 +7,7 @@ export type CreateMapParams = {
   zoom: number;
   width: number;
   height: number;
-  geojson?: FeatureCollection<
-    Geometry,
-    {
-      style: PathOptions;
-    }
-  >[];
+  geojson: Feature<Geometry, { style: PathOptions }>[];
 };
 
 export type Base64MapImage = string;

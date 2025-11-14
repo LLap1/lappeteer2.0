@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDocumentInput } from 'src/orpc/routers/documents/documents.router.schema';
+import {
+  CreateDocumentInput,
+  CreateDocumentsOutput,
+  CreateDocumentsInput,
+} from 'src/orpc/routers/documents/documents.router.schema';
 import { zipFiles } from 'src/models/file.model';
 import { TemplateFileService } from '../template/template-file-storage/template-file-storage.service';
 import { TemplateMetadataStorageService } from '../template/template-metadata-storage/template-metadata-storage.service';
@@ -15,14 +19,20 @@ export class DocumentService {
     private readonly documentParamsCreatorService: DocumentParamsCreatorService,
   ) {}
 
-  async create(input: CreateDocumentInput): Promise<File> {
+  async create(input: CreateDocumentsInput): Promise<CreateDocumentsOutput> {
+    const documents = await Promise.all(input.map(item => this.createDocuments(item)));
+    const zippedDocument = await zipFiles(documents);
+    return zippedDocument;
+  }
+
+  async createDocuments(input: CreateDocumentsInput[number]): Promise<File> {
     const templateFile = await this.templateFileService.download(input.templateFileName);
     const metadata = await this.templateMetadataStorageService.getByName(input.templateFileName);
     const params = await this.documentParamsCreatorService.create(input.data, metadata!.placeholders);
     const document = await this.documnetGenerator.generate({
       templateFile,
       data: params,
-      filename: input.templateFileName,
+      filename: input.filename,
     });
     return document;
   }

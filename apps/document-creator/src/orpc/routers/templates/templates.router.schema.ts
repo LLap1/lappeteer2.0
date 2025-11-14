@@ -7,8 +7,15 @@ export const DownloadTemplateInputSchema = z.object({
 
 export const DownloadTemplateOutputSchema = PowerpointTemplateSchema;
 
+export const UploadTemplateInputSchema = z
+  .object({
+    file: PowerpointTemplateSchema,
+  })
+  .loose();
+
 export const UploadTemplateOutputSchema = z.object({
-  filename: z.string(),
+  name: z.string(),
+  path: z.string(),
   placeholders: z.array(
     z.object({
       key: z.string(),
@@ -21,4 +28,5 @@ export const UploadTemplateOutputSchema = z.object({
 export type DownloadTemplateInput = z.infer<typeof DownloadTemplateInputSchema>;
 export type DownloadTemplateOutput = z.infer<typeof DownloadTemplateOutputSchema>;
 
+export type UploadTemplateInput = z.infer<typeof UploadTemplateInputSchema>;
 export type UploadTemplateOutput = z.infer<typeof UploadTemplateOutputSchema>;

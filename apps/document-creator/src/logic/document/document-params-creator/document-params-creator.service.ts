@@ -25,7 +25,6 @@ export class DocumentParamsCreatorService {
 
     const stringParams = populatedParams.filter(p => p.type === 'string');
     const maps = await this.mapCreatorService.create(mapParams);
-    console.log('maps', maps);
     const populatedParamsWithMaps = populatedParams
       .filter(p => p.type === 'map')
       .map(p => {

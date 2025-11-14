@@ -18,7 +18,7 @@ export class MapFunctionCaller extends PuppeteerFunctionCaller {
     return this.runMapFunction('waitForTilelayersToLoad');
   }
 
-  async addGeoJsonLayer(geojson: FeatureCollection<Geometry, { style: PathOptions }>) {
+  async addGeoJsonLayer(geojson: Feature<Geometry, { style: PathOptions }>) {
     return this.runMapFunction('addGeoJsonLayer', {
       geojson,
     });

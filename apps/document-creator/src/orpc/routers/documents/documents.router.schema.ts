@@ -9,7 +9,7 @@ export const CreateDocumentMapInputSchema = z.object({
   zoom: z.number().min(1).max(20),
   width: z.number().or(z.null()).default(null),
   height: z.number().or(z.null()).default(null),
-  geojson: z.array(z.custom<FeatureCollection<Geometry, { style: PathOptions }>>()),
+  geojson: z.array(z.custom<Feature<Geometry, { style: PathOptions }>>()),
 });
 
 export const CreateDocumentDataSchema = z.discriminatedUnion('type', [
@@ -29,6 +29,10 @@ export const CreateDocumentInputSchema = z.object({
   filename: z.string(),
   data: z.array(CreateDocumentDataSchema),
 });
+export const CreateDocumentsInputSchema = z.array(CreateDocumentInputSchema);
+export const CreateDocumentsOutputSchema = z.file().refine(file => file.type === 'application/zip', {
+  message: 'File must be a zip file',
+});
 
 export const CreateDocumentStringInputSchema = z.string();
 
@@ -37,3 +41,5 @@ export type CreateDocumentMapInput = z.infer<typeof CreateDocumentMapInputSchema
 export type CreateDocumentStringInput = z.infer<typeof CreateDocumentStringInputSchema>;
 export type CreateDocumentDataTypes = z.infer<typeof CreateDocumentDataTypesSchema>;
 export type CreateDocumentInput = z.infer<typeof CreateDocumentInputSchema>;
+export type CreateDocumentsInput = z.infer<typeof CreateDocumentsInputSchema>;
+export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;

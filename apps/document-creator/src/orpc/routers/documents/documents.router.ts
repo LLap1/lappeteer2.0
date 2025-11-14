@@ -1,4 +1,8 @@
-import { CreateDocumentInputSchema } from 'src/orpc/routers/documents/documents.router.schema';
+import {
+  CreateDocumentsInputSchema,
+  CreateDocumentsOutput,
+  CreateDocumentsOutputSchema,
+} from 'src/orpc/routers/documents/documents.router.schema';
 import { os } from '@orpc/server';
 import { DocumentService } from 'src/logic/document/document.service';
 import type { FastifyReply } from 'fastify';
@@ -13,10 +17,11 @@ const create = base
     summary: 'Create a document',
     tags: ['Documents'],
   })
-  .input(CreateDocumentInputSchema)
-  .handler(async ({ input, context }): Promise<File> => {
+  .input(CreateDocumentsInputSchema)
+  .output(CreateDocumentsOutputSchema)
+  .handler(async ({ input, context }): Promise<CreateDocumentsOutput> => {
     const document = await context.nest.get(DocumentService).create(input);
-    return document as any;
+    return document;
   });
 
 const router = base.router({
