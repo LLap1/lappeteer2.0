@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocumentParamsCreatorService } from './document-params-creator.service';
+import { DocumentParamsTransformerService } from './document-params-creator.service';
 
 describe('DocumentParamsCreatorService', () => {
-  let service: DocumentParamsCreatorService;
+  let service: DocumentParamsTransformerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DocumentParamsCreatorService],
+      providers: [DocumentParamsTransformerService],
     }).compile();
 
-    service = module.get<DocumentParamsCreatorService>(DocumentParamsCreatorService);
+    service = module.get<DocumentParamsTransformerService>(DocumentParamsTransformerService);
   });
 
   it('should be defined', () => {

@@ -6,6 +6,6 @@ import {
 
 export type CreateDocumentDataParam<T extends CreateDocumentDataTypes> = T extends 'map'
   ? CreateDocumentMapInput
-  : T extends 'string'
+  : T extends 'text'
   ? CreateDocumentStringInput
   : never;

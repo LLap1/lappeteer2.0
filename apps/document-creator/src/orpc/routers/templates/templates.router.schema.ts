@@ -19,6 +19,7 @@ export const UploadTemplateOutputSchema = z.object({
   placeholders: z.array(
     z.object({
       key: z.string(),
+      type: z.string(),
       width: z.number(),
       height: z.number(),
     }),

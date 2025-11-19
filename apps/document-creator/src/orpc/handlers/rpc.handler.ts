@@ -1,10 +1,15 @@
 import { getFilenameFromContentDisposition } from '@orpc/standard-server';
 import { RPCHandler } from '@orpc/server/fastify';
 import root from 'src/orpc/routers/root.router';
-
+import { onError } from '@orpc/client';
 const OVERRIDE_BODY_CONTEXT = Symbol('OVERRIDE_BODY_CONTEXT');
 
 const rpcHandler = new RPCHandler(root, {
+  interceptors: [
+    onError(error => {
+      console.error(error);
+    }),
+  ],
   adapterInterceptors: [
     options => {
       return options.next({

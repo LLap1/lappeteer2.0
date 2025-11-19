@@ -113,7 +113,7 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
     const mapRect = mapContainer.getBoundingClientRect();
 
     const tilePromises = tileImages.map(tileImg => {
-      return new Promise<{ img: HTMLImageElement; rect: DOMRect }>((resolve, reject) => {
+      return new Promise<{ img: HTMLImageElement; rect: DOMRect }>((resolve, _) => {
         const tileRect = tileImg.getBoundingClientRect();
         const relativeX = tileRect.left - mapRect.left;
         const relativeY = tileRect.top - mapRect.top;
@@ -127,7 +127,11 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
           });
         };
         img.onerror = () => {
-          reject(new Error(`Failed to load image: ${tileImg.src}`));
+          console.error(new Error(`Failed to load image: ${tileImg.src}`));
+          resolve({
+            img: new Image(),
+            rect: new DOMRect(0, 0, 0, 0),
+          });
         };
         img.src = tileImg.src;
       });
@@ -146,7 +150,7 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
       const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
 
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, _) => {
         const svgImage = new Image();
         svgImage.onload = () => {
           ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
@@ -155,7 +159,8 @@ export const exportMap: WindowFunction<{ map: L.Map }, string> = {
         };
         svgImage.onerror = () => {
           URL.revokeObjectURL(svgUrl);
-          reject(new Error('Failed to render GeoJSON overlay'));
+          console.error(new Error('Failed to render GeoJSON overlay'));
+          resolve();
         };
         svgImage.src = svgUrl;
       }).catch(error => {

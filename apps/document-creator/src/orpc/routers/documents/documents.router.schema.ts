@@ -3,43 +3,60 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { PathOptions } from 'leaflet';
 import { ZipFileSchema } from 'src/models/file.model';
 
-export const CreateDocumentDataTypesSchema = z.enum(['map', 'string']);
+export const CreateDocumentDataTypesSchema = z.enum(['map', 'text']);
 export const CreateDocumentMapInputSchema = z.object({
   center: z.tuple([z.number(), z.number()]),
   zoom: z.number().min(1).max(20),
-  width: z.number().or(z.null()).default(null),
-  height: z.number().or(z.null()).default(null),
   geojson: z.array(z.custom<Feature<Geometry, { style: PathOptions }>>()),
 });
+export const CreateDocumentStringInputSchema = z.string();
+export const CreateDocumentImageInputSchema = z.url();
 
-export const CreateDocumentDataSchema = z.discriminatedUnion('type', [
+export const CreateDocumentPlaceholderDataSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('map'),
     key: z.string(),
+    id: z.string().or(z.null()).default(null),
+    width: z.number().or(z.null()).default(null),
+    height: z.number().or(z.null()).default(null),
     value: CreateDocumentMapInputSchema,
   }),
   z.object({
-    type: z.literal('string'),
+    type: z.literal('text'),
     key: z.string(),
-    value: z.string(),
+    id: z.string().or(z.null()).default(null),
+    width: z.number().or(z.null()).default(null),
+    height: z.number().or(z.null()).default(null),
+    value: CreateDocumentStringInputSchema,
+  }),
+  z.object({
+    type: z.literal('image'),
+    key: z.string(),
+    id: z.string().or(z.null()).default(null),
+    width: z.number().or(z.null()).default(null),
+    height: z.number().or(z.null()).default(null),
+    value: CreateDocumentImageInputSchema,
   }),
 ]);
-export const CreateDocumentInputSchema = z.object({
-  templateFileName: z.string(),
+
+export const CreateDocumentDataSchema = z.object({
+  placeholderData: z.array(CreateDocumentPlaceholderDataSchema),
   filename: z.string(),
+});
+
+export const CreateDocumentsInputSchema = z.object({
+  templateFileName: z.string(),
   data: z.array(CreateDocumentDataSchema),
 });
-export const CreateDocumentsInputSchema = z.array(CreateDocumentInputSchema);
+
 export const CreateDocumentsOutputSchema = z.file().refine(file => file.type === 'application/zip', {
   message: 'File must be a zip file',
 });
-
-export const CreateDocumentStringInputSchema = z.string();
-
+export type CreateDocumentPlaceholderData = z.infer<typeof CreateDocumentPlaceholderDataSchema>;
 export type CreateDocumentData = z.infer<typeof CreateDocumentDataSchema>;
 export type CreateDocumentMapInput = z.infer<typeof CreateDocumentMapInputSchema>;
 export type CreateDocumentStringInput = z.infer<typeof CreateDocumentStringInputSchema>;
 export type CreateDocumentDataTypes = z.infer<typeof CreateDocumentDataTypesSchema>;
-export type CreateDocumentInput = z.infer<typeof CreateDocumentInputSchema>;
+export type CreateDocumentInput = z.infer<typeof CreateDocumentsInputSchema>;
 export type CreateDocumentsInput = z.infer<typeof CreateDocumentsInputSchema>;
 export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;

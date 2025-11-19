@@ -34,7 +34,7 @@ export function base64ToFile(dataUrl: string, filename: string = 'screenshot.png
   return file;
 }
 
-export const zipFiles = async (files: File[]): Promise<File> => {
+export async function zipFiles(files: File[]): Promise<File> {
   return new Promise(async (resolve, reject) => {
     const archive = archiver('zip', {
       zlib: { level: 9 },
@@ -58,8 +58,7 @@ export const zipFiles = async (files: File[]): Promise<File> => {
     });
 
     try {
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
+      for (const file of files) {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         archive.append(buffer, { name: file.name });
@@ -70,4 +69,4 @@ export const zipFiles = async (files: File[]): Promise<File> => {
       reject(err);
     }
   });
-};
+}

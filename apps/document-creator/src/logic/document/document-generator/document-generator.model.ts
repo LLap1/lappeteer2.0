@@ -1,8 +1,8 @@
 export type GenerateDocumentInput = {
   templateFile: File;
-  filename: string;
+  documentFileName: string;
   data: {
-    type: 'map' | 'string';
+    type: 'map' | 'text' | 'image';
     key: string;
     value: string;
   }[];

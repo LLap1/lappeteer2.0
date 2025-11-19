@@ -5,6 +5,7 @@ import { DocumentModule } from './document/document.module';
 import { TemplateFileStorageModule } from './template/template-file-storage/template-file-storage.module';
 import { TemplateModule } from './template/template.module';
 import { FileStorageModule } from './file/file-storage.module';
+import { ProcessModule } from './process/process.module';
 
 @Module({
   imports: [

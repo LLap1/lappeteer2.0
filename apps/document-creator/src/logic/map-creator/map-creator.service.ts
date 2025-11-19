@@ -7,10 +7,11 @@ import { MapFunctionCaller } from 'src/models/map.model';
 import { PageFucntionCaller } from 'src/models/page.model';
 import { config } from 'src/config';
 import { CreateMapParams } from './map-creator.model';
+import { chunk } from 'lodash';
 
 @Injectable()
 export class MapCreatorService {
-  private cluster!: Cluster;
+  private cluster?: Cluster;
   private readonly config: Config['puppeteerDocumentCreateor'];
 
   constructor(private readonly configService: ConfigService) {
@@ -18,14 +19,32 @@ export class MapCreatorService {
   }
   async onModuleInit() {
     this.cluster = await Cluster.launch(this.config.launchOptions);
+    this.cluster.idle().then();
   }
 
   async create(params: CreateMapParams[]): Promise<{ id: string; base64: string }[]> {
-    const maps = await this.cluster.execute(async ({ page }: { page: Page }) => {
-      await this.createMapPool(page, params);
-      return this.createMaps(page, params);
+    if (this.cluster !== undefined) {
+      this.cluster = await Cluster.launch(this.config.launchOptions);
+    }
+
+    const chunks = chunk(params, 100);
+
+    const maps = (
+      await Promise.all<{ id: string; base64: string }[]>(
+        chunks.map(async chunk => {
+          return await this.cluster!.execute(async ({ page }: { page: Page }) => {
+            await this.createMapPool(page, chunk);
+            return this.createMaps(page, chunk);
+          });
+        }),
+      )
+    ).flat();
+
+    this.cluster!.idle().then(() => {
+      this.cluster!.close();
+      this.cluster = undefined;
     });
-    console.log('maps', maps);
+
     return maps;
   }
 
@@ -42,14 +61,11 @@ export class MapCreatorService {
   }
 
   private async createMap(page: Page, params: CreateMapParams): Promise<{ id: string; base64: string }> {
-    console.log('params', params);
     const mapFunctionCaller = new MapFunctionCaller(page, params.id);
     await mapFunctionCaller.setView({ center: params.center, zoom: params.zoom });
     await mapFunctionCaller.addTileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-
     params.geojson.forEach(async geojson => await mapFunctionCaller.addGeoJsonLayer(geojson));
     await mapFunctionCaller.waitForTilelayersToLoad();
-    await mapFunctionCaller.wait(10);
     const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
     const base64 = screenshotDataUrl.split(',')[1];
     return {

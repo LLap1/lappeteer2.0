@@ -29,7 +29,6 @@ const uploadTemplatesFromStorage = async () => {
         });
 
         await templateService.upload(file);
-        console.log(`Uploaded template: ${filename}`);
       } catch (error) {
         console.error(`Error uploading template ${filename}:`, error);
       }
@@ -44,8 +43,6 @@ NestFactory.create(AppModule).then(async appInstance => {
   await nest.init();
   await uploadTemplatesFromStorage();
 });
-
-console.log('test');
 
 const server = Fastify();
 
