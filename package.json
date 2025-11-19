@@ -13,6 +13,7 @@
     "debug": "turbo run debug"
   },
   "dependencies": {
+    "@mirite/zod-to-mongoose": "^0.3.1",
     "@types/bun": "^1.3.2",
     "@types/lodash": "^4.17.20",
     "lodash": "^4.17.21",

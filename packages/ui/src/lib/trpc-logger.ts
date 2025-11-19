@@ -1,6 +1,6 @@
-import { type Log, Logger, type LogSchema } from '@auto-doucment/types/logs';
+import { type Log, Logger, type LogSchema } from '@auto-document/types/logs';
 import type { TRPCClient } from '@trpc/client';
-import type { LoggerRouter } from '@auto-doucment/trpc/logger';
+import type { LoggerRouter } from '@auto-document/trpc/logger';
 import type { z } from 'zod';
 
 export class TRPCLogger extends Logger {

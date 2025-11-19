@@ -1,4 +1,4 @@
-import { Input } from '@auto-doucment/ui/components/input';
+import { Input } from '@auto-document/ui/components/input';
 import { useCallback, useEffect, useState } from 'react';
 import { debounce } from '../lib/debounce';
 

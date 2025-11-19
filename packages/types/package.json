@@ -1,5 +1,5 @@
 {
-  "name": "@auto-doucment/types",
+  "name": "@auto-document/types",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,8 +8,8 @@
   },
   "scripts": {},
   "devDependencies": {
-    "@auto-doucment/eslint-config": "workspace:*",
-    "@auto-doucment/typescript-config": "workspace:*"
+    "@auto-document/eslint-config": "workspace:*",
+    "@auto-document/typescript-config": "workspace:*"
   },
   "dependencies": {
     "@trpc/client": "^11.5.1",

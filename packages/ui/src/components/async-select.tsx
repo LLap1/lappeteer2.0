@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { useDebounce } from '@auto-doucment/ui/hooks/use-debounce';
+import { useDebounce } from '@auto-document/ui/hooks/use-debounce';
 
-import { cn } from '@auto-doucment/ui/lib/utils';
-import { Button } from '@auto-doucment/ui/components/button';
+import { cn } from '@auto-document/ui/lib/utils';
+import { Button } from '@auto-document/ui/components/button';
 import {
   Command,
   CommandEmpty,
@@ -11,8 +11,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@auto-doucment/ui/components/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@auto-doucment/ui/components/popover';
+} from '@auto-document/ui/components/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@auto-document/ui/components/popover';
 
 export interface Option {
   value: string;

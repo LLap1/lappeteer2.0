@@ -1,6 +1,6 @@
-import { Button } from '@auto-doucment/ui/components/button';
-import { Calendar } from '@auto-doucment/ui/components/calendar';
-import { Checkbox } from '@auto-doucment/ui/components/checkbox';
+import { Button } from '@auto-document/ui/components/button';
+import { Calendar } from '@auto-document/ui/components/calendar';
+import { Checkbox } from '@auto-document/ui/components/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -9,16 +9,16 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@auto-doucment/ui/components/command';
+} from '@auto-document/ui/components/command';
 import {
   Popover,
   // PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
-} from '@auto-doucment/ui/components/popover';
-import { Slider } from '@auto-doucment/ui/components/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@auto-doucment/ui/components/tabs';
-import { cn } from '@auto-doucment/ui/lib/utils';
+} from '@auto-document/ui/components/popover';
+import { Slider } from '@auto-document/ui/components/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@auto-document/ui/components/tabs';
+import { cn } from '@auto-document/ui/lib/utils';
 import { isEqual } from 'date-fns';
 import { format } from 'date-fns';
 import { Ellipsis } from 'lucide-react';

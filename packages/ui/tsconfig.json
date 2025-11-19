@@ -1,10 +1,10 @@
 {
-  "extends": "@auto-doucment/typescript-config/react.json",
+  "extends": "@auto-document/typescript-config/react.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@auto-doucmentlogs": ["./logs/index.ts"],
-      "@auto-doucment/types": ["./types/index.ts"]
+      "@auto-documentlogs": ["./logs/index.ts"],
+      "@auto-document/types": ["./types/index.ts"]
     }
   }
 }

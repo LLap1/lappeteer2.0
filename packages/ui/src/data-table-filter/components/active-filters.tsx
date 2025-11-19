@@ -1,5 +1,5 @@
-import { Button } from '@auto-doucment/ui/components/button';
-import { Separator } from '@auto-doucment/ui/components/separator';
+import { Button } from '@auto-document/ui/components/button';
+import { Separator } from '@auto-document/ui/components/separator';
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type {

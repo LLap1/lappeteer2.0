@@ -1,5 +1,5 @@
-import { Button } from '@auto-doucment/ui/components/button';
-import { cn } from '@auto-doucment/ui/lib/utils';
+import { Button } from '@auto-document/ui/components/button';
+import { cn } from '@auto-document/ui/lib/utils';
 import { FilterXIcon } from 'lucide-react';
 import { memo } from 'react';
 import type { DataTableFilterActions } from '../core/types';

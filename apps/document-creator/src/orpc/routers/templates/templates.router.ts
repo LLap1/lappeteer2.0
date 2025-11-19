@@ -5,7 +5,7 @@ import {
   UploadTemplateOutputSchema,
 } from './templates.router.schema';
 import { os } from '@orpc/server';
-import { TemplateFileService } from 'src/logic/template/template-file-storage/template-file-storage.service';
+import { TemplateFileService } from 'src/logic/template/template-file/template-file.service';
 import type { FastifyReply } from 'fastify';
 import { INestApplication } from '@nestjs/common';
 import { TemplateParserService } from 'src/logic/template/template-parser/template-parser.service';
@@ -39,8 +39,7 @@ const upload = base
   .input(UploadTemplateInputSchema)
   .output(UploadTemplateOutputSchema)
   .handler(async ({ input, context }) => {
-    const file = input.file;
-    const metadata = await context.nest.get(TemplateService).upload(file);
+    const metadata = await context.nest.get(TemplateService).upload(input.file);
     return metadata;
   });
 

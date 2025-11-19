@@ -1,5 +1,5 @@
 {
-  "name": "@auto-doucment/trpc",
+  "name": "@auto-document/trpc",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -10,7 +10,7 @@
     "./*": "./routers/*.ts"
   },
   "devDependencies": {
-    "@auto-doucment/types": "workspace:*"
+    "@auto-document/types": "workspace:*"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

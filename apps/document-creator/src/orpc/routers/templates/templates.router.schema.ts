@@ -9,7 +9,7 @@ export const DownloadTemplateOutputSchema = PowerpointTemplateSchema;
 
 export const UploadTemplateInputSchema = z
   .object({
-    file: PowerpointTemplateSchema,
+    file: z.instanceof(File),
   })
   .loose();
 

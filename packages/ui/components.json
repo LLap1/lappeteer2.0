@@ -11,10 +11,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@auto-doucment/ui/components",
-    "utils": "@auto-doucment/ui/lib/utils",
-    "hooks": "@auto-doucment/ui/hooks",
-    "lib": "@auto-doucment/ui/lib",
-    "ui": "@auto-doucment/ui/components"
+    "components": "@auto-document/ui/components",
+    "utils": "@auto-document/ui/lib/utils",
+    "hooks": "@auto-document/ui/hooks",
+    "lib": "@auto-document/ui/lib",
+    "ui": "@auto-document/ui/components"
   }
 }

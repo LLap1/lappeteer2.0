@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@auto-doucment/document-creator",
+      "name": "@auto-document/document-creator",
       "dependencies": {
         "@fastify/multipart": "^9.3.0",
         "@jest/globals": "^30.2.0",

@@ -1,3 +1,3 @@
-import reactConfig from '@auto-doucment/eslint-config/react-app';
+import reactConfig from '@auto-document/eslint-config/react-app';
 
 export default reactConfig;

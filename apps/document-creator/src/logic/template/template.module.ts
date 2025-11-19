@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { TemplateParserModule } from './template-parser/template-parser.module';
-import { TemplateFileStorageModule } from './template-file-storage/template-file-storage.module';
-import { TemplateMetadataStorageModule } from './template-metadata-storage/template-metadata-storage.module';
-import { TemplateMetadataStorageService } from './template-metadata-storage/template-metadata-storage.service';
-import { TemplateFileService } from './template-file-storage/template-file-storage.service';
+import { TemplateFileStorageModule } from './template-file/template-file.module';
+import { TemplateMetadataModule } from './template-metadata/template-metadata.module';
+import { S3Module } from '../s3/s3.module';
 @Module({
-  imports: [TemplateParserModule, TemplateFileStorageModule, TemplateMetadataStorageModule],
+  imports: [TemplateParserModule, TemplateFileStorageModule, TemplateMetadataModule],
   providers: [TemplateService],
   exports: [TemplateService],
 })

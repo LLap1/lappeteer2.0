@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { type Logger, type Log, type Project } from '@auto-doucment/types/logs';
+import { type Logger, type Log, type Project } from '@auto-document/types/logs';
 
 export type UseLogOptions = {
   project: Project;
