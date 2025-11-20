@@ -41,6 +41,10 @@ export class MapFunctionCaller extends PuppeteerFunctionCaller {
     return this.runMapFunction('exportMap');
   }
 
+  async removeLayers() {
+    return this.runMapFunction('removeLayers');
+  }
+s
   private async runMapFunction<T, R = any>(windowFunctionName: string, params?: T): Promise<R> {
     return this.runWindowFunction(`${this.mapId}-${windowFunctionName}`, params);
   }

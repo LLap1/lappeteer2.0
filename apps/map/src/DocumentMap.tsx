@@ -3,12 +3,12 @@ import { MapContainer, GeoJSON } from 'react-leaflet';
 import {
   addGeoJsonLayer,
   addTileLayer,
-  closeMap,
+  removeLayers,
   exportMap,
   setView,
   wait,
   waitForTilelayersToLoad,
-} from '../types/map.types';
+} from './models/window-functions.model';
 import { BindWindowFunctionToMap } from './BindWindowFunctionToMap';
 import 'leaflet/dist/leaflet.css';
 
@@ -20,8 +20,9 @@ export const DocumentMap = ({ id, width, height }: { id: string; width: number; 
       <BindWindowFunctionToMap windowFunction={setView} id={id} />
       <BindWindowFunctionToMap windowFunction={addGeoJsonLayer} id={id} />
       <BindWindowFunctionToMap windowFunction={waitForTilelayersToLoad} id={id} />
-      <BindWindowFunctionToMap windowFunction={closeMap} id={id} />
+      <BindWindowFunctionToMap windowFunction={removeLayers} id={id} />
       <BindWindowFunctionToMap windowFunction={wait} id={id} />
+      <BindWindowFunctionToMap windowFunction={removeLayers} id={id} />
     </MapContainer>
   );
 };

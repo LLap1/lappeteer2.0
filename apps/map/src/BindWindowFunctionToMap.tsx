@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import { type WindowFunction } from '../types/map.types';
+import { type WindowFunction } from './models/window-functions.model';
 import { Map } from 'leaflet';
 
 type setWindowEventProps<T, R, D = any> = {

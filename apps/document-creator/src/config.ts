@@ -46,7 +46,7 @@ const templatedConfig: z.infer<typeof configSchema> = {
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '6VJUXAC69Q6W5YbANvKpw3yReQ7M2YI1OJkyDrhP',
     region: process.env.S3_REGION ?? 'region',
     endpoint: process.env.S3_ENDPOINT ?? 'https://s3.tebi.io',
-    bucket: process.env.S3_BUCKET ?? 'treasure',
+    bucket: process.env.S3_BUCKET ?? 'lapi',
   },
   mongodb: {
     uri:

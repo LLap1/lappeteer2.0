@@ -4,12 +4,11 @@ import { CreateDocumentsInput } from 'src/orpc/routers/documents/documents.route
 import { MapCreatorService } from '../../map-creator/map-creator.service';
 import { v4 as uuidv4 } from 'uuid';
 import { of, map, firstValueFrom } from 'rxjs';
-import { GenerateDocumentInput } from '../document-generator/document-generator.model';
 import { CreateMapParams } from 'src/logic/map-creator/map-creator.model';
 
 @Injectable()
 export class DocumentParamsTransformerService {
-  private transformPipline = (params, placeholders: DocumentTemplatePlaceholder[]) =>
+  private transformPipline = (params: CreateDocumentsInput, placeholders: DocumentTemplatePlaceholder[]) =>
     of(params).pipe(
       map(params => this.populateParamsWithIds(params)),
       map(params => this.populateParamsWithPlaceholders(params, placeholders)),

@@ -4,7 +4,7 @@ import { DocumentService } from './document.service';
 import { TemplateFileStorageModule } from '../template/template-file/template-file.module';
 import { DocumentGeneratorModule } from './document-generator/document-generator.module';
 import { TemplateMetadataModule } from '../template/template-metadata/template-metadata.module';
-import { DocumentParamsCreatorModule } from './document-params-creator/document-params-creator.module';
+import { DocumentParamsCreatorModule } from './document-params-creator/document-params-transformer.module';
 @Module({
   imports: [TemplateFileStorageModule, TemplateMetadataModule, DocumentGeneratorModule, DocumentParamsCreatorModule],
   providers: [DocumentService],

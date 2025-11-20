@@ -5,6 +5,7 @@ import { Cluster } from 'puppeteer-cluster';
 import { Page } from 'puppeteer';
 import { createDocuments } from 'src/models/puppeteer.model';
 import { jest } from '@jest/globals';
+import { MIME_TYPES, DEFAULT_FILENAMES, FILE_EXTENSIONS } from 'src/models/file.model';
 jest.mock('puppeteer-cluster');
 jest.mock('src/models/puppeteer.model');
 
@@ -73,10 +74,10 @@ describe('PuppeteerDocumentCreatorService', () => {
 
   describe('createDocument', () => {
     const mockInput = [
-      { filename: 'test-1.png', center: [51.505, -0.09] as [number, number] },
-      { filename: 'test-2.png', center: [48.8566, 2.3522] as [number, number], zoom: 12 },
+      { filename: `test-1${FILE_EXTENSIONS.PNG}`, center: [51.505, -0.09] as [number, number] },
+      { filename: `test-2${FILE_EXTENSIONS.PNG}`, center: [48.8566, 2.3522] as [number, number], zoom: 12 },
     ];
-    const mockZipFile = new File([new Blob(['test'])], 'documents.zip', { type: 'application/zip' });
+    const mockZipFile = new File([new Blob(['test'])], DEFAULT_FILENAMES.DOCUMENTS_ZIP, { type: MIME_TYPES.ZIP });
 
     beforeEach(async () => {
       await service.onModuleInit();
@@ -117,8 +118,8 @@ describe('PuppeteerDocumentCreatorService', () => {
       const result = await service.create(mockInput);
 
       expect(result).toBeInstanceOf(File);
-      expect(result.type).toBe('application/zip');
-      expect(result.name).toBe('documents.zip');
+      expect(result.type).toBe(MIME_TYPES.ZIP);
+      expect(result.name).toBe(DEFAULT_FILENAMES.DOCUMENTS_ZIP);
     });
   });
 });

@@ -17,7 +17,7 @@ export class TemplateMetadataService {
     });
   }
 
-  async getByName(name: string): Promise<TemplateMetadataType | undefined> {
+  async get(name: string): Promise<TemplateMetadataType | undefined> {
     const document = await this.templateMetadataModel.findOne({ name }).lean().exec();
     if (!document) {
       return undefined;

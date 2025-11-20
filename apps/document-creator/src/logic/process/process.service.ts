@@ -3,7 +3,7 @@ import { spawn, SpawnOptions } from 'bun';
 
 @Injectable()
 export class ProcessService {
-  async runProcess(command: string[], inputs: ArrayBufferLike[]): Promise<ArrayBufferLike> {
+  async run(command: string[], inputs: ArrayBufferLike[]): Promise<ArrayBufferLike> {
     const process = spawn(command, {
       stdin: 'pipe',
       stdout: 'pipe',

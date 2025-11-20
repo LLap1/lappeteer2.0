@@ -1,4 +1,4 @@
-import { type Geometry, type Feature, type FeatureCollection, type GeoJsonObject } from 'geojson';
+import { type Geometry, type Feature, type GeoJsonObject } from 'geojson';
 import * as L from 'leaflet';
 import type { PathOptions } from 'leaflet';
 
@@ -45,11 +45,13 @@ export const addGeoJsonLayer: WindowFunction<
     }),
 };
 
-export const closeMap: WindowFunction<{ map: L.Map }, void> = {
-  type: 'closeMap',
+export const removeLayers: WindowFunction<{ map: L.Map }, void> = {
+  type: 'removeLayers',
   handler: async ({ map }) => {
     return new Promise<void>(resolve => {
-      map.remove();
+      map.eachLayer(layer => {
+        layer.remove();
+      });
       resolve();
     });
   },

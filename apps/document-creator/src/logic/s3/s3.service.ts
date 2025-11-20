@@ -5,15 +5,19 @@ import { S3Client } from 'bun';
 export class S3Service {
   constructor(private readonly s3Client: S3Client) {}
 
-  upload(file: File): Promise<number> {
-    return this.s3Client.file(file.name).write(file);
+  async upload(file: File): Promise<number> {
+    return this.s3Client.file(file.name).write(file, {
+      type: file.type,
+    });
   }
 
-  download(key: string): Promise<ArrayBufferLike> {
-    return this.s3Client.file(key).arrayBuffer();
+  async download(key: string): Promise<File> {
+    const file = this.s3Client.file(key);
+    const arrayBuffer = await file.arrayBuffer();
+    return new File([new Blob([arrayBuffer])], file.name!, { type: file.type });
   }
 
-  delete(key: string): Promise<void> {
+  async delete(key: string): Promise<void> {
     return this.s3Client.file(key).delete();
   }
 }

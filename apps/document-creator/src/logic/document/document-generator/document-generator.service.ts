@@ -11,7 +11,7 @@ export class DocumentGeneratorService {
     const pythonPath = path.join(__dirname, 'generate.py');
     const inputBuffer = new TextEncoder().encode(JSON.stringify(input.data)).buffer;
     const templateBuffer = await input.templateFile.arrayBuffer();
-    const buffer = await this.processService.runProcess(['python3', pythonPath], [templateBuffer, inputBuffer]);
+    const buffer = await this.processService.run(['python3', pythonPath], [templateBuffer, inputBuffer]);
     const blob = new Blob([new Uint8Array(buffer as ArrayBuffer)], {
       type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });

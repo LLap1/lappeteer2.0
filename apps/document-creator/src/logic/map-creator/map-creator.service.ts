@@ -17,13 +17,9 @@ export class MapCreatorService {
   constructor(private readonly configService: ConfigService) {
     this.config = this.configService.get<Config['puppeteerDocumentCreateor']>('puppeteerDocumentCreateor')!;
   }
-  async onModuleInit() {
-    this.cluster = await Cluster.launch(this.config.launchOptions);
-    this.cluster.idle().then();
-  }
 
   async create(params: CreateMapParams[]): Promise<{ id: string; base64: string }[]> {
-    if (this.cluster !== undefined) {
+    if (this.cluster === undefined) {
       this.cluster = await Cluster.launch(this.config.launchOptions);
     }
 
@@ -40,8 +36,8 @@ export class MapCreatorService {
       )
     ).flat();
 
-    this.cluster!.idle().then(() => {
-      this.cluster!.close();
+    this.cluster?.idle().then(() => {
+      this.cluster?.close();
       this.cluster = undefined;
     });
 
@@ -67,6 +63,7 @@ export class MapCreatorService {
     params.geojson.forEach(async geojson => await mapFunctionCaller.addGeoJsonLayer(geojson));
     await mapFunctionCaller.waitForTilelayersToLoad();
     const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
+    await mapFunctionCaller.removeLayers();
     const base64 = screenshotDataUrl.split(',')[1];
     return {
       id: params.id,

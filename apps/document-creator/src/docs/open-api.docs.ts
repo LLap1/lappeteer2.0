@@ -13,7 +13,6 @@ import {
 } from 'src/orpc/routers/templates/templates.router.schema';
 import { ZipFileSchema } from 'src/models/file.model';
 import { PowerpointTemplateSchema } from 'src/models/file.model';
-import { createDocumentWith10MapsExample } from './examples/create-document-with-10-maps.example';
 const openapiGenerator = new OpenAPIGenerator({
   schemaConverters: [new ZodToJsonSchemaConverter()],
 });
@@ -64,10 +63,6 @@ export async function generateOpenAPIDocument() {
 JSON_SCHEMA_REGISTRY.add(CreateDocumentsInputSchema, {
   examples: [createDocumentInputExample],
 });
-
-// JSON_SCHEMA_REGISTRY.add(CreateDocumentsInputSchema, {
-//   examples: [createDocumentWith10MapsExample],
-// });
 
 JSON_SCHEMA_REGISTRY.add(DownloadTemplateInputSchema, {
   examples: [downloadTemplateExample],

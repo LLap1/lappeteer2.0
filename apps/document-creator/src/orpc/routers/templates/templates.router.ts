@@ -24,7 +24,8 @@ const download = base
   .input(DownloadTemplateInputSchema)
   .output(DownloadTemplateOutputSchema)
   .handler(async ({ input, context }) => {
-    const file = await context.nest.get(TemplateFileService).download(input.filename);
+    const file = await context.nest.get(TemplateFileService).get(input.filename);
+    console.log(file);
     return file;
   });
 

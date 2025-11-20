@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DocumentParamsTransformerService } from './document-params-creator.service';
+import { DocumentParamsTransformerService } from './document-params-transformer.service';
 
 describe('DocumentParamsCreatorService', () => {
   let service: DocumentParamsTransformerService;

@@ -6,9 +6,9 @@ import { S3Service } from 'src/logic/s3/s3.service';
 export class TemplateFileService {
   constructor(private readonly s3Service: S3Service) {}
 
-  async download(fileName: string): Promise<File> {
-    const arrayBuffer = await this.s3Service.download(fileName);
-    return new File([new Blob([arrayBuffer as ArrayBuffer])], fileName);
+  async get(fileName: string): Promise<File> {
+    const file = await this.s3Service.download(fileName);
+    return file;
   }
 
   async upload(file: File): Promise<number> {

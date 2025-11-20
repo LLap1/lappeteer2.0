@@ -25,8 +25,8 @@ export class TemplateService {
   }
 
   async download(name: string): Promise<File> {
-    const templateMetadata = await this.templateMetadataStorageService.getByName(name);
-    const templateFile = await this.templateFileService.download(templateMetadata!.path);
+    const templateMetadata = await this.templateMetadataStorageService.get(name);
+    const templateFile = await this.templateFileService.get(templateMetadata!.path);
     return templateFile;
   }
 }
