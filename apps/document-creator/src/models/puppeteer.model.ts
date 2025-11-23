@@ -1,17 +1,14 @@
 import { Page } from 'puppeteer';
-import { Geometry } from 'geojson';
-import { base64ToFile, zipFiles } from './file.model';
-import { config } from 'src/config';
-import { PageFucntionCaller } from './page.model';
 
-export class PuppeteerFunctionCaller {
+export class PageController {
   constructor(protected readonly page: Page) {}
 
-  protected async runWindowFunction<T, R = any>(windowFunctionName: string, params?: T): Promise<R> {
+  protected async runWindowFunction<T, R = any>(id: string, windowFunctionName: string, params?: T): Promise<R> {
     const result = await this.page.evaluate(
-      (windowFunctionName, params) => {
-        return window[windowFunctionName](params);
+      (id, windowFunctionName, params) => {
+        return window[id][windowFunctionName](params);
       },
+      id,
       windowFunctionName,
       params,
     );

@@ -32,6 +32,7 @@ export const configSchema = z.object({
       maxConcurrency: z.number(),
       puppeteerOptions: z.object({
         headless: z.boolean(),
+        devtools: z.boolean(),
       }),
     }),
   }),
@@ -60,10 +61,11 @@ const templatedConfig: z.infer<typeof configSchema> = {
     mapPoolUrl: process.env.MAP_POOL_URL ?? 'http://localhost:8080',
     launchOptions: {
       timeout: Number(process.env.PUPPETEER_TIMEOUT ?? 600000),
-      concurrency: Number(process.env.PUPPETEER_CONCURRENCY ?? Cluster.CONCURRENCY_PAGE),
+      concurrency: Number(process.env.PUPPETEER_CONCURRENCY ?? Cluster.CONCURRENCY_CONTEXT),
       maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY ?? 20),
       puppeteerOptions: {
         headless: Boolean(process.env.PUPPETEER_HEADLESS),
+        devtools: Boolean(process.env.PUPPETEER_DEVTOOLS ?? true),
       },
     },
   },

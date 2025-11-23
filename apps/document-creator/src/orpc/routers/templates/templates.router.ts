@@ -6,12 +6,11 @@ import {
 } from './templates.router.schema';
 import { os } from '@orpc/server';
 import { TemplateFileService } from 'src/logic/template/template-file/template-file.service';
-import type { FastifyReply } from 'fastify';
 import { INestApplication } from '@nestjs/common';
 import { TemplateParserService } from 'src/logic/template/template-parser/template-parser.service';
 import { TemplateService } from 'src/logic/template/template.service';
 
-const base = os.$context<{ reply: FastifyReply; nest: INestApplication }>();
+const base = os.$context<{ nest: INestApplication; request: Request }>();
 
 const download = base
   .route({

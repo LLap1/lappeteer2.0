@@ -5,10 +5,9 @@ import {
 } from 'src/orpc/routers/documents/documents.router.schema';
 import { os } from '@orpc/server';
 import { DocumentService } from 'src/logic/document/document.service';
-import type { FastifyReply } from 'fastify';
 import { INestApplication } from '@nestjs/common';
 
-const base = os.$context<{ reply: FastifyReply; nest: INestApplication }>();
+const base = os.$context<{ nest: INestApplication; request: Request }>();
 
 const create = base
   .route({

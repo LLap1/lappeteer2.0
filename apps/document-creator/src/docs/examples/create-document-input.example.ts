@@ -156,7 +156,7 @@ const generateRandomMap = (mapKey: string) => {
 
 export const createDocumentInputExample: CreateDocumentsInput = {
   templateFileName: 'sample.pptx',
-  data: Array.from({ length: 100 }, (_, index) => ({
+  data: Array.from({ length: 300 }, (_, index) => ({
     placeholderData: [
       generateRandomMap('מפה'),
       {

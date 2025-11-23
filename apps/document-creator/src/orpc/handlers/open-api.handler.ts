@@ -1,7 +1,6 @@
-import { OpenAPIHandler } from '@orpc/openapi/fastify';
+import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import root from 'src/orpc/routers/root.router';
 import { onError } from '@orpc/server';
-import type { FastifyRequest } from 'fastify';
 
 const openApiHandler = new OpenAPIHandler(root, {
   interceptors: [
@@ -9,32 +8,25 @@ const openApiHandler = new OpenAPIHandler(root, {
       console.error(error);
     }),
     options => {
-      const fastifyRequest = options.context.reply?.request as FastifyRequest | undefined;
-      const contentType = fastifyRequest?.headers['content-type'] || '';
+      const request = options.context.request as Request;
+      const contentType = request.headers.get('content-type') || '';
 
-      if (contentType.includes('multipart/form-data') && fastifyRequest && fastifyRequest.isMultipart()) {
+      if (contentType.includes('multipart/form-data')) {
         return options.next({
           ...options,
           request: {
             ...options.request,
             async body() {
-              const formData: Record<string, File> = {};
-              const parts = fastifyRequest.parts();
+              const formData = await request.formData();
+              const formDataObj: Record<string, File> = {};
 
-              for await (const part of parts) {
-                if (part.type === 'file') {
-                  const buffers: Buffer[] = [];
-                  for await (const chunk of part.file) {
-                    buffers.push(chunk);
-                  }
-                  const buffer = Buffer.concat(buffers);
-                  formData[part.fieldname] = new File([buffer], part.filename || 'file', {
-                    type: part.mimetype || 'application/octet-stream',
-                  });
+              for (const [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                  formDataObj[key] = value;
                 }
               }
 
-              return formData;
+              return formDataObj;
             },
           },
         });

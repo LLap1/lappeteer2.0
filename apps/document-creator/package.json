@@ -15,7 +15,8 @@
     "./router/root": "./src/routers/root.router.ts"
   },
   "devDependencies": {
-    "@auto-document/map": "workspace:*",
+    
+    "@auto-document/controlled-map": "workspace:*",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/common": "^11.1.7",
     "@nestjs/core": "^11.1.7",
@@ -34,6 +35,7 @@
     "zod": "^4.1.12"
   },
   "dependencies": {
+    "@auto-document/controlled-map": "workspace:*",
     "@auto-document/s3": "workspace:*",
     "@fastify/multipart": "^9.3.0",
     "@jest/globals": "^30.2.0",

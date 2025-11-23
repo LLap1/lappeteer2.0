@@ -1,5 +1,5 @@
 {
-  "name": "@auto-document/map",
+  "name": "@auto-document/controlled-map",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -11,7 +11,7 @@
     "type:check": "tsc --noEmit"
   },
   "exports": {
-    "/types": "src/types/*.types"
+    "./routers/root": "./src/routers/root.ts"
   },
   "dependencies": {
     "@auto-document/typescript-config": "workspace:*",

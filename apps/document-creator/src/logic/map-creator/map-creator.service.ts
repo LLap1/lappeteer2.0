@@ -2,10 +2,8 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
 import { ConfigService } from '@nestjs/config';
-import { Config } from 'src/config';
-import { MapFunctionCaller } from 'src/models/map.model';
-import { PageFucntionCaller } from 'src/models/page.model';
-import { config } from 'src/config';
+import { Config, config } from 'src/config';
+import { WindowActionSender } from 'src/models/control.model';
 import { CreateMapParams } from './map-creator.model';
 import { chunk } from 'lodash';
 
@@ -29,8 +27,10 @@ export class MapCreatorService {
       await Promise.all<{ id: string; base64: string }[]>(
         chunks.map(async chunk => {
           return await this.cluster!.execute(async ({ page }: { page: Page }) => {
-            await this.createMapPool(page, chunk);
-            return this.createMaps(page, chunk);
+            const actionSender = new WindowActionSender(page);
+            await page.goto(config.puppeteerDocumentCreateor.mapPoolUrl);
+            await actionSender.send({ type: 'createMapPool', params: chunk });
+            return this.createMapCanvases(actionSender, chunk);
           });
         }),
       )
@@ -44,26 +44,33 @@ export class MapCreatorService {
     return maps;
   }
 
-  private async createMaps(page: Page, params: CreateMapParams[]): Promise<{ id: string; base64: string }[]> {
-    const mapTasks = params.map(param => this.createMap(page, param));
+  private async createMapCanvases(
+    controlSender: WindowActionSender,
+    params: CreateMapParams[],
+  ): Promise<{ id: string; base64: string }[]> {
+    const mapTasks = params.map(param => this.createMap(controlSender, param));
     const maps = await Promise.all(mapTasks);
     return maps;
   }
 
-  private async createMapPool(page: Page, params: CreateMapParams[]): Promise<void> {
-    const pageFunctionCaller = new PageFucntionCaller(page);
-    await pageFunctionCaller.goto(config.puppeteerDocumentCreateor.mapPoolUrl);
-    await pageFunctionCaller.createMapPool(params);
-  }
-
-  private async createMap(page: Page, params: CreateMapParams): Promise<{ id: string; base64: string }> {
-    const mapFunctionCaller = new MapFunctionCaller(page, params.id);
-    await mapFunctionCaller.setView({ center: params.center, zoom: params.zoom });
-    await mapFunctionCaller.addTileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-    params.geojson.forEach(async geojson => await mapFunctionCaller.addGeoJsonLayer(geojson));
-    await mapFunctionCaller.waitForTilelayersToLoad();
-    const screenshotDataUrl: string = await mapFunctionCaller.exportMap();
-    await mapFunctionCaller.removeLayers();
+  private async createMap(
+    windowActionSender: WindowActionSender,
+    params: CreateMapParams,
+  ): Promise<{ id: string; base64: string }> {
+    await windowActionSender.send({
+      type: 'setView',
+      params: { id: params.id, center: params.center, zoom: params.zoom },
+    });
+    await windowActionSender.send({
+      type: 'addTileLayer',
+      params: { id: params.id, url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
+    });
+    params.geojson.forEach(
+      async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
+    );
+    await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
+    const screenshotDataUrl: string = await windowActionSender.send({ type: 'exportMap', params: { id: params.id } });
+    await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
     const base64 = screenshotDataUrl.split(',')[1];
     return {
       id: params.id,

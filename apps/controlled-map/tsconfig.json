@@ -5,7 +5,12 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "allowImportingTsExtensions": false
   },
   "include": ["src/**/*", "*.ts", "*.tsx"],
   "exclude": ["node_modules", "dist", "build"]
