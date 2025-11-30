@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrpcClientService } from '@auto-document/nest/orpc-client.service';
 import { TemplateService } from '../template/template.service';
-import type { Client } from '../root.client';
+import type { Client } from '../app.module';
 import type { CreateDocumentsInput, CreateDocumentsOutput } from './documents.router.schema';
 
 @Injectable()

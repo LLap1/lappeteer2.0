@@ -1,6 +1,5 @@
 import { Controller, Post } from '@nestjs/common';
 import { TemplateService } from './template.service';
-import { CreateTemplateInputSchema } from './template.router.schema';
 import { implement, Implement } from '@orpc/nest';
 import templateRouter from './template.router';
 
@@ -11,7 +10,7 @@ export class TemplateController {
   @Implement(templateRouter.create)
   create() {
     return implement(templateRouter.create).handler(async ({ input }) => {
-      return this.templateService.create(input);
+      return this.templateService.create(input.file);
     });
   }
 

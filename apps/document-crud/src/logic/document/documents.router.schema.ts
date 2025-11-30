@@ -8,11 +8,16 @@ import type {
   CreateDocumentStringInput,
   CreateDocumentDataTypes,
 } from '@auto-document/types/document';
+import { createDocumentInputExample } from '../../docs/examples/create-document-input.example';
 
-export const CreateDocumentsInputSchema = z.object({
-  templateId: z.string(),
-  data: z.array(CreateDocumentDataSchema),
-});
+export const CreateDocumentsInputSchema = z
+  .object({
+    templateId: z.string(),
+    data: z.array(CreateDocumentDataSchema),
+  })
+  .meta({
+    examples: [createDocumentInputExample],
+  });
 
 export const CreateDocumentsOutputSchema = z.file().refine(file => file.type === 'application/zip', {
   message: 'File must be a zip file',

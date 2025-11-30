@@ -12,7 +12,7 @@
     "type:check": "bun tsc --noEmit"
   },
   "exports": {
-    "./contract": "./src/contract.ts"
+    "./router": "./src/logic/app.router.ts"
   },
   "devDependencies": {
     "@auto-document/orpc": "workspace:*",
@@ -38,17 +38,18 @@
     "zod": "^4.1.12"
   },
   "dependencies": {
-    "@auto-document/document-template-file": "workspace:*",
+    "@auto-document/document-file-generator": "workspace:*",
     "@auto-document/nest": "workspace:*",
     "@auto-document/orpc": "workspace:*",
+    "@auto-document/document-map-pool": "workspace:*",
     "@auto-document/types": "workspace:*",
-    "@auto-document/utils": "workspace:*",
     "@nestjs/config": "^4.0.2",
     "@nestjs/platform-express": "^11.1.8",
     "@orpc/client": "^1.10.2",
     "@orpc/nest": "^1.11.3",
     "@orpc/server": "^1.10.2",
     "@orpc/standard-server": "^1.10.4",
+    "@types/leaflet": "^1.9.21",
     "archiver": "^7.0.1",
     "bun": "^1.3.2",
     "dotenv": "^17.2.3",

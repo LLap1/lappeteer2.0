@@ -1,7 +1,5 @@
 import { Feature, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import { CreateDocumentsInput, CreateDocumentsInputSchema } from '../../logic/document/documents.router.schema';
-import { JSON_SCHEMA_REGISTRY } from '@orpc/zod/zod4';
 
 const inlandCities = [
   [52.52, 13.405], // Berlin
@@ -155,7 +153,7 @@ const generateRandomMap = (mapKey: string) => {
   };
 };
 
-export const createDocumentInputExample: CreateDocumentsInput = {
+export const createDocumentInputExample = {
   templateId: '692aa09678436255ac85889b',
   data: Array.from({ length: 300 }, (_, index) => ({
     placeholderData: [

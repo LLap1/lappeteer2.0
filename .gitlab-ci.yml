@@ -10,114 +10,282 @@ include:
   - local: /ci-templates/build-template.yml
   - local: /ci-templates/deploy-template.yml
 
-build-web-integ:
+build-document-creator-integ:
   stage: build
   extends: .build-image
   variables:
     ENV: 'integ'
     VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'web'
+    MICROSERVICE: 'document-creator'
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
-        - apps/web/**/*
+        - apps/document-creator/**/*
         - packages/**/*
 
-build-backend-integ:
-  stage: build
-  extends: .build-image
-  variables:
-    ENV: 'integ'
-    VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'backend'
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - apps/backend/**/*
-        - packages/**/*
-
-build-web-prod:
+build-document-creator-prod:
   stage: build
   extends: .build-image
   variables:
     ENV: 'prod'
     VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'web'
+    MICROSERVICE: 'document-creator'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - apps/web/**/*
+        - apps/document-creator/**/*
         - packages/**/*
 
-build-backend-prod:
+build-document-crud-integ:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'integ'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-crud'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-crud/**/*
+        - packages/**/*
+
+build-document-crud-prod:
   stage: build
   extends: .build-image
   variables:
     ENV: 'prod'
     VERSION: '${CI_PIPELINE_IID}'
-    MICROSERVICE: 'backend'
+    MICROSERVICE: 'document-crud'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - apps/backend/**/*
+        - apps/document-crud/**/*
         - packages/**/*
 
-deploy-web-integ:
+build-document-file-generator-integ:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'integ'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-file-generator'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-file-generator/**/*
+        - packages/**/*
+
+build-document-file-generator-prod:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'prod'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-file-generator'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-file-generator/**/*
+        - packages/**/*
+
+build-document-map-pool-integ:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'integ'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-map-pool'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-map-pool/**/*
+        - packages/**/*
+
+build-document-map-pool-prod:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'prod'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-map-pool'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-map-pool/**/*
+        - packages/**/*
+
+build-document-template-analyzer-integ:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'integ'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-template-analyzer'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-template-analyzer/**/*
+        - packages/**/*
+
+build-document-template-analyzer-prod:
+  stage: build
+  extends: .build-image
+  variables:
+    ENV: 'prod'
+    VERSION: '${CI_PIPELINE_IID}'
+    MICROSERVICE: 'document-template-analyzer'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-template-analyzer/**/*
+        - packages/**/*
+
+deploy-document-creator-integ:
   stage: deploy
   extends: .deploy-image
   variables:
     ENV: 'integ'
-    MICROSERVICE: 'web'
-    OPENSHIFT_PROJECT_NAME: overlays-integ-web
+    MICROSERVICE: 'document-creator'
+    OPENSHIFT_PROJECT_NAME: overlays-integ-document-creator
     OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
-        - apps/web/**/*
+        - apps/document-creator/**/*
         - packages/**/*
 
-deploy-backend-integ:
+deploy-document-creator-prod:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'prod'
+    MICROSERVICE: 'document-creator'
+    OPENSHIFT_PROJECT_NAME: overlays-prod-document-creator
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-creator/**/*
+        - packages/**/*
+
+deploy-document-crud-integ:
   stage: deploy
   extends: .deploy-image
   variables:
     ENV: 'integ'
-    MICROSERVICE: 'backend'
-    OPENSHIFT_PROJECT_NAME: overlays-integ-backend
+    MICROSERVICE: 'document-crud'
+    OPENSHIFT_PROJECT_NAME: overlays-integ-document-crud
     OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
       changes:
-        - apps/backend/**/*
+        - apps/document-crud/**/*
         - packages/**/*
 
-deploy-web-prod:
+deploy-document-crud-prod:
   stage: deploy
   extends: .deploy-image
   variables:
     ENV: 'prod'
-    MICROSERVICE: 'web'
-    OPENSHIFT_PROJECT_NAME: overlays-prod-web
+    MICROSERVICE: 'document-crud'
+    OPENSHIFT_PROJECT_NAME: overlays-prod-document-crud
     OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - apps/web/**/*
+        - apps/document-crud/**/*
         - packages/**/*
 
-deploy-backend-prod:
+deploy-document-file-generator-integ:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'integ'
+    MICROSERVICE: 'document-file-generator'
+    OPENSHIFT_PROJECT_NAME: overlays-integ-document-file-generator
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-file-generator/**/*
+        - packages/**/*
+
+deploy-document-file-generator-prod:
   stage: deploy
   extends: .deploy-image
   variables:
     ENV: 'prod'
-    MICROSERVICE: 'backend'
-    OPENSHIFT_PROJECT_NAME: overlays-prod-backend
+    MICROSERVICE: 'document-file-generator'
+    OPENSHIFT_PROJECT_NAME: overlays-prod-document-file-generator
     OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
     APP_VERSION: '${CI_PIPELINE_IID}'
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - apps/backend/**/*
+        - apps/document-file-generator/**/*
+        - packages/**/*
+
+deploy-document-map-pool-integ:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'integ'
+    MICROSERVICE: 'document-map-pool'
+    OPENSHIFT_PROJECT_NAME: overlays-integ-document-map-pool
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-map-pool/**/*
+        - packages/**/*
+
+deploy-document-map-pool-prod:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'prod'
+    MICROSERVICE: 'document-map-pool'
+    OPENSHIFT_PROJECT_NAME: overlays-prod-document-map-pool
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-map-pool/**/*
+        - packages/**/*
+
+deploy-document-template-analyzer-integ:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'integ'
+    MICROSERVICE: 'document-template-analyzer'
+    OPENSHIFT_PROJECT_NAME: overlays-integ-document-template-analyzer
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - apps/document-template-analyzer/**/*
+        - packages/**/*
+
+deploy-document-template-analyzer-prod:
+  stage: deploy
+  extends: .deploy-image
+  variables:
+    ENV: 'prod'
+    MICROSERVICE: 'document-template-analyzer'
+    OPENSHIFT_PROJECT_NAME: overlays-prod-document-template-analyzer
+    OPENSHIFT_HOST: 'https://api.${DEPLOYMENT_MAIN_ENV}:6443'
+    APP_VERSION: '${CI_PIPELINE_IID}'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - apps/document-template-analyzer/**/*
         - packages/**/*

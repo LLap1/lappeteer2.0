@@ -1,21 +1,19 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
 import { Cluster } from 'puppeteer-cluster';
-import { join } from 'path';
 import packageJson from '../package.json';
 loadDotenv();
 
 export const configSchema = z.object({
   server: z.object({
     port: z.number(),
-    publicDir: z.string(),
   }),
   openApi: z.object({
     title: z.string(),
     version: z.string(),
     description: z.string(),
   }),
-  templateFile: z.object({
+  documentFileGenerator: z.object({
     url: z.string().url(),
   }),
   puppeteerDocumentCreateor: z.object({
@@ -34,26 +32,25 @@ export const configSchema = z.object({
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
-    port: Number(process.env.PORT ?? 3000),
-    publicDir: process.env.PUBLIC_DIR ?? join(process.cwd(), 'src', 'public'),
+    port: Number(process.env.PORT!),
   },
   openApi: {
-    title: process.env.OPEN_API_TITLE ?? packageJson.name,
-    version: process.env.OPEN_API_VERSION ?? packageJson.version,
-    description: process.env.OPEN_API_DESCRIPTION ?? packageJson.description,
+    title: packageJson.name,
+    version: packageJson.version,
+    description: packageJson.description,
   },
-  templateFile: {
-    url: process.env.TEMPLATE_FILE_URL ?? 'http://localhost:3002',
+  documentFileGenerator: {
+    url: process.env.DOCUMENT_FILE_GENERATOR_URL!,
   },
   puppeteerDocumentCreateor: {
-    mapPoolUrl: process.env.MAP_POOL_URL ?? 'http://localhost:8080',
+    mapPoolUrl: process.env.MAP_POOL_URL!,
     launchOptions: {
-      timeout: Number(process.env.PUPPETEER_TIMEOUT ?? 600000),
-      concurrency: Number(process.env.PUPPETEER_CONCURRENCY ?? Cluster.CONCURRENCY_CONTEXT),
-      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY ?? 20),
+      timeout: process.env.PUPPETEER_TIMEOUT ? Number(process.env.PUPPETEER_TIMEOUT) : undefined,
+      concurrency: Number(process.env.PUPPETEER_CONCURRENCY!),
+      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY!),
       puppeteerOptions: {
-        headless: Boolean(process.env.PUPPETEER_HEADLESS),
-        devtools: Boolean(process.env.PUPPETEER_DEVTOOLS ?? true),
+        headless: process.env.PUPPETEER_HEADLESS === 'true',
+        devtools: process.env.PUPPETEER_DEVTOOLS === 'true',
       },
     },
   },

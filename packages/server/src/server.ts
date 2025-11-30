@@ -1,35 +1,33 @@
 import type { AnyContractRouter } from '@orpc/contract';
 import { NestFactory } from '@nestjs/core';
-import { RootModule } from '@auto-document/nest/root.module';
 import { Type } from '@nestjs/common';
 import node from '@auto-document/open-telemetry/node';
 import { createLogger } from '@auto-document/logger';
 import { NestLoggerAdapter } from '@auto-document/logger/nest-adapter';
 import type { OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { generateOpenAPIDocument } from '@auto-document/orpc/open-api.docs';
+import { generateOpenAPIDocument } from '@auto-document/orpc/utils/open-api';
 
 export type ServerConfig = {
   server: {
     port: number;
-    publicDir: string;
   };
   openApi: OpenAPIGeneratorGenerateOptions;
 };
 
 export interface ServeOptions {
   config: ServerConfig;
-  rootRouter: AnyContractRouter;
-  modules: Type<any>[];
+  appRouter: AnyContractRouter;
+  appModule: Type<any>;
 }
 
-export async function runServer({ config, modules, rootRouter }: ServeOptions) {
-  node.start();
-
+export async function runServer({ config, appModule, appRouter }: ServeOptions) {
   const logger = createLogger();
   const nestLogger = new NestLoggerAdapter(logger);
-  const app = await NestFactory.create(RootModule.forRoot(config, ...modules));
-  const spec = await generateOpenAPIDocument(rootRouter, config.openApi);
+  const app = await NestFactory.create(appModule, {
+    bodyParser: false,
+  });
+  const spec = await generateOpenAPIDocument(appRouter, config.openApi);
   app.use(
     '/docs',
     apiReference({

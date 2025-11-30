@@ -1,11 +1,9 @@
 import { z } from 'zod/v4';
 import { TemplatePlaceholderSchema } from '@auto-document/types/template';
 
-export const CreateTemplateInputSchema = z
-  .instanceof(File)
-  .refine(file => file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation', {
-    message: 'File must be a PowerPoint presentation (.pptx)',
-  });
+export const CreateTemplateInputSchema = z.object({
+  file: z.file(),
+});
 
 export const CreateTemplateOutputSchema = z.object({
   id: z.string(),

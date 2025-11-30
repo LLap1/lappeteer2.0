@@ -3,8 +3,7 @@ import { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
 import { ConfigService } from '@nestjs/config';
 import { Config, config } from 'src/config';
-import { WindowActionSender } from 'src/models/control.model';
-import { CreateMapParams } from './map-creator.model';
+import { CreateMapParams, WindowActionSender } from './map-creator.model';
 import { chunk } from 'lodash';
 
 @Injectable()
@@ -69,6 +68,7 @@ export class MapCreatorService {
     params.geojson.forEach(
       async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
     );
+    console.log('waitForTilelayersToLoad');
     await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
     const dataUrl: string = await windowActionSender.send({ type: 'exportMap', params: { id: params.id } });
     await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });

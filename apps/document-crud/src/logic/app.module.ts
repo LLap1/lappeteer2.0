@@ -7,15 +7,16 @@ import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { Config } from '../config';
 import { OrpcClientModule } from '@auto-document/nest/orpc-client.module';
-import templateFileContract from '@auto-document/document-template-file/contract';
-import documentCreatorContract from '@auto-document/document-creator/contract';
+import templateAnalyzerRouter from '@auto-document/document-template-analyzer/router';
+import documentCreatorRouter from '@auto-document/document-creator/router';
 import { createRpcClient } from '@auto-document/orpc/clients/rpc';
+import { ORPCModule, onError } from '@orpc/nest';
 
-const templateFileClient = createRpcClient<typeof templateFileContract>(config.templateFile.url);
-const documentCreatorClient = createRpcClient<typeof documentCreatorContract>(config.documentCreator.url);
+const templateAnalyzerClient = createRpcClient<typeof templateAnalyzerRouter>(config.templateAnalyzer.url);
+const documentCreatorClient = createRpcClient<typeof documentCreatorRouter>(config.documentCreator.url);
 
 export const rootClient = {
-  templateFile: templateFileClient,
+  templateAnalyzer: templateAnalyzerClient,
   documentCreator: documentCreatorClient,
 };
 
@@ -36,6 +37,13 @@ export type Client = typeof rootClient;
       },
     }),
     OrpcClientModule.forRoot(rootClient),
+    ORPCModule.forRoot({
+      interceptors: [
+        onError(error => {
+          console.error(error);
+        }),
+      ],
+    }),
     TemplateModule,
     DocumentModule,
   ],

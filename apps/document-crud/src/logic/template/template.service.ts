@@ -1,16 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { TemplateFileService } from './template-file/template-file.service';
-import { TemplateMetadataType, TemplatePlaceholder } from './template-metadata/template-metadata.schema';
+import { TemplateFileStorageService } from './template-file-storage/template-file-storage.service';
+import { TemplateMetadataType } from './template-metadata/template-metadata.schema';
 import { TemplateMetadataService } from './template-metadata/template-metadata.service';
 import { OrpcClientService } from '@auto-document/nest/orpc-client.service';
-import type { Client } from '../root.client';
-import { GetTemplateInput, UpdateTemplateInput, UpdateTemplateOutput } from './template.router.schema';
-import { DeleteTemplateInput, GetTemplateOutput, ListTemplatesOutput } from './template.router.schema';
-import { DownloadTemplateInput, DownloadTemplateOutput } from './template.router.schema';
+import type { Client } from '../app.module';
+import {
+  DeleteTemplateInput,
+  DownloadTemplateInput,
+  DownloadTemplateOutput,
+  GetTemplateInput,
+  GetTemplateOutput,
+  ListTemplatesOutput,
+  UpdateTemplateInput,
+  UpdateTemplateOutput,
+} from './template.router.schema';
 @Injectable()
 export class TemplateService {
   constructor(
-    private readonly templateFileService: TemplateFileService,
+    private readonly templateFileService: TemplateFileStorageService,
     private readonly templateMetadataService: TemplateMetadataService,
     private readonly orpcClient: OrpcClientService<Client>,
   ) {}
@@ -24,7 +31,7 @@ export class TemplateService {
       placeholders: [],
     });
 
-    const placeholders = await this.orpcClient.client.templateFile.templateFile.extractParams({
+    const placeholders = await this.orpcClient.client.templateAnalyzer.extractParams({
       file: templateFile,
     });
 

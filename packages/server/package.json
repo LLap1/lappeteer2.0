@@ -27,6 +27,7 @@
     "@scalar/api-reference": "^1.40.0",
     "@scalar/nestjs-api-reference": "^1.0.8",
     "@trpc/client": "^11.5.1",
+    "express": "^5.1.0",
     "hono": "^4.10.6",
     "nest": "^0.1.6",
     "nestjs": "^0.0.1",

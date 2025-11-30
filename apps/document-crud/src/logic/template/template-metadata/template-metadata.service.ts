@@ -12,6 +12,7 @@ export class TemplateMetadataService {
 
   async create(templateMetadata: Omit<TemplateMetadataType, 'id'>): Promise<TemplateMetadataType> {
     const document = await this.templateMetadataModel.create(templateMetadata);
+
     return {
       id: document._id.toString(),
       name: document.name,

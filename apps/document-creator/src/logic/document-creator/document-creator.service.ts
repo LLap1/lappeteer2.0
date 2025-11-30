@@ -5,7 +5,7 @@ import { DocumentParamsTransformerService } from '../document-params-transformer
 import { zipFiles } from 'src/models/file.model';
 import type { RootClient } from '../app.module';
 
-type GenerateTemplatePlaceholderData = Parameters<RootClient['templateFile']['generate']>[0]['data'][number];
+type GenerateTemplatePlaceholderData = Parameters<RootClient['documentFileGenerator']['generate']>[0]['data'][number];
 
 @Injectable()
 export class DocumentCreatorService {
@@ -31,7 +31,7 @@ export class DocumentCreatorService {
     documentFileName: string,
     data: GenerateTemplatePlaceholderData[],
   ): Promise<File> {
-    return await this.orpcClient.client.templateFile.generate({
+    return await this.orpcClient.client.documentFileGenerator.generate({
       file: templateFile,
       documentFileName,
       data: data,

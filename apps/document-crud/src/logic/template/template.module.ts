@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TemplateService } from './template.service';
-import { TemplateFileStorageModule } from './template-file/template-file.module';
+import { TemplateFileStorageModule } from './template-file-storage/template-file-storage.module';
 import { TemplateMetadataModule } from './template-metadata/template-metadata.module';
 import { TemplateController } from './template.controller';
 

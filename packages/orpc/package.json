@@ -10,8 +10,7 @@
   },
   "exports": {
     "./clients/*": "./src/clients/*.client.ts",
-    "./handlers/*": "./src/handlers/*.handler.ts",
-    "./open-api.docs": "./src/open-api.docs.ts"
+    "./utils/*": "./src/utils/*.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

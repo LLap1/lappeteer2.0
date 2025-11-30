@@ -1,7 +1,8 @@
 import documents from '../logic/document-creator/documents.router';
+import { oc } from '@orpc/contract';
 
-const root = {
+const appRouter = oc.router({
   documents,
-};
+});
 
-export default root;
+export default appRouter;

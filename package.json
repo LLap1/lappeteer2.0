@@ -10,12 +10,14 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "debug": "turbo run debug"
+    "debug": "turbo run debug",
+    "generate:ci": "node scripts/generate-gitlab-ci.js"
   },
   "dependencies": {
     "@mirite/zod-to-mongoose": "^0.3.1",
     "@nestjs/microservices": "^11.1.9",
     "@orpc/client": "^1.11.3",
+    "@orpc/zod": "^1.12.0",
     "@scalar/mock-server": "^0.7.2",
     "@types/bun": "^1.3.2",
     "@types/lodash": "^4.17.20",
