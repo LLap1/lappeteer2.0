@@ -1,28 +1,22 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
 import { Cluster } from 'puppeteer-cluster';
-
+import { join } from 'path';
+import packageJson from '../package.json';
 loadDotenv();
-
-const documentDataCreatorTypeSchema = z.enum(['puppeteer']);
-type DocumentDataCreatorType = z.infer<typeof documentDataCreatorTypeSchema>;
 
 export const configSchema = z.object({
   server: z.object({
     port: z.number(),
+    publicDir: z.string(),
   }),
-  s3: z.object({
-    accessKeyId: z.string(),
-    secretAccessKey: z.string(),
-    region: z.string(),
-    endpoint: z.string(),
-    bucket: z.string(),
+  openApi: z.object({
+    title: z.string(),
+    version: z.string(),
+    description: z.string(),
   }),
-  mongodb: z.object({
-    uri: z.string().url(),
-  }),
-  documentDataCreator: z.object({
-    type: documentDataCreatorTypeSchema,
+  templateFile: z.object({
+    url: z.string().url(),
   }),
   puppeteerDocumentCreateor: z.object({
     mapPoolUrl: z.string().url(),
@@ -41,21 +35,15 @@ export const configSchema = z.object({
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT ?? 3000),
+    publicDir: process.env.PUBLIC_DIR ?? join(process.cwd(), 'src', 'public'),
   },
-  s3: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '4Um3zQvBYUaftOMG',
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '6VJUXAC69Q6W5YbANvKpw3yReQ7M2YI1OJkyDrhP',
-    region: process.env.S3_REGION ?? 'region',
-    endpoint: process.env.S3_ENDPOINT ?? 'https://s3.tebi.io',
-    bucket: process.env.S3_BUCKET ?? 'lapi',
+  openApi: {
+    title: process.env.OPEN_API_TITLE ?? packageJson.name,
+    version: process.env.OPEN_API_VERSION ?? packageJson.version,
+    description: process.env.OPEN_API_DESCRIPTION ?? packageJson.description,
   },
-  mongodb: {
-    uri:
-      process.env.MONGODB_URI ??
-      'mongodb+srv://lapidotyonatan:n49E1ZQDy9ViuAM5@document.lfs17r0.mongodb.net/?appName=Document',
-  },
-  documentDataCreator: {
-    type: (process.env.DOCUMENT_DATA_CREATOR_TYPE as DocumentDataCreatorType) ?? 'puppeteer',
+  templateFile: {
+    url: process.env.TEMPLATE_FILE_URL ?? 'http://localhost:3002',
   },
   puppeteerDocumentCreateor: {
     mapPoolUrl: process.env.MAP_POOL_URL ?? 'http://localhost:8080',

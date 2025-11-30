@@ -1,233 +1,205 @@
-## Zohan Monorepo Template
+# Auto Document - Document Generation Platform
 
-Turborepo-based monorepo template with:
+A monorepo for an automated document generation system built with microservices architecture, using oRPC for type-safe inter-service communication.
 
-- **Frontend**: React + Vite + Tailwind + shadcn/ui
-- **Routing**: TanStack Router (file-based via Vite plugin)
-- **Data**: tRPC v11 + TanStack Query v5
-- **Backend**: Express + tRPC (with `superjson`)
+## Tech Stack
 
-### Requirements
+- **Runtime**: Bun
+- **Backend Framework**: NestJS
+- **RPC Framework**: oRPC (OpenRPC)
+- **Monorepo**: Turborepo + pnpm workspaces
+- **Database**: MongoDB (via Mongoose)
+- **Storage**: S3-compatible storage
+- **Document Processing**: Python scripts for PowerPoint manipulation
 
-- Node.js 18+
+## Requirements
+
+- Bun 1.3.2+
 - pnpm 9+
+- Python 3+ (for document processing)
+- MongoDB (for template metadata)
+- S3-compatible storage (for template files)
 
-### Install
+## Installation
 
 ```bash
 pnpm install
 ```
 
-### Develop
+## Development
 
-Run all apps with Turbo:
+Run all services with Turbo:
 
 ```bash
 pnpm dev
 ```
 
-Or run individually:
+Or run services individually:
 
 ```bash
-# API (Express + tRPC) on http://localhost:3000
-pnpm --filter @auto-document/api dev
+# Document Creator (port 3000)
+pnpm --filter @auto-document/document-creator dev
 
-# Web (Vite) on http://localhost:5173 (proxies /trpc to :3000)
-pnpm --filter @auto-document/web dev
+# Document Template CRUD (port 3001)
+pnpm --filter @auto-document/document-template-crud dev
+
+# Document Template File (port 3002)
+pnpm --filter @auto-document/document-template-file dev
 ```
 
-Vite proxy is configured for `/trpc` and `/api` to `http://localhost:3000` in `apps/web/vite.config.ts`.
+## Project Structure
 
-### Build
+### Apps
+
+#### `apps/document-creator`
+
+Main orchestration service that coordinates document creation.
+
+- **Port**: 3000 (default)
+- **Purpose**: Receives document creation requests, fetches template metadata, transforms parameters, and generates multiple documents
+- **Dependencies**: `document-template-file`, `document-template-crud`
+- **Routes**: `/documents/create`
+
+#### `apps/document-template-crud`
+
+Service for managing template metadata and file operations.
+
+- **Port**: 3001 (default)
+- **Purpose**: CRUD operations for template metadata (stored in MongoDB) and template file downloads (from S3)
+- **Routes**:
+  - `/templates` - Template metadata operations (create, get, list, update, delete)
+  - `/templates/:id/download` - Download template files
+
+#### `apps/document-template-file`
+
+Service for document generation and parameter extraction.
+
+- **Port**: 3002 (default)
+- **Purpose**: Generates PowerPoint documents from templates and extracts placeholder parameters
+- **Routes**:
+  - `/generate` - Generate documents from templates
+  - `/extract-params` - Extract placeholder parameters from templates
+
+#### `apps/document-map-pool`
+
+Frontend application for managing map pools (used for map placeholders in documents).
+
+### Packages
+
+#### `packages/orpc`
+
+Shared oRPC utilities:
+
+- `clients/rpc` - RPC client creation
+- `handlers/*` - Request handlers for oRPC
+
+#### `packages/nest`
+
+Shared NestJS modules and services:
+
+- `orpc-client` - oRPC client service for dependency injection
+- `s3` - S3 file storage service
+- `process` - Process execution service
+- `root` - Root module configuration
+
+#### `packages/server`
+
+Server utilities for running NestJS apps with Hono and Bun.
+
+## Architecture
+
+### Service Communication
+
+Services communicate via oRPC clients:
+
+- Each service creates typed clients for other services it depends on
+- Clients are merged and injected via `OrpcClientService` in NestJS
+- Type safety is maintained through contract exports
+
+### Document Generation Flow
+
+1. **Client** → `document-creator`: Request document creation with template ID and data
+2. **document-creator** → `document-template-crud`: Fetch template metadata (placeholders)
+3. **document-creator**: Transform input data with template placeholders
+4. **document-creator** → `document-template-file`: Generate documents for each data set
+5. **document-template-file** → `document-template-crud`: Download template file
+6. **document-template-file**: Process template with Python scripts
+7. **document-creator**: Zip all generated documents and return
+
+### Template Structure
+
+Templates are PowerPoint files (.pptx) with placeholders that can be:
+
+- **Text**: Simple text replacement
+- **Image**: Image URL replacement
+- **Map**: Map generation with GeoJSON data
+
+Each template has metadata stored in MongoDB:
+
+- Template ID
+- Name
+- File path (S3)
+- Placeholders array (key, type, width, height)
+
+## Environment Variables
+
+### document-creator
+
+```env
+PORT=3000
+TEMPLATE_FILE_URL=http://localhost:3002
+TEMPLATE_CRUD_URL=http://localhost:3001
+MAP_POOL_URL=http://localhost:8080
+PUPPETEER_TIMEOUT=600000
+PUPPETEER_CONCURRENCY=2
+PUPPETEER_MAX_CONCURRENCY=20
+PUPPETEER_HEADLESS=true
+PUPPETEER_DEVTOOLS=false
+```
+
+### document-template-crud
+
+```env
+PORT=3001
+MONGODB_URI=mongodb://localhost:27017/documents
+S3_ACCESS_KEY_ID=your-access-key
+S3_SECRET_ACCESS_KEY=your-secret-key
+S3_REGION=region
+S3_ENDPOINT=https://s3.example.com
+S3_BUCKET=bucket-name
+```
+
+### document-template-file
+
+```env
+PORT=3002
+TEMPLATE_CRUD_URL=http://localhost:3001
+```
+
+## API Documentation
+
+Each service exposes OpenAPI documentation at `/docs` (Scalar UI) and OpenAPI spec at `/openapi-spec.json`.
+
+## Build
 
 ```bash
 pnpm build
 ```
 
-### Workspace layout
+## Scripts
 
-- `apps/api`: Express+tRPC server, Drizzle-ready. Serves tRPC at `/trpc` and can serve static files from `public/`.
-- `apps/web`: React + Vite app. TanStack Router file-based routing is enabled via `@tanstack/router-vite-plugin`.
-- `packages/ui`: Shared UI library (shadcn/ui based) exposed under `@auto-document/ui`.
-- `packages/eslint-config`, `packages/typescript-config`: Shared config.
+- `pnpm dev` - Run all services in development mode
+- `pnpm build` - Build all services
+- `pnpm debug` - Run services with debugger attached
 
----
+## Type Safety
 
-## Frontend: TanStack Router (file-based)
+The project uses TypeScript with strict type checking. oRPC contracts ensure type safety across service boundaries:
 
-File-based routing is enabled via the Vite plugin. The route tree is generated to `apps/web/src/routeTree.gen.ts`. The root route lives at `apps/web/src/routes/__root.tsx` and the home page at `apps/web/src/routes/index.tsx`.
+- Each service exports its contract from `contract.ts`
+- Clients are created with contract types: `createRpcClient<typeof contract>(url)`
+- Services inject typed clients via `OrpcClientService<RootClient>`
 
-#### Add a new route
+## License
 
-1. Create a file in `apps/web/src/routes`. For an About page:
-
-```tsx
-// apps/web/src/routes/about.tsx
-import { createFileRoute } from '@tanstack/react-router';
-
-function AboutPage() {
-  return <div className="p-6 text-xl">About</div>;
-}
-
-export const Route = createFileRoute('/about')({
-  component: AboutPage,
-});
-```
-
-2. Navigate with typed links:
-
-```tsx
-import { Link } from '@tanstack/react-router';
-
-export const Nav = () => (
-  <nav className="flex gap-4 p-4">
-    <Link to="/">Home</Link>
-    <Link to="/about">About</Link>
-  </nav>
-);
-```
-
-3. Dynamic params (file name `[id].tsx`):
-
-```tsx
-// apps/web/src/routes/posts/[id].tsx
-import { createFileRoute } from '@tanstack/react-router';
-
-export const Route = createFileRoute('/posts/$id')({
-  component: () => {
-    const { id } = Route.useParams();
-    return <div className="p-6">Post {id}</div>;
-  },
-});
-```
-
-Devtools are enabled via `TanStackRouterDevtools` in `__root.tsx`.
-
-References: [TanStack Router — File-based routing](https://tanstack.com/router/latest/docs/framework/react/guide/file-based-routing), [Creating a router](https://tanstack.com/router/latest/docs/framework/react/guide/creating-a-router)
-
----
-
-## Backend: tRPC v11
-
-tRPC server is mounted at `/trpc` in `apps/api/index.ts` and uses `superjson` via `initTRPC(...).create({ transformer: superjson })`.
-
-#### Add a new router with a query and mutation
-
-```ts
-// apps/api/trpc/routers/user.ts
-import { z } from 'zod';
-import { publicProcedure, router } from '../init';
-
-export const userRouter = router({
-  byId: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
-    return { id: input.id, name: 'Ada Lovelace' };
-  }),
-
-  create: publicProcedure.input(z.object({ name: z.string().min(1) })).mutation(async ({ input }) => {
-    return { id: 'new-id', name: input.name };
-  }),
-});
-```
-
-Wire it into the app router:
-
-```ts
-// apps/api/trpc/routers/_app.ts
-import { router } from '../init';
-import { exampleRouter } from './example';
-import { userRouter } from './user';
-
-export const appRouter = router({
-  example: exampleRouter,
-  user: userRouter,
-});
-
-export type AppRouter = typeof appRouter;
-```
-
----
-
-## Frontend: tRPC + TanStack Query (options proxy)
-
-Provide the `QueryClient` and router in `apps/web/src/App.tsx` (already wired):
-
-```tsx
-// apps/web/src/App.tsx
-import { QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { router } from './router';
-import { queryClient } from './trpc/client';
-
-export const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router} />
-  </QueryClientProvider>
-);
-```
-
-#### Use a query (React Query v5)
-
-```tsx
-import { useQuery } from '@tanstack/react-query';
-import { trpc } from '@/trpc/client';
-
-export const UserCard = ({ id }: { id: string }) => {
-  const userQuery = useQuery(trpc.user.byId.queryOptions({ id }));
-
-  if (userQuery.isLoading) return <div>Loading…</div>;
-  if (userQuery.error) return <div>Error</div>;
-
-  return <div className="p-4">{userQuery.data.name}</div>;
-};
-```
-
-#### Use a mutation
-
-```tsx
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { trpc } from '@/trpc/client';
-
-export const CreateUserButton = () => {
-  const queryClient = useQueryClient();
-  const createUser = useMutation(
-    trpc.user.create.mutationOptions({
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.user.byId.getQueryKey({ id: 'new-id' }) }),
-    }),
-  );
-
-  const handleClick = () => createUser.mutate({ name: 'New User' });
-
-  return (
-    <button className="btn" onClick={handleClick} disabled={createUser.isPending}>
-      {createUser.isPending ? 'Creating…' : 'Create User'}
-    </button>
-  );
-};
-```
-
-Notes:
-
-- The options proxy (`createTRPCOptionsProxy`) produces strongly typed `queryOptions`/`mutationOptions` for direct use with TanStack Query’s `useQuery`/`useMutation`.
-- The API base is `/trpc` (proxied in dev to the API server).
-
-References: [tRPC + TanStack Query (v11) setup](https://trpc.io/docs/client/tanstack-react-query/setup), [httpBatchLink](https://trpc.io/docs/client/links/httpBatchLink), [TanStack Query v5](https://tanstack.com/query/latest/docs/react/overview)
-
----
-
-## Environment
-
-Backend expects `.env` in `apps/api` (example):
-
-```env
-PORT=3000
-DATABASE_URL="postgres://user:pass@host:5432/db"
-NODE_ENV=development
-```
-
----
-
-## Scripts (common)
-
-- Root: `pnpm dev`, `pnpm build`
-- API: `pnpm --filter @auto-document/api dev | build`
-- Web: `pnpm --filter @auto-document/web dev | build | preview`
+Private

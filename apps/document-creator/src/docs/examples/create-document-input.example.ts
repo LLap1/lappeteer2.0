@@ -1,6 +1,6 @@
 import { Feature, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import { CreateDocumentsInput } from 'src/orpc/routers/documents/documents.router.schema';
+import { CreateDocumentsInput } from '../../logic/document-creator/documents.router.schema';
 
 const inlandCities = [
   [52.52, 13.405], // Berlin
@@ -155,7 +155,8 @@ const generateRandomMap = (mapKey: string) => {
 };
 
 export const createDocumentInputExample: CreateDocumentsInput = {
-  templateFileName: 'sample.pptx',
+  templateFile: new File([], 'sample.pptx'),
+  placeholders: [],
   data: Array.from({ length: 300 }, (_, index) => ({
     placeholderData: [
       generateRandomMap('מפה'),

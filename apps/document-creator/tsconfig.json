@@ -24,7 +24,7 @@
   },
   "references": [
     {
-      "path": "../controlled-map"
+      "path": "../document-map-pool"
     }
   ]
 }

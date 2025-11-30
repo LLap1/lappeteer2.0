@@ -16,15 +16,16 @@ export class MapCreatorService {
     this.config = this.configService.get<Config['puppeteerDocumentCreateor']>('puppeteerDocumentCreateor')!;
   }
 
-  async create(params: CreateMapParams[]): Promise<{ id: string; base64: string }[]> {
+  async create(params: CreateMapParams[]): Promise<{ id: string; dataUrl: string }[]> {
     if (this.cluster === undefined) {
+      console.log('launching cluster', this.config.launchOptions);
       this.cluster = await Cluster.launch(this.config.launchOptions);
     }
 
     const chunks = chunk(params, 100);
 
     const maps = (
-      await Promise.all<{ id: string; base64: string }[]>(
+      await Promise.all<{ id: string; dataUrl: string }[]>(
         chunks.map(async chunk => {
           return await this.cluster!.execute(async ({ page }: { page: Page }) => {
             const actionSender = new WindowActionSender(page);
@@ -47,7 +48,7 @@ export class MapCreatorService {
   private async createMapCanvases(
     controlSender: WindowActionSender,
     params: CreateMapParams[],
-  ): Promise<{ id: string; base64: string }[]> {
+  ): Promise<{ id: string; dataUrl: string }[]> {
     const mapTasks = params.map(param => this.createMap(controlSender, param));
     const maps = await Promise.all(mapTasks);
     return maps;
@@ -56,7 +57,7 @@ export class MapCreatorService {
   private async createMap(
     windowActionSender: WindowActionSender,
     params: CreateMapParams,
-  ): Promise<{ id: string; base64: string }> {
+  ): Promise<{ id: string; dataUrl: string }> {
     await windowActionSender.send({
       type: 'setView',
       params: { id: params.id, center: params.center, zoom: params.zoom },
@@ -69,12 +70,12 @@ export class MapCreatorService {
       async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
     );
     await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
-    const screenshotDataUrl: string = await windowActionSender.send({ type: 'exportMap', params: { id: params.id } });
+    const dataUrl: string = await windowActionSender.send({ type: 'exportMap', params: { id: params.id } });
     await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
-    const base64 = screenshotDataUrl.split(',')[1];
+
     return {
       id: params.id,
-      base64,
+      dataUrl,
     };
   }
 }

@@ -1,23 +1,17 @@
 import { Module } from '@nestjs/common';
+import { DocumentCreatorModule } from './document-creator/document-creator.module';
+import { createOpenApiClient } from '@auto-document/orpc/clients/open-api';
+import { appRouter } from '@auto-document/document-template-file/contract';
 import { config } from '../config';
-import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { DocumentModule } from './document/document.module';
-import { TemplateFileStorageModule } from './template/template-file/template-file.module';
-import { TemplateModule } from './template/template.module';
-import { FileStorageModule } from './file/file-storage.module';
-import { ProcessModule } from './process/process.module';
-import { S3Module } from './s3/s3.module';
+import { OrpcClientModule } from '@auto-document/nest/orpc-client.module';
 
+const rootClient = {
+  templateFile: createOpenApiClient<typeof appRouter>(config.templateFile.url, appRouter),
+};
+
+export type RootClient = typeof rootClient;
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      validate: () => config,
-    }),
-    MongooseModule.forRoot(config.mongodb.uri),
-    DocumentModule,
-    TemplateModule,
-  ],
+  imports: [DocumentCreatorModule, OrpcClientModule.forRoot(rootClient)],
+  exports: [DocumentCreatorModule],
 })
 export class AppModule {}

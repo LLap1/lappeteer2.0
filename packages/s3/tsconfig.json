@@ -1,9 +1,0 @@
-{
-  "extends": "@treasure/typescript-config/node.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "declaration": true,
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"]
-}
