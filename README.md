@@ -38,7 +38,7 @@ Or run services individually:
 
 ```bash
 # Document Creator (port 3000)
-pnpm --filter @auto-document/document-creator dev
+pnpm --filter @auto-document/document-map-creator dev
 
 # Document Template CRUD (port 3001)
 pnpm --filter @auto-document/document-template-crud dev

@@ -1,5 +1,6 @@
 import { Feature, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
+import type { CreateDocumentsInput, CreateDocumentMapPlaceholderData } from '../../documents/documents.router.schema';
 
 const inlandCities = [
   [52.52, 13.405], // Berlin
@@ -114,7 +115,7 @@ const createPolygon = (
   };
 };
 
-const generateRandomMap = (mapKey: string) => {
+function generateRandomMap(mapKey: string): CreateDocumentMapPlaceholderData {
   const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)];
   const randomOffsetLat = (Math.random() - 0.5) * 0.3;
   const randomOffsetLng = (Math.random() - 0.5) * 0.3;
@@ -141,20 +142,18 @@ const generateRandomMap = (mapKey: string) => {
 
   return {
     type: 'map' as const,
-    id: null,
     key: mapKey,
-    width: null,
-    height: null,
     value: {
       center,
       zoom,
       geojson: [polygon1, polygon2],
     },
   };
-};
+}
 
-export const createDocumentInputExample = {
-  templateId: '692aa09678436255ac85889b',
+export const createDocumentInputExample: CreateDocumentsInput = {
+  templateId: '692ea2e9564a0840eb8d2cf0',
+  zipFileName: 'documents.zip',
   data: Array.from({ length: 300 }, (_, index) => ({
     placeholderData: [
       generateRandomMap('מפה'),
@@ -162,17 +161,11 @@ export const createDocumentInputExample = {
         type: 'text',
         key: 'כותרת',
         value: `World Maps ${index + 1}`,
-        id: null,
-        width: null,
-        height: null,
       },
       {
         type: 'text',
         key: 'תיאור',
         value: `This is a description of the world maps document ${index + 1}`,
-        id: null,
-        width: null,
-        height: null,
       },
     ],
     filename: `world_maps_${index + 1}.pptx`,

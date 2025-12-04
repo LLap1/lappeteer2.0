@@ -1,6 +1,6 @@
-import { AppModule } from './logic/app.module';
+import { AppModule } from './app.module';
 import { config } from './config';
-import appRouter from './logic/app.router';
+import appRouter from './app.router';
 import { runServer } from '@auto-document/server/server';
 
 runServer({

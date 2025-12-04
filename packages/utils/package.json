@@ -5,12 +5,16 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    "./*": "./src/*.ts"
   },
   "devDependencies": {
+    "@auto-document/types": "workspace:*",
     "@auto-document/typescript-config": "workspace:*",
+    "@types/archiver": "^7.0.0",
     "@types/node": "^22.15.30",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1"
   }
 }
-

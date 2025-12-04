@@ -13,6 +13,9 @@
     "debug": "turbo run debug",
     "generate:ci": "node scripts/generate-gitlab-ci.js"
   },
+  "exports": {
+    "./router": "./src/app.router.ts"
+  },
   "dependencies": {
     "@mirite/zod-to-mongoose": "^0.3.1",
     "@nestjs/microservices": "^11.1.9",

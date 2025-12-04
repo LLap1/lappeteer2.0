@@ -5,10 +5,10 @@ loadDotenv();
 
 export const configSchema = z.object({
   server: z.object({
-    port: z.number(),
+    port: z.coerce.number(),
   }),
   maps: z.object({
-    maxParallelMaps: z.number(),
+    maxParallelMaps: z.coerce.number(),
   }),
 });
 

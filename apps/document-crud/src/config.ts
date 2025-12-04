@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
-import { CreateDocumentsInputSchema } from './logic/document/documents.router.schema';
+import { CreateDocumentsInputSchema } from './documents/documents.router.schema';
 import packageJson from '../package.json';
 
 loadDotenv();
 
 export const configSchema = z.object({
   server: z.object({
-    port: z.number(),
+    port: z.coerce.number(),
   }),
   openApi: z.object({
     title: z.string(),
@@ -15,11 +15,11 @@ export const configSchema = z.object({
     description: z.string(),
     commonSchemas: z.record(z.string(), z.object({ schema: z.any() })),
   }),
-  templateAnalyzer: z.object({
-    url: z.string().url(),
+  documentProcessor: z.object({
+    url: z.url(),
   }),
-  documentCreator: z.object({
-    url: z.string().url(),
+  documentMapCreator: z.object({
+    url: z.url(),
   }),
   s3: z.object({
     accessKeyId: z.string(),
@@ -29,7 +29,7 @@ export const configSchema = z.object({
     bucket: z.string(),
   }),
   mongodb: z.object({
-    uri: z.string().url(),
+    uri: z.url(),
   }),
 });
 
@@ -45,11 +45,11 @@ const templatedConfig: z.infer<typeof configSchema> = {
       CreateDocumentsInput: { schema: CreateDocumentsInputSchema },
     },
   },
-  templateAnalyzer: {
-    url: process.env.TEMPLATE_ANALYZER_URL!,
+  documentProcessor: {
+    url: process.env.DOCUMENT_PROCESSOR!,
   },
-  documentCreator: {
-    url: process.env.DOCUMENT_CREATOR_URL!,
+  documentMapCreator: {
+    url: process.env.DOCUMENT_MAP_CREATOR_URL!,
   },
   s3: {
     accessKeyId: process.env.S3_ACCESS_KEY_ID!,

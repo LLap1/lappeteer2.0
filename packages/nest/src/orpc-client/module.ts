@@ -1,6 +1,7 @@
 import { type DynamicModule } from '@nestjs/common';
-import { OrpcClientService } from './service';
 import type { ContractRouterClient } from '@orpc/contract';
+
+export const ORPC_CLIENT = 'ORPC_CLIENT_TOKEN';
 
 export class OrpcClientModule {
   static forRoot(rootClient: ContractRouterClient<any>): DynamicModule {
@@ -9,13 +10,13 @@ export class OrpcClientModule {
       global: true,
       providers: [
         {
-          provide: OrpcClientService,
+          provide: ORPC_CLIENT,
           useFactory: () => {
-            return new OrpcClientService(rootClient);
+            return rootClient;
           },
         },
       ],
-      exports: [OrpcClientService],
+      exports: [ORPC_CLIENT],
     };
   }
 }
