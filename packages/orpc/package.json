@@ -21,7 +21,6 @@
     "@orpc/server": "^1.11.3",
     "@orpc/standard-server": "^1.11.3",
     "@orpc/zod": "^1.11.3",
-    "@trpc/client": "^11.5.1",
     "zod": "^4.1.11"
   },
   "peerDependencies": {

@@ -8,7 +8,6 @@ export class WindowActionSender {
 
   async send<T extends WindowActions['type']>(action: WindowAction<T>): Promise<any> {
     const result = await this.page.evaluate((action: WindowActions) => {
-      console.log('evaluating action', action.type, window[action.type]);
       return window[action.type](action.params);
     }, action);
     return result as never;

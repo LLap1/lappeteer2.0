@@ -12,8 +12,6 @@ import documentMapCreatorRouter from '@auto-document/document-map-creator/router
 import { createOpenApiClient } from '@auto-document/orpc/clients/open-api';
 import { ORPCModule, onError } from '@orpc/nest';
 import { ContractRouterClient } from '@orpc/contract';
-import { OtelModuleConfig } from '@auto-document/nest/open-telemetry.module';
-import { OpenTelemetryModule } from 'nestjs-otel';
 
 export const rootClient: ContractRouterClient<{
   documentProcessor: typeof documentProcessorRouter;
@@ -53,7 +51,6 @@ export type Client = typeof rootClient;
         }),
       ],
     }),
-    OpenTelemetryModule.forRoot(OtelModuleConfig),
     TemplateModule,
     DocumentsModule,
   ],

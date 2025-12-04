@@ -14,6 +14,7 @@ const InnerMap = ({ id }: { id: string }) => {
   }, [dispatch, map]);
   return <></>;
 };
+
 export const ControlledMap = ({ id, width, height }: { id: string; width: number; height: number }) => {
   return (
     <MapContainer id={id} trackResize={true} zoomControl={false} style={{ width: `${width}px`, height: `${height}px` }}>

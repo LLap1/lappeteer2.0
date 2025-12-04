@@ -3,8 +3,7 @@ import { DocumentMapCreatorModule } from './document-map-creator/document-map-cr
 import { config } from './config';
 import { onError, ORPCModule } from '@orpc/nest';
 import { ConfigModule } from '@nestjs/config';
-import { OtelModuleConfig } from '@auto-document/nest/open-telemetry.module';
-import { OpenTelemetryModule } from 'nestjs-otel';
+
 @Module({
   imports: [
     DocumentMapCreatorModule,
@@ -19,7 +18,6 @@ import { OpenTelemetryModule } from 'nestjs-otel';
         }),
       ],
     }),
-    OpenTelemetryModule.forRoot(OtelModuleConfig),
   ],
 })
 export class AppModule {}

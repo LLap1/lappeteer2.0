@@ -17,6 +17,7 @@ export const configSchema = z.object({
     url: z.string().url(),
   }),
   MapCreator: z.object({
+    orthoTileLayerUrl: z.url(),
     mapPoolUrl: z.string().url(),
     launchOptions: z.object({
       timeout: z.coerce.number().optional(),
@@ -44,6 +45,7 @@ const templatedConfig: z.infer<typeof configSchema> = {
     url: process.env.DOCUMENT_FILE_GENERATOR_URL!,
   },
   MapCreator: {
+    orthoTileLayerUrl: process.env.ORTHO_TILE_LAYER_URL!,
     mapPoolUrl: process.env.MAP_POOL_URL!,
     launchOptions: {
       timeout: process.env.PUPPETEER_TIMEOUT ? Number(process.env.PUPPETEER_TIMEOUT) : undefined,

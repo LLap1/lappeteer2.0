@@ -12,9 +12,7 @@
     "./server": "./src/server.ts"
   },
   "dependencies": {
-    "@auto-document/logger": "workspace:*",
     "@auto-document/nest": "workspace:*",
-    "@auto-document/open-telemetry": "workspace:*",
     "@auto-document/orpc": "workspace:*",
     "@nestjs/common": "^11.1.9",
     "@nestjs/core": "^11.1.9",
@@ -26,11 +24,6 @@
     "@orpc/zod": "^1.11.3",
     "@scalar/api-reference": "^1.40.0",
     "@scalar/nestjs-api-reference": "^1.0.8",
-    "@trpc/client": "^11.5.1",
-    "express": "^5.1.0",
-    "hono": "^4.10.6",
-    "nest": "^0.1.6",
-    "nestjs": "^0.0.1",
     "zod": "^4.1.11"
   },
   "peerDependencies": {

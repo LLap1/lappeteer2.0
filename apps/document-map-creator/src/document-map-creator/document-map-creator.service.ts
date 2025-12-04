@@ -21,7 +21,6 @@ export class DocumentMapCreatorService {
   @Span()
   async create(params: CreateMapsInput): Promise<CreateMapsOutput> {
     if (this.cluster === undefined) {
-      console.log('launching cluster', this.config.launchOptions);
       this.cluster = await Cluster.launch(this.config.launchOptions);
     }
 
@@ -65,10 +64,12 @@ export class DocumentMapCreatorService {
       type: 'setView',
       params: { id: params.id, center: params.center, zoom: params.zoom },
     });
+
     await windowActionSender.send({
       type: 'addTileLayer',
       params: { id: params.id, url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
     });
+
     params.geojson.forEach(
       async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
     );

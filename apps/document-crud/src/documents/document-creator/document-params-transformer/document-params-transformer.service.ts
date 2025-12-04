@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { of, map, firstValueFrom } from 'rxjs';
+import { of, map, firstValueFrom, switchMap } from 'rxjs';
 import type { CreateDocumentsInput } from '../../documents.router.schema';
 import type { TemplatePlaceholder } from '@auto-document/types/document';
 import type { Client } from '../../../app.module';
@@ -65,17 +65,19 @@ export class DocumentParamsTransformerService {
       .map(data =>
         data.placeholderData
           .filter(placeholder => placeholder.type === 'map')
-          .map(placeholder => ({
-            // @ts-ignore
-            id: placeholder.id,
-            // @ts-ignore
-            width: placeholder.width,
-            // @ts-ignore
-            height: placeholder.height,
-            center: placeholder.value.center,
-            zoom: placeholder.value.zoom,
-            geojson: placeholder.value.geojson,
-          })),
+          .map(placeholder => {
+            return {
+              // @ts-ignore
+              id: placeholder.id,
+              // @ts-ignore
+              width: placeholder.width,
+              // @ts-ignore
+              height: placeholder.height,
+              center: placeholder.value.center,
+              zoom: placeholder.value.zoom,
+              geojson: placeholder.value.geojson,
+            };
+          }),
       )
       .flat();
     const mapData = await this.orpcClient.documentMapCreator.create(mapParams);
