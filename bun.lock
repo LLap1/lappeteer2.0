@@ -184,6 +184,7 @@
         "@nestjs/common": "^11.1.7",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.9",
+        "@nestjs/mongoose": "^11.0.3",
         "@nestjs/serve-static": "^5.0.4",
         "@nestjs/swagger": "^11.2.3",
         "@orpc/nest": "^1.11.3",
@@ -250,7 +251,7 @@
       "name": "@auto-document/types",
       "version": "0.0.0",
       "dependencies": {
-        "@types/leaflet": "^1.9.8",
+        "@types/leaflet": "^1.9.21",
         "geojson": "^0.5.0",
         "leaflet": "^1.9.4",
       },

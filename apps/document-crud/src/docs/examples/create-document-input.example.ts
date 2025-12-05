@@ -152,9 +152,9 @@ function generateRandomMap(mapKey: string): CreateDocumentMapPlaceholderData {
 }
 
 export const createDocumentInputExample: CreateDocumentsInput = {
-  templateId: '692ea2e9564a0840eb8d2cf0',
+  templateId: '6932a124ea872042221b0f1a',
   zipFileName: 'documents.zip',
-  data: Array.from({ length: 300 }, (_, index) => ({
+  data: Array.from({ length: 40 }, (_, index) => ({
     placeholderData: [
       generateRandomMap('מפה'),
       {

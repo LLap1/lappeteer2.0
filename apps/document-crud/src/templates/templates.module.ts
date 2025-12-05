@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TemplateService } from './templates.service';
-import { TemplateFileStorageModule } from './template-file-storage/template-file-storage.module';
 import { TemplateMetadataModule } from './template-metadata/template-metadata.module';
 import { TemplatesController } from './templates.controller';
+import { FileStorageModule } from '@auto-document/nest/file.module';
 
 @Module({
-  imports: [TemplateFileStorageModule, TemplateMetadataModule],
+  imports: [FileStorageModule, TemplateMetadataModule],
   providers: [TemplateService],
   exports: [TemplateService],
   controllers: [TemplatesController],

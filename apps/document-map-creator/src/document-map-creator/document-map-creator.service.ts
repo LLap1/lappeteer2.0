@@ -75,12 +75,15 @@ export class DocumentMapCreatorService {
     );
 
     await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
-    const dataUrl: Base64DataURL = await windowActionSender.send({ type: 'exportMap', params: { id: params.id } });
+    const layerDataUrls: Base64DataURL[] = await windowActionSender.send({
+      type: 'exportMap',
+      params: { id: params.id },
+    });
     await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
 
     return {
       id: params.id,
-      dataUrl,
+      layerDataUrls,
     };
   }
 }

@@ -1,14 +1,5 @@
-import { Injectable } from '@nestjs/common';
-
-@Injectable()
-export class FileService {
-  async read(filePath: string): Promise<File> {
-    const file = Bun.file(filePath);
-    return new File([await file.arrayBuffer()], file.name!, { type: file.type });
-  }
-
-  async save(file: File, filePath: string): Promise<void> {
-    await Bun.write(filePath, file);
-  }
+export abstract class FileStorageService {
+  abstract upload(file: File, filePath: string): Promise<void>;
+  abstract download(filePath: string): Promise<File>;
+  abstract delete(filePath: string): Promise<void>;
 }
-

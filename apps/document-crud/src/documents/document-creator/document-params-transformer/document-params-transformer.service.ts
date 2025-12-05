@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { of, map, firstValueFrom, switchMap } from 'rxjs';
 import type { CreateDocumentsInput } from '../../documents.router.schema';
 import type { TemplatePlaceholder } from '@auto-document/types/document';
-import type { Client } from '../../../app.module';
 import { ORPC_CLIENT } from '@auto-document/nest/orpc-client.module';
 import { Span } from 'nestjs-otel';
+import type { Client } from '../../../orpc';
 
 @Injectable()
 export class DocumentParamsTransformerService {
@@ -91,7 +91,7 @@ export class DocumentParamsTransformerService {
               return {
                 ...placeholderData,
                 // @ts-ignore
-                value: mapData.find(map => map.id === placeholderData.id)!.dataUrl,
+                value: mapData.find(map => map.id === placeholderData.id)!.layerDataUrls,
               };
             default:
               return placeholderData;

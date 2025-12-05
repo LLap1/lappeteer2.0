@@ -1,11 +1,28 @@
 import { z } from 'zod/v4';
 import { TemplateSchema, DocumentSchema } from '@auto-document/types/document';
+import { Base64DataURLSchema } from '@auto-document/types/file';
 
-export const GenerateDocumentPlaceholderDataSchema = z.object({
-  type: z.enum(['map', 'text', 'image']),
+export const GenerateDocumentMapPlaceholderDataSchema = z.object({
+  type: z.literal('map'),
+  key: z.string(),
+  value: z.array(Base64DataURLSchema),
+});
+export const GenerateDocumentTextPlaceholderDataSchema = z.object({
+  type: z.literal('text'),
   key: z.string(),
   value: z.string(),
 });
+export const GenerateDocumentImagePlaceholderDataSchema = z.object({
+  type: z.literal('image'),
+  key: z.string(),
+  value: Base64DataURLSchema,
+});
+
+export const GenerateDocumentPlaceholderDataSchema = z.discriminatedUnion('type', [
+  GenerateDocumentMapPlaceholderDataSchema,
+  GenerateDocumentTextPlaceholderDataSchema,
+  GenerateDocumentImagePlaceholderDataSchema,
+]);
 
 export const GenerateDocumentInputSchema = z.object({
   file: TemplateSchema,

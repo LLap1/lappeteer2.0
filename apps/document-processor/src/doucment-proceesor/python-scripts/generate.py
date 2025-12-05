@@ -33,9 +33,9 @@ def load_presentation(pptx_data: BytesIO | str) -> Presentation:
     return Presentation(pptx_data)
 
 
-def prepare_placeholders(parse_data: List[Dict[str, Any]]) -> Tuple[Dict[str, str], Dict[str, BytesIO]]:
+def prepare_placeholders(parse_data: List[Dict[str, Any]]) -> Tuple[Dict[str, str], Dict[str, List[BytesIO]]]:
     string_placeholders: Dict[str, str] = {}
-    map_placeholders: Dict[str, BytesIO] = {}
+    map_placeholders: Dict[str, List[BytesIO]] = {}
     
     for item in parse_data:
         if item.get('type') == 'text':
@@ -44,9 +44,11 @@ def prepare_placeholders(parse_data: List[Dict[str, Any]]) -> Tuple[Dict[str, st
             string_placeholders[key] = value
         elif item.get('type') == 'map':
             key = item['key']
-            data_url: str = item['value']
-            base64_value = data_url.split(',', 1)[1]            
-            map_placeholders[key] = BytesIO(base64.b64decode(base64_value))
+            data_urls: List[str] = item['value']
+            map_placeholders[key] = []
+            for data_url in data_urls:
+                base64_value = data_url.split(',', 1)[1]
+                map_placeholders[key].append(BytesIO(base64.b64decode(base64_value)))
     
     return string_placeholders, map_placeholders
 
@@ -183,8 +185,8 @@ def replace_text_in_text_frame(
 def process_shape_for_placeholders(
     shape: BaseShape,
     string_placeholders: Dict[str, str],
-    map_placeholders: Dict[str, BytesIO]
-) -> Tuple[Optional[Dict[str, Any]], Optional[BaseShape]]:
+    map_placeholders: Dict[str, List[BytesIO]]
+) -> Tuple[Optional[List[Dict[str, Any]]], Optional[BaseShape]]:
     found_placeholders: List[tuple[str, str]] = []
     has_text: bool = hasattr(shape, 'text') and bool(shape.text)
     has_text_frame: bool = hasattr(shape, 'text_frame') and bool(shape.text_frame)
@@ -215,15 +217,21 @@ def process_shape_for_placeholders(
     
     if map_placeholder_found:
         clean_key, type = map_placeholder_found
-        image_info: Dict[str, Any] = {
-            'left': shape.left,
-            'top': shape.top,
-            'width': shape.width,
-            'height': shape.height,
-            'image': map_placeholders[clean_key],
-            'key': clean_key,
-        }
-        return image_info, shape
+        image_list: List[BytesIO] = map_placeholders[clean_key]
+        image_infos: List[Dict[str, Any]] = []
+        
+        for image in image_list:
+            image_info: Dict[str, Any] = {
+                'left': shape.left,
+                'top': shape.top,
+                'width': shape.width,
+                'height': shape.height,
+                'image': image,
+                'key': clean_key,
+            }
+            image_infos.append(image_info)
+        
+        return image_infos, shape
     
     if has_text_frame:
         replace_text_in_text_frame(
@@ -277,19 +285,19 @@ def process_slide(
     slide: Any,
     slide_idx: int,
     string_placeholders: Dict[str, str],
-    map_placeholders: Dict[str, BytesIO]
+    map_placeholders: Dict[str, List[BytesIO]]
 ) -> None:
     
     shapes_to_remove: List[BaseShape] = []
     images_to_add: List[Dict[str, Any]] = []
     
     for shape in slide.shapes:
-        image_info, shape_to_remove = process_shape_for_placeholders(
+        image_infos, shape_to_remove = process_shape_for_placeholders(
             shape, string_placeholders, map_placeholders
         )
         
-        if image_info:
-            images_to_add.append(image_info)
+        if image_infos:
+            images_to_add.extend(image_infos)
         if shape_to_remove:
             shapes_to_remove.append(shape_to_remove)
     
@@ -336,7 +344,7 @@ def main() -> None:
     parse_data_bytes: bytes = read_size_prefixed_data()
     
     try:
-        parse_data: Dict[str, Any] = json.loads(parse_data_bytes.decode('utf-8'))
+        parse_data: List[Dict[str, Any]] = json.loads(parse_data_bytes.decode('utf-8'))
     except json.JSONDecodeError as e:
         trace = traceback.format_exc()
         sys.stderr.write(trace)

@@ -4,13 +4,11 @@ import type { AnalyzeTemplateParamsInput, AnalyzeTemplateParamsOutput } from './
 import path from 'path';
 import { ProcessService } from '@auto-document/nest/process.service';
 import { PPTX_MIME_TYPE } from '@auto-document/types/file';
-import { Span } from 'nestjs-otel';
 
 @Injectable()
 export class DocumentProcessorService {
   constructor(private readonly processService: ProcessService) {}
 
-  @Span()
   async generate(input: GenerateDocumentInput): Promise<GenerateDocumentOuput> {
     const pythonPath = path.join(__dirname, 'python-scripts', 'generate.py');
     const inputBuffer = new TextEncoder().encode(JSON.stringify(input.data)).buffer;
@@ -31,7 +29,7 @@ export class DocumentProcessorService {
   }
   async analyze(input: AnalyzeTemplateParamsInput): Promise<AnalyzeTemplateParamsOutput> {
     const pythonPath = path.join(__dirname, 'python-scripts', 'parse.py');
-    const templateBuffer = await input.file.arrayBuffer();
+    const templateBuffer = await input.arrayBuffer();
 
     const buffer = await this.processService.run(['python3', pythonPath], [templateBuffer]);
 

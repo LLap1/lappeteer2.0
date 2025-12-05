@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TemplateFileStorageService } from './template-file-storage/template-file-storage.service';
 import { TemplateMetadataType } from './template-metadata/template-metadata.schema';
 import { TemplateMetadataService } from './template-metadata/template-metadata.service';
 import type { Client } from '../app.module';
@@ -15,19 +14,20 @@ import {
   CreateTemplateInput,
 } from './templates.router.schema';
 import { ORPC_CLIENT } from '@auto-document/nest/orpc-client.module';
+import { FileStorageService } from '@auto-document/nest/file.service';
 
 @Injectable()
 export class TemplateService {
   constructor(
-    private readonly templateFileService: TemplateFileStorageService,
     private readonly templateMetadataService: TemplateMetadataService,
+    private readonly fileStorageService: FileStorageService,
     @Inject(ORPC_CLIENT) private readonly orpcClient: Client,
   ) {}
 
   async create(input: CreateTemplateInput): Promise<TemplateMetadataType> {
-    await this.templateFileService.upload(input.file);
+    await this.fileStorageService.upload(input.file, input.file.name);
 
-    const placeholders = await this.orpcClient.documentProcessor.analyze(input);
+    const placeholders = await this.orpcClient.documentProcessor.analyze(input.file);
 
     const templateMetadata = await this.templateMetadataService.create({
       name: input.file.name,
@@ -70,7 +70,7 @@ export class TemplateService {
     if (!templateMetadata) {
       throw new Error(`Template with id ${input.id} not found`);
     }
-    await this.templateFileService.delete(templateMetadata.path);
+    await this.fileStorageService.delete(templateMetadata.path);
     await this.templateMetadataService.delete(input.id);
   }
 
@@ -79,6 +79,6 @@ export class TemplateService {
     if (!templateMetadata) {
       throw new Error(`Template with id ${input.id} not found`);
     }
-    return await this.templateFileService.download(templateMetadata.path);
+    return await this.fileStorageService.download(templateMetadata.path);
   }
 }

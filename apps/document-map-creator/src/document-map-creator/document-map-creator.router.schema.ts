@@ -15,7 +15,7 @@ export const CreateMapsInputSchema = z.array(
 export const CreateMapsOutputSchema = z.array(
   z.object({
     id: z.string(),
-    dataUrl: Base64DataURLSchema,
+    layerDataUrls: z.array(Base64DataURLSchema),
   }),
 );
 

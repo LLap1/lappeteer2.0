@@ -12,8 +12,5 @@
     "build": "turbo run build",
     "debug": "turbo run debug",
     "generate:ci": "node scripts/generate-gitlab-ci.js"
-  },
-  "exports": {
-    "./router": "./src/app.router.ts"
   }
 }
