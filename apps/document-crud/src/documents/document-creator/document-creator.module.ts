@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { DocumentCreatorService } from './document-creator.service';
-import { DocumentParamsCreatorModule } from './document-params-transformer/document-params-transformer.module';
+import { PlaceholderCreatorModule } from './placholder-creator/placeholder-creator.module';
 
 @Module({
-  imports: [DocumentParamsCreatorModule, DocumentParamsCreatorModule],
+  imports: [PlaceholderCreatorModule],
   providers: [DocumentCreatorService],
   exports: [DocumentCreatorService],
 })

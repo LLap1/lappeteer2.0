@@ -6,7 +6,6 @@
 - fix downloading template
 
 - create template upload form page:
-
 * see all the avilable templates -> powerpoint viewer, params
 * upload new templates -> also alert if theres an already existent template and switch
 * delete templates -> remove from s3 and mongo

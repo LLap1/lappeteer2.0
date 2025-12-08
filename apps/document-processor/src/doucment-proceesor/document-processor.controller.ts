@@ -2,7 +2,7 @@ import { DocumentProcessorService } from './document-processor.service';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
 import { Controller } from '@nestjs/common';
-import router from './document-processor.router';
+import router from '../app.router';
 
 @Controller()
 export class DocumentProcessorController {

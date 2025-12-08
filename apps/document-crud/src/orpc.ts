@@ -1,6 +1,6 @@
 import { createOpenApiClient } from '@auto-document/orpc/clients/open-api';
-import documentProcessorRouter from 'node_modules/@auto-document/document-processor/src/doucment-proceesor/document-processor.router';
-import documentMapCreatorRouter from 'node_modules/@auto-document/document-map-creator/src/document-map-creator/document-map-creator.router';
+import documentProcessorRouter from '@auto-document/document-processor/router';
+import documentMapCreatorRouter from '@auto-document/document-map-creator/router';
 import { ContractRouterClient } from '@orpc/contract';
 import { config } from './config';
 

@@ -1,5 +1,37 @@
+import {
+  GenerateDocumentInputSchema as GenerateDocumentInputSchema,
+  GenerateDocumentOutputSchema as GenerateDocumentOutputSchema,
+  AnalyzeTemplateParamsInputSchema,
+  AnalyzeTemplateParamsOutputSchema,
+} from './app.router.schema';
 import { oc } from '@orpc/contract';
-import documentProcessor from './doucment-proceesor/document-processor.router';
-const appRouter = oc.router(documentProcessor);
 
-export default appRouter;
+const generate = oc
+  .route({
+    method: 'POST',
+    path: '/generate',
+    summary: 'Generate a PowerPoint document from a template',
+    tags: ['Documents'],
+    description: 'Generates a .pptx file by filling template placeholders with provided data',
+  })
+  .input(GenerateDocumentInputSchema)
+  .output(GenerateDocumentOutputSchema);
+
+const analyze = oc
+  .route({
+    method: 'POST',
+    path: '/analyze',
+    summary: 'Extract placeholder parameters from a PowerPoint template',
+    tags: ['Templates'],
+    description:
+      'Analyzes a PowerPoint template file and extracts all placeholder parameters (keys, types, dimensions)',
+  })
+  .input(AnalyzeTemplateParamsInputSchema)
+  .output(AnalyzeTemplateParamsOutputSchema);
+
+const router = {
+  generate,
+  analyze,
+};
+
+export default router;

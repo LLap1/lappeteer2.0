@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TemplateMetadataType } from './template-metadata/template-metadata.schema';
 import { TemplateMetadataService } from './template-metadata/template-metadata.service';
-import type { Client } from '../app.module';
+import type { Client } from '../orpc';
+
 import {
   DeleteTemplateInput,
   DownloadTemplateInput,
@@ -32,13 +33,10 @@ export class TemplateService {
     const templateMetadata = await this.templateMetadataService.create({
       name: input.file.name,
       path: input.file.name,
-      placeholders: placeholders,
+      placeholders,
     });
 
-    return {
-      ...templateMetadata,
-      placeholders,
-    };
+    return templateMetadata;
   }
 
   async get(input: GetTemplateInput): Promise<GetTemplateOutput> {

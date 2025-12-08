@@ -36,25 +36,18 @@ export namespace MapUtils {
 
   export async function exportMap({ map }: { map: LeafletMap }): Promise<string[]> {
     const mapContainer = map.getContainer()!;
-    const tileLayers: L.TileLayer[] = [];
-    const vectorLayers: L.GeoJSON[] = [];
-
-    map.eachLayer(function (layer: L.Layer) {
-      if (layer instanceof L.TileLayer) {
-        tileLayers.push(layer);
-      } else if (layer instanceof L.GeoJSON) {
-        vectorLayers.push(layer);
-      }
-    });
-
     const mapRect = mapContainer.getBoundingClientRect();
     const layerExports: Array<string> = [];
 
-    for (let i = 0; i < tileLayers.length; i++) {
-      const tileLayer = tileLayers[i];
-      const tileContainer = tileLayer.getContainer()!;
-      const tileImages = Array.from(tileContainer.getElementsByTagName('img')) as HTMLImageElement[];
+    const panes = map.getPanes();
+    if (!panes) {
+      return layerExports;
+    }
 
+    const tilePane = panes.tilePane;
+    const tileImages = Array.from(tilePane.getElementsByTagName('img') ?? []) as HTMLImageElement[];
+
+    if (tilePane && tileImages.length > 0) {
       const canvas = document.createElement('canvas');
       canvas.width = mapContainer.clientWidth;
       canvas.height = mapContainer.clientHeight;
@@ -97,41 +90,41 @@ export namespace MapUtils {
       layerExports.push(canvas.toDataURL('image/png', 1.0));
     }
 
-    for (let i = 0; i < vectorLayers.length; i++) {
-      const overlayPane = map.getPanes()?.overlayPane;
-      const overlayCanvas = overlayPane?.querySelector('canvas');
+    const overlayPane = panes.overlayPane;
+    const overlaySvg = overlayPane?.querySelector('svg') as SVGElement | null;
 
-      if (overlayCanvas) {
-        const canvas = document.createElement('canvas');
-        const ctx = overlayCanvas.getContext('2d')!;
+    if (overlayPane && overlaySvg) {
+      const canvas = document.createElement('canvas');
+      canvas.width = mapContainer.clientWidth;
+      canvas.height = mapContainer.clientHeight;
+      const ctx = canvas.getContext('2d')!;
 
-        const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(overlayCanvas);
-        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-        const svgUrl = URL.createObjectURL(svgBlob);
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(overlaySvg);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
 
-        await new Promise<void>(resolve => {
-          const svgImage = new Image();
+      await new Promise<void>(resolve => {
+        const svgImage = new Image();
 
-          svgImage.onload = function () {
-            ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
-            URL.revokeObjectURL(svgUrl);
-            resolve();
-          };
+        svgImage.onload = function () {
+          ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(svgUrl);
+          resolve();
+        };
 
-          svgImage.onerror = function () {
-            URL.revokeObjectURL(svgUrl);
-            console.error(new Error('Failed to render GeoJSON overlay'));
-            resolve();
-          };
+        svgImage.onerror = function () {
+          URL.revokeObjectURL(svgUrl);
+          console.error(new Error('Failed to render GeoJSON overlay'));
+          resolve();
+        };
 
-          svgImage.src = svgUrl;
-        }).catch(error => {
-          console.error('Failed to render GeoJSON overlay:', error);
-        });
+        svgImage.src = svgUrl;
+      }).catch(error => {
+        console.error('Failed to render GeoJSON overlay:', error);
+      });
 
-        layerExports.push(canvas.toDataURL('image/png', 1.0));
-      }
+      layerExports.push(canvas.toDataURL('image/png', 1.0));
     }
 
     return layerExports;

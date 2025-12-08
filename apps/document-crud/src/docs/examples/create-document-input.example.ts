@@ -1,6 +1,13 @@
 import { Feature, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import type { CreateDocumentsInput, CreateDocumentMapPlaceholderData } from '../../documents/documents.router.schema';
+import {
+  CreateDocumentsInputSchema,
+  CreateMapPlaceholderParamsSchema,
+  CreatePlaceholderParamsSchema,
+  type CreateDocumentsInput,
+  type CreatePlaceholderParams,
+} from '../../documents/documents.router.schema';
+import z from 'zod';
 
 const inlandCities = [
   [52.52, 13.405], // Berlin
@@ -115,7 +122,7 @@ const createPolygon = (
   };
 };
 
-function generateRandomMap(mapKey: string): CreateDocumentMapPlaceholderData {
+function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderParamsSchema> {
   const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)];
   const randomOffsetLat = (Math.random() - 0.5) * 0.3;
   const randomOffsetLng = (Math.random() - 0.5) * 0.3;
@@ -141,9 +148,9 @@ function generateRandomMap(mapKey: string): CreateDocumentMapPlaceholderData {
   const polygon2 = createPolygon(polygon2Center, polygonSize, color2);
 
   return {
-    type: 'map' as const,
+    type: 'map',
     key: mapKey,
-    value: {
+    params: {
       center,
       zoom,
       geojson: [polygon1, polygon2],
@@ -151,23 +158,23 @@ function generateRandomMap(mapKey: string): CreateDocumentMapPlaceholderData {
   };
 }
 
-export const createDocumentInputExample: CreateDocumentsInput = {
-  templateId: '6932a124ea872042221b0f1a',
-  zipFileName: 'documents.zip',
-  data: Array.from({ length: 40 }, (_, index) => ({
-    placeholderData: [
+export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
+  templateId: '693337c593227af16d2129c2',
+  zipFilename: 'documents.zip',
+  params: Array.from({ length: 40 }, (_, index) => ({
+    placeholders: [
       generateRandomMap('מפה'),
       {
         type: 'text',
         key: 'כותרת',
-        value: `World Maps ${index + 1}`,
+        params: `World Maps ${index + 1}`,
       },
       {
         type: 'text',
         key: 'תיאור',
-        value: `This is a description of the world maps document ${index + 1}`,
+        params: `This is a description of the world maps document ${index + 1}`,
       },
     ],
-    filename: `world_maps_${index + 1}.pptx`,
+    documentFilename: `world_maps_${index + 1}.pptx`,
   })),
 };

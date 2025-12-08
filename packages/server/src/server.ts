@@ -20,9 +20,9 @@ export interface ServeOptions {
 
 export async function runServer({ config, appModule, appRouter }: ServeOptions) {
   const app = await NestFactory.create(appModule, {
-    bodyParser: false,
+    bodyParser: false
   });
-
+  
   const spec = await generateOpenAPIDocument(appRouter, config.openApi);
   app.use(
     '/docs',

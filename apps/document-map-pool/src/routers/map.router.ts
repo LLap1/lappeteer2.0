@@ -76,6 +76,7 @@ export const mapRouter: Router<{ maps: MapPoolState; dispatch: Dispatch<MapPoolA
 
     return MapUtils.setView({ map, center: params.center, zoom: params.zoom });
   },
+  
   addGeoJsonLayer: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
     if (!map) {

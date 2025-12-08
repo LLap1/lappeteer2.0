@@ -15,7 +15,6 @@
     "./router": "./src/logic/app.router.ts"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.21",
     "@auto-document/server": "workspace:*",
     "@jest/globals": "^30.2.0",
     "@nestjs/cli": "^11.0.10",
@@ -26,7 +25,9 @@
     "@orpc/openapi-client": "^1.10.2",
     "@orpc/zod": "^1.12.2",
     "@types/bun": "^1.3.2",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^22.15.30",
+    "geojson": "^0.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",

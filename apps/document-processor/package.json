@@ -12,6 +12,7 @@
     "type:check": "bun tsc --noEmit"
   },
   "exports": {
+    "./schema": "./src/app.router.schema.ts",
     "./router": "./src/app.router.ts"
   },
   "devDependencies": {

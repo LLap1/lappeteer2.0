@@ -19,7 +19,7 @@ export const ControlledMap = ({ id, width, height }: { id: string; width: number
   return (
     <MapContainer
       id={id}
-      preferCanvas={true}
+      preferCanvas={false}
       trackResize={true}
       zoomControl={false}
       style={{ width: `${width}px`, height: `${height}px` }}

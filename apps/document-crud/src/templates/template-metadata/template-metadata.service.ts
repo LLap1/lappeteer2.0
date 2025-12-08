@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemplateMetadata, TemplateMetadataDocument, TemplateMetadataType } from './template-metadata.schema';
+import { PlaceholderType } from '@auto-document/types/document';
 
 @Injectable()
 export class TemplateMetadataService {

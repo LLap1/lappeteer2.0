@@ -3,6 +3,8 @@ import { DocumentProcessorModule } from './doucment-proceesor/document-processor
 import { ConfigModule } from '@nestjs/config';
 import { ORPCModule, onError } from '@orpc/nest';
 import { config } from './config';
+import { REQUEST } from '@nestjs/core';
+
 @Module({
   imports: [
     DocumentProcessorModule,
@@ -10,12 +12,16 @@ import { config } from './config';
       isGlobal: true,
       load: [() => config],
     }),
-    ORPCModule.forRoot({
-      interceptors: [
-        onError(error => {
-          console.error(error);
-        }),
-      ],
+    ORPCModule.forRootAsync({
+      useFactory: (request: Request) => ({
+        interceptors: [
+          onError(error => {
+            console.error(error);
+          }),
+        ],
+        context: { request },
+      }),
+      inject: [REQUEST],
     }),
   ],
 })

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Feature, Geometry, GeoJsonProperties, Position } from 'geojson';
+import type { PathOptions } from 'leaflet';
 
 export const GeoJsonFeatureTypeSchema = z.enum([
   'Point',
@@ -56,7 +57,7 @@ export const GeoJsonPropertiesSchema = z.object({
       fillOpacity: z.number().optional(),
     })
     .strict(),
-}) as z.ZodType<GeoJsonProperties>;
+}) as z.ZodType<{ style?: PathOptions }>;
 
 export const GeoJsonFeatureSchema = z.object({
   type: z.literal('Feature'),

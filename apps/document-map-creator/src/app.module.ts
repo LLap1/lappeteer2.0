@@ -3,6 +3,7 @@ import { DocumentMapCreatorModule } from './document-map-creator/document-map-cr
 import { config } from './config';
 import { onError, ORPCModule } from '@orpc/nest';
 import { ConfigModule } from '@nestjs/config';
+import { REQUEST } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -11,12 +12,16 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       load: [() => config],
     }),
-    ORPCModule.forRoot({
-      interceptors: [
-        onError(error => {
-          console.error(error);
-        }),
-      ],
+    ORPCModule.forRootAsync({
+      useFactory: (request: Request) => ({
+        interceptors: [
+          onError(error => {
+            console.error(error);
+          }),
+        ],
+        context: { request },
+      }),
+      inject: [REQUEST],
     }),
   ],
 })

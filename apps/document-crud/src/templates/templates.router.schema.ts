@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { TemplatePlaceholderSchema } from '@auto-document/types/document';
+import { PlaceholderMetadataSchema } from '@auto-document/types/document';
 
 export const CreateTemplateInputSchema = z.object({
   file: z.file(),
@@ -9,7 +9,7 @@ export const CreateTemplateOutputSchema = z.object({
   id: z.string(),
   name: z.string(),
   path: z.string(),
-  placeholders: z.array(TemplatePlaceholderSchema),
+  placeholders: z.array(PlaceholderMetadataSchema),
 });
 
 export const GetTemplateInputSchema = z.object({
@@ -20,14 +20,14 @@ export const GetTemplateOutputSchema = z.object({
   id: z.string(),
   name: z.string(),
   path: z.string(),
-  placeholders: z.array(TemplatePlaceholderSchema),
+  placeholders: z.array(PlaceholderMetadataSchema),
 });
 
 export const ListTemplatesOutputSchema = z.array(GetTemplateOutputSchema);
 
 export const UpdateTemplateInputSchema = z.object({
   id: z.string(),
-  placeholders: z.array(TemplatePlaceholderSchema),
+  placeholders: z.array(PlaceholderMetadataSchema),
 });
 
 export const UpdateTemplateOutputSchema = GetTemplateOutputSchema;

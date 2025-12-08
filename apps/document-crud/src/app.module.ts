@@ -8,15 +8,16 @@ import { ConfigService } from '@nestjs/config';
 import { Config } from './config';
 import { OrpcClientModule } from '@auto-document/nest/orpc-client.module';
 import { ORPCModule, onError } from '@orpc/nest';
-import { FileStorageModule } from '@auto-document/nest/file.module';
+import { S3Module } from '@auto-document/nest/s3.module';
 import { rootClient } from './orpc';
+import { REQUEST } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [() => config],
     }),
-    FileStorageModule,
+    S3Module,
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService<Config>) => {
@@ -25,12 +26,16 @@ import { rootClient } from './orpc';
       },
     }),
     OrpcClientModule.forRoot(rootClient),
-    ORPCModule.forRoot({
-      interceptors: [
-        onError(error => {
-          console.error(error);
-        }),
-      ],
+    ORPCModule.forRootAsync({
+      useFactory: (request: Request) => ({
+        interceptors: [
+          onError(error => {
+            console.error(error);
+          }),
+        ],
+        context: { request },
+      }),
+      inject: [REQUEST],
     }),
     TemplateModule,
     DocumentsModule,

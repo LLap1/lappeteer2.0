@@ -1,12 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-
-export type TemplatePlaceholder = {
-  key: string;
-  type: string;
-  width: number;
-  height: number;
-};
+import type { PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
 
 export type TemplateMetadataDocument = TemplateMetadata & Document;
 
@@ -29,7 +23,7 @@ export class TemplateMetadata {
     ],
     required: true,
   })
-  placeholders!: TemplatePlaceholder[];
+  placeholders!: PlaceholderMetadata<PlaceholderType>[];
 }
 
 export const TemplateMetadataSchema = SchemaFactory.createForClass(TemplateMetadata);
@@ -38,5 +32,5 @@ export type TemplateMetadataType = {
   id: string;
   name: string;
   path: string;
-  placeholders: TemplatePlaceholder[];
+  placeholders: PlaceholderMetadata<PlaceholderType>[];
 };
