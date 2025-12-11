@@ -1,5 +1,4 @@
 import { z } from 'zod/v4';
-import { ZipFileSchema } from '@auto-document/types/file';
 import { GeoJsonFeatureSchema } from '@auto-document/types/geojson';
 import { PlaceholderType, PlaceholderTypeSchema } from '@auto-document/types/document';
 import {
@@ -73,4 +72,14 @@ export const CreateDocumentsInputSchema = z
   })
   .strict();
 
-export const CreateDocumentsOutputSchema = ZipFileSchema;
+export const CreateDocumentsOutputSchema = z.object({
+  url: z.url(),
+});
+
+export const DownloadDocumentInputSchema = z.object({
+  filePath: z.string().min(1),
+});
+
+export const DownloadDocumentOutputSchema = z.file();
+
+export type DownloadDocumentInput = z.infer<typeof DownloadDocumentInputSchema>;

@@ -12,5 +12,20 @@
     "build": "turbo run build",
     "debug": "turbo run debug",
     "generate:ci": "node scripts/generate-gitlab-ci.js"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/dotenv": "^8.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@orpc/nest": "^1.12.2",
+    "auto-document": ".",
+    "dotenv": "^17.2.3",
+    "turbo": "^2.6.3"
   }
 }

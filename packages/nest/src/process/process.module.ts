@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ProcessService } from './service';
+import { ProcessService } from './process.service';
 
 @Module({
   providers: [ProcessService],

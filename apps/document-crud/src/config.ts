@@ -10,6 +10,7 @@ loadDotenv();
 export const configSchema = z.object({
   server: z.object({
     port: z.coerce.number(),
+    baseUrl: z.url(),
   }),
   openApi: z.object({
     title: z.string(),
@@ -33,6 +34,7 @@ export const configSchema = z.object({
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT!),
+    baseUrl: process.env.BASE_URL!,
   },
   openApi: {
     title: packageJson.name,

@@ -24,6 +24,10 @@ export class PlaceholderCreatorService {
   }
 
   private async createMapPlaceholder(params: PlaceholderParams<'map'>[]): Promise<Placeholder<'map'>[]> {
+    if (params.length === 0) {
+      return [];
+    }
+
     const createMapsParams = params.map(p => ({
       id: p.id,
       width: p.width,

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { S3Client } from 'bun';
-import { FileStorageService } from '../file/service';
+import { FileStorageService } from '../file/file.service';
+import { basename } from 'path';
 
 @Injectable()
 export class S3Service implements FileStorageService {
@@ -15,7 +16,8 @@ export class S3Service implements FileStorageService {
   async download(path: string): Promise<File> {
     const file = this.s3Client.file(path);
     const arrayBuffer = await file.arrayBuffer();
-    return new File([new Blob([arrayBuffer])], file.name!, { type: file.type });
+    const filename = basename(path);
+    return new File([new Blob([arrayBuffer])], filename, { type: file.type });
   }
 
   async delete(path: string): Promise<void> {

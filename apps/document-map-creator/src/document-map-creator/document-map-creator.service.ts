@@ -7,7 +7,6 @@ import { chunk } from 'lodash';
 import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.router.schema';
 import { WindowActionSender } from './document-map-creator.model';
 import { Base64DataURL } from '@auto-document/types/file';
-import { Span } from 'nestjs-otel';
 
 @Injectable()
 export class DocumentMapCreatorService {
@@ -18,7 +17,6 @@ export class DocumentMapCreatorService {
     this.config = this.configService.get<Config['MapCreator']>('MapCreator')!;
   }
 
-  @Span()
   async create(params: CreateMapsInput): Promise<CreateMapsOutput> {
     if (this.cluster === undefined) {
       this.cluster = await Cluster.launch(this.config.launchOptions);

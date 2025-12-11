@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { S3Service } from './service';
+import { S3Service } from './s3.service';
 import { S3Client } from 'bun';
 import { ConfigService } from '@nestjs/config';
 import { z } from 'zod';

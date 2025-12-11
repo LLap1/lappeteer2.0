@@ -1,0 +1,26 @@
+{
+  "templateId": "693ac95d74de782aee76c7f2",
+  "zipFilename": "documents.zip",
+  "params": [
+        {
+            "slide": {
+                "id": "1",
+                "location": 1,
+                "duplicate": 2,
+                "placeholders": [
+                    {
+                        "type": "text",
+                        "key": "כותרת",
+                        "params": "World Maps 1"
+                    },
+                    {
+                        "type": "text",
+                        "key": "תיאור",
+                        "params": "This is a description of the world maps document 1"
+                    }
+                ]
+            },
+            "documentFilename": "world_maps_1.pptx"
+        }
+    ]
+}
