@@ -11,6 +11,7 @@ lerna-debug.log*
 patches/*
 .cursor
 
+bun.lock
 *bun.lock
 patches
 pnpm-lock.yaml
