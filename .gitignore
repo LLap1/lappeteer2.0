@@ -11,7 +11,7 @@ lerna-debug.log*
 patches/*
 .cursor
 
-*batches/
+*patches/
 bun.lock
 *bun.lock
 patches
