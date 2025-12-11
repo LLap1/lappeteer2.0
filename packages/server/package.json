@@ -16,7 +16,7 @@
     "@auto-document/orpc": "workspace:*",
     "@nestjs/common": "^11.1.9",
     "@nestjs/core": "^11.1.9",
-    "@nestjs/platform-express": "^11.1.9",
+    "@nestjs/platform-express": "^11.1.8",
     "@orpc/contract": "^1.11.3",
     "@orpc/openapi": "^1.11.3",
     "@orpc/server": "^1.11.3",
