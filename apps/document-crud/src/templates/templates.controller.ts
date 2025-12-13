@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { TemplateService } from './templates.service';
 import { implement, Implement } from '@orpc/nest';
 import templateRouter from './templates.router';
@@ -10,7 +10,9 @@ export class TemplatesController {
   @Implement(templateRouter.create)
   create() {
     return implement(templateRouter.create).handler(async ({ input }) => {
-      return this.templateService.create(input);
+      return this.templateService.create({
+        file: input.file,
+      });
     });
   }
 

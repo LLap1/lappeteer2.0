@@ -159,9 +159,9 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
 }
 
 export const createDocumentInputWithNoMapsExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: '693ac95d74de782aee76c7f2',
+  templateId: '693d5dfacb77435822da5cef',
   zipFilename: 'documents.zip',
-  params: Array.from({ length: 40 }, (_, index) => ({
+  params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
       {
         type: 'text',

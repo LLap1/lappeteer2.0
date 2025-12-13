@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package documentprocessor;
+
+service DocumentProcessorService {
+  rpc generate (GenerateDocumentRequest) returns (GenerateDocumentResponse);
+  rpc analyze (AnalyzeTemplateRequest) returns (AnalyzeTemplateResponse);
+}
+
+message GenerateDocumentRequest {
+  bytes file = 1;
+  string filename = 2;
+  repeated PlaceholderData data = 3;
+}
+
+message PlaceholderData {
+  string id = 1;
+  string key = 2;
+  string type = 3;
+  string value = 4;
+  double width = 5;
+  double height = 6;
+}
+
+message MapValue {
+  repeated string layerDataUrls = 1;
+}
+
+message GenerateDocumentResponse {
+  bytes file = 1;
+}
+
+message AnalyzeTemplateRequest {
+  bytes file = 1;
+}
+
+message PlaceholderMetadata {
+  string key = 1;
+  string type = 2;
+  double width = 3;
+  double height = 4;
+}
+
+
+message AnalyzeTemplateResponse {
+  repeated PlaceholderMetadata placeholders = 1;
+}

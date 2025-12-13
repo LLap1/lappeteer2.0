@@ -19,10 +19,12 @@ export const configSchema = z.object({
     commonSchemas: z.record(z.string(), z.object({ schema: z.any() })),
   }),
   documentProcessor: z.object({
-    url: z.url(),
+    host: z.string(),
+    port: z.coerce.number(),
   }),
   documentMapCreator: z.object({
-    url: z.url(),
+    host: z.string(),
+    port: z.coerce.number(),
   }),
   ...S3ConfigSchema.shape,
   ...FileStorageConfigSchema.shape,
@@ -45,10 +47,12 @@ const templatedConfig: z.infer<typeof configSchema> = {
     },
   },
   documentProcessor: {
-    url: process.env.DOCUMENT_PROCESSOR!,
+    host: process.env.DOCUMENT_PROCESSOR_HOST!,
+    port: Number(process.env.DOCUMENT_PROCESSOR_PORT!),
   },
   documentMapCreator: {
-    url: process.env.DOCUMENT_MAP_CREATOR_URL!,
+    host: process.env.DOCUMENT_MAP_CREATOR_HOST!,
+    port: Number(process.env.DOCUMENT_MAP_CREATOR_PORT!),
   },
   s3: {
     accessKeyId: process.env.S3_ACCESS_KEY_ID!,

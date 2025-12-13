@@ -1,10 +1,14 @@
+import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import path, { join } from 'path';
 import { AppModule } from './app.module';
 import { config } from './config';
-import { runServer, type ServerConfig } from '@auto-document/server/server';
-import appRouter from './app.router';
+import { ReflectionService } from '@grpc/reflection';
+import { runMicroservice, type ServeOptions } from '@auto-document/bootstrap/microservice';
 
-runServer({
-  config: config as ServerConfig,
-  appRouter,
+const serveOptions: ServeOptions = {
+  config,
   appModule: AppModule,
-});
+};
+
+runMicroservice(serveOptions);

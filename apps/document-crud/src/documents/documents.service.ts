@@ -1,13 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TemplateService } from '../templates/templates.service';
 import type { CreateDocumentsInput, CreateDocumentsOutput, DownloadDocumentInput } from './documents.router.schema';
 import { DocumentCreatorService } from './document-creator/document-creator.service';
 import { zipFiles } from '@auto-document/utils/file';
 import { FileStorageService } from '@auto-document/nest/file.service';
 import { v4 as uuidv4 } from 'uuid';
+import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class DocumentsService {
+  private static readonly logger = new Logger(DocumentsService.name);
   constructor(
     private readonly templateService: TemplateService,
     private readonly documentCreatorService: DocumentCreatorService,
@@ -15,6 +17,7 @@ export class DocumentsService {
     @Inject('BASE_URL') private readonly baseUrl: string,
   ) {}
 
+  @Log(DocumentsService.logger)
   async create(input: CreateDocumentsInput): Promise<CreateDocumentsOutput> {
     const templateMetadata = await this.templateService.get({ id: input.templateId });
 
@@ -29,16 +32,18 @@ export class DocumentsService {
       placeholderMetadata: templateMetadata.placeholders,
     });
 
-    const zippedDocuments = await zipFiles(documentFiles, input.zipFilename);
-    const filePath = `${uuidv4()}/${input.zipFilename}`;
-    await this.fileStorageService.upload(zippedDocuments, filePath);
-    const downloadUrl = new URL('/documents', this.baseUrl);
+    const zippedDocumentsBlob = await zipFiles(documentFiles);
+    const zippedDocumentsFile = new File([zippedDocumentsBlob], input.zipFilename, { type: zippedDocumentsBlob.type });
+    const filePath = `documents/${uuidv4()}/${input.zipFilename}`;
+    await this.fileStorageService.upload(zippedDocumentsFile, filePath);
+    const downloadUrl = new URL('documents', this.baseUrl);
     downloadUrl.searchParams.set('filePath', filePath);
     return {
       url: downloadUrl.toString(),
     };
   }
 
+  @Log(DocumentsService.logger)
   async download(input: DownloadDocumentInput): Promise<File> {
     return this.fileStorageService.download(input.filePath);
   }

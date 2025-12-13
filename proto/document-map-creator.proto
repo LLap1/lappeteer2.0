@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package documentmapcreator;
+
+service DocumentMapCreatorService {
+  rpc create (CreateMapsRequest) returns (CreateMapsResponse);
+}
+
+message CreateMapsRequest {
+  repeated MapParams maps = 1;
+}
+
+message MapParams {
+  string id = 1;
+  double width = 2;
+  double height = 3;
+  repeated double center = 4;
+  double zoom = 5;
+  repeated GeoJsonFeature geojson = 6;
+}
+
+message GeoJsonFeature {
+  string type = 1;
+  bytes geometry = 2;
+  bytes properties = 3;
+}
+
+message CreateMapsResponse {
+  repeated MapResult maps = 1;
+}
+
+message MapResult {
+  string id = 1;
+  repeated string layerDataUrls = 2;
+}

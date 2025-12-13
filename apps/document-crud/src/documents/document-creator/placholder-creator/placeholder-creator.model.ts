@@ -1,8 +1,7 @@
-import type { PlaceholderMetadata, Placeholder } from '@auto-document/types/document';
+import type { PlaceholderMetadata } from '@auto-document/types/document';
 import { PathOptions } from 'leaflet';
 import { Feature, Geometry } from 'geojson';
 import type { PlaceholderType } from '@auto-document/types/document';
-import { CreatePlaceholderParams } from 'src/documents/documents.router.schema';
 
 export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = PlaceholderMetadata<T> & {
   id: string;

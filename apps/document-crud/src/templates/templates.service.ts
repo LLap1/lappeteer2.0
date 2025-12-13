@@ -1,44 +1,57 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TemplateMetadataType } from './template-metadata/template-metadata.schema';
 import { TemplateMetadataService } from './template-metadata/template-metadata.service';
-import type { Client } from '../orpc';
 
 import {
-  DeleteTemplateInput,
-  DownloadTemplateInput,
-  DownloadTemplateOutput,
-  GetTemplateInput,
-  GetTemplateOutput,
-  ListTemplatesOutput,
-  UpdateTemplateInput,
-  UpdateTemplateOutput,
-  CreateTemplateInput,
+  type DeleteTemplateInput,
+  type DownloadTemplateInput,
+  type DownloadTemplateOutput,
+  type GetTemplateInput,
+  type GetTemplateOutput,
+  type ListTemplatesOutput,
+  type UpdateTemplateInput,
+  type UpdateTemplateOutput,
+  type CreateTemplateInput,
 } from './templates.router.schema';
-import { ORPC_CLIENT } from '@auto-document/nest/orpc-client.module';
 import { FileStorageService } from '@auto-document/nest/file.service';
+import path from 'path';
+import { type DocumentProcessorServiceClient } from '@auto-document/types/proto/document-processor';
+import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
+import { firstValueFrom } from 'rxjs';
+import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class TemplateService {
+  private static readonly logger = new Logger(TemplateService.name);
   constructor(
     private readonly templateMetadataService: TemplateMetadataService,
     private readonly fileStorageService: FileStorageService,
-    @Inject(ORPC_CLIENT) private readonly orpcClient: Client,
+    @Inject('DocumentProcessorServiceClient')
+    private readonly documentProcessorService: DocumentProcessorServiceClient,
   ) {}
 
+  @Log(TemplateService.logger)
   async create(input: CreateTemplateInput): Promise<TemplateMetadataType> {
-    await this.fileStorageService.upload(input.file, input.file.name);
+    const filename = path.basename(input.file.name!);
+    const filepath = path.join('/templates', filename);
 
-    const placeholders = await this.orpcClient.documentProcessor.analyze(input.file);
+    await this.fileStorageService.upload(input.file, filepath!);
+    const response = await firstValueFrom(
+      this.documentProcessorService.analyze({
+        file: new Uint8Array(await input.file.arrayBuffer()),
+      }),
+    );
 
     const templateMetadata = await this.templateMetadataService.create({
-      name: input.file.name,
-      path: input.file.name,
-      placeholders,
+      name: filename,
+      path: filepath,
+      placeholders: response.placeholders as PlaceholderMetadata<PlaceholderType>[],
     });
 
     return templateMetadata;
   }
 
+  @Log(TemplateService.logger)
   async get(input: GetTemplateInput): Promise<GetTemplateOutput> {
     const templateMetadata = await this.templateMetadataService.getById(input.id);
     if (!templateMetadata) {
@@ -47,10 +60,12 @@ export class TemplateService {
     return templateMetadata;
   }
 
+  @Log(TemplateService.logger)
   async list(): Promise<ListTemplatesOutput> {
     return await this.templateMetadataService.list();
   }
 
+  @Log(TemplateService.logger)
   async update(input: UpdateTemplateInput): Promise<UpdateTemplateOutput> {
     const existing = await this.templateMetadataService.getById(input.id);
     if (!existing) {
@@ -63,6 +78,7 @@ export class TemplateService {
     };
   }
 
+  @Log(TemplateService.logger)
   async delete(input: DeleteTemplateInput): Promise<void> {
     const templateMetadata = await this.templateMetadataService.getById(input.id);
     if (!templateMetadata) {
@@ -72,11 +88,12 @@ export class TemplateService {
     await this.templateMetadataService.delete(input.id);
   }
 
+  @Log(TemplateService.logger)
   async download(input: DownloadTemplateInput): Promise<DownloadTemplateOutput> {
     const templateMetadata = await this.templateMetadataService.getById(input.id);
     if (!templateMetadata) {
       throw new Error(`Template with id ${input.id} not found`);
     }
-    return await this.fileStorageService.download(templateMetadata.path);
+    return this.fileStorageService.download(templateMetadata.path);
   }
 }

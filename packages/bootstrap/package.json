@@ -1,0 +1,34 @@
+{
+  "name": "@auto-document/bootstrap",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "@auto-document/eslint-config": "workspace:*",
+    "@auto-document/typescript-config": "workspace:*"
+  },
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@auto-document/nest": "workspace:*",
+    "@grpc/reflection": "^1.0.4",
+    "@nestjs/common": "^11.1.9",
+    "@nestjs/core": "^11.1.9",
+    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/platform-express": "^11.1.8",
+    "@orpc/contract": "^1.11.3",
+    "@orpc/openapi": "^1.11.3",
+    "@orpc/server": "^1.11.3",
+    "@orpc/standard-server": "^1.11.3",
+    "@orpc/zod": "^1.11.3",
+    "@scalar/api-reference": "^1.40.0",
+    "@scalar/nestjs-api-reference": "^1.0.11",
+    "zod": "^4.1.11"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  }
+}

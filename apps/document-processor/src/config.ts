@@ -1,28 +1,23 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
 import packageJson from '../package.json';
+import path from 'path';
 
 loadDotenv();
 
 export const configSchema = z.object({
   server: z.object({
+    host: z.string(),
     port: z.coerce.number(),
-  }),
-  openApi: z.object({
-    title: z.string(),
-    version: z.string(),
-    description: z.string(),
+    appName: z.string(),
   }),
 });
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT!),
-  },
-  openApi: {
-    title: packageJson.name,
-    version: packageJson.version,
-    description: packageJson.description,
+    host: process.env.HOST!,
+    appName: packageJson.name.split('/').pop()!,
   },
 };
 

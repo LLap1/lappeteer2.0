@@ -9,14 +9,15 @@
     "start:prod": "bun run dist/main.js",
     "dev": "bun --watch run ./src/main.ts",
     "debug": "bun --inspect=9230 --watch run ./src/main.ts",
-    "type:check": "bun tsc --noEmit"
+    "type:check": "bun tsc --noEmit",
+    "proto:generate": "protoc --ts_proto_out=. ./src/app.proto --ts_proto_opt=nestJs=true,esModuleInterop=true",
+    "proto:watch": "chokidar \"**/*.proto\" -c \"bun run proto:generate\""
   },
   "exports": {
-    "./router": "./src/app.router.ts"
+    "./app": "./src/app.ts"
   },
   "devDependencies": {
-    "@auto-document/orpc": "workspace:*",
-    "@auto-document/server": "workspace:*",
+    "@auto-document/bootstrap": "workspace:*",
     "@auto-document/types": "workspace:*",
     "@jest/globals": "^30.2.0",
     "@nestjs/cli": "^11.0.10",
@@ -33,16 +34,22 @@
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.15.30",
     "ts-node": "^10.9.2",
+    "ts-proto": "^2.8.3",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
     "zod": "^4.1.12"
   },
   "dependencies": {
+    "@auto-document/utils": "workspace:*",
     "@auto-document/document-map-pool": "workspace:*",
     "@auto-document/nest": "workspace:*",
-    "@auto-document/orpc": "workspace:*",
     "@auto-document/types": "workspace:*",
+    "@bufbuild/protobuf": "^2.10.2",
+    "@grpc/grpc-js": "^1.12.0",
+    "@grpc/proto-loader": "^0.7.15",
+    "@grpc/reflection": "^1.0.4",
     "@nestjs/config": "^4.0.2",
+    "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.1.8",
     "@orpc/client": "^1.10.2",
     "@orpc/nest": "^1.12.2",
@@ -52,6 +59,7 @@
     "dotenv": "^17.2.3",
     "lodash": "^4.17.21",
     "puppeteer": "^24.32.1",
-    "puppeteer-cluster": "^0.24.0"
+    "puppeteer-cluster": "^0.24.0",
+    "rxjs": "^7.8.2"
   }
 }

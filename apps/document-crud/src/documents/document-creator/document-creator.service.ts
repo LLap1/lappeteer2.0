@@ -1,20 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ORPC_CLIENT } from '@auto-document/nest/orpc-client.module';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { CreateDocumentParams, CreatePlaceholderParams } from '../documents.router.schema';
 import type { PptxFile } from '@auto-document/types/file';
-import type { Client } from '../../orpc';
 import type { PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
-import { PlaceholderParams } from './placholder-creator/placeholder-creator.model';
+import { type PlaceholderParams } from './placholder-creator/placeholder-creator.model';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  type GenerateDocumentRequest,
+  type DocumentProcessorServiceClient,
+} from '@auto-document/types/proto/document-processor';
+import { firstValueFrom } from 'rxjs';
+import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class DocumentCreatorService {
+  private static readonly logger = new Logger(DocumentCreatorService.name);
   constructor(
-    @Inject(ORPC_CLIENT) private readonly orpcClient: Client,
+    @Inject('DocumentProcessorServiceClient')
+    private readonly documentProcessorService: DocumentProcessorServiceClient,
     private readonly placeholderCreatorService: PlaceholderCreatorService,
   ) {}
 
+  @Log(DocumentCreatorService.logger)
   async create({
     template,
     params,
@@ -26,20 +32,25 @@ export class DocumentCreatorService {
   }): Promise<PptxFile[]> {
     const allParamsFlattened = params.map(param => param.placeholders).flat();
     const placeholderParams = this.mergePlaceholderWithMetadata(allParamsFlattened, placeholderMetadata);
-
     const placeholders = await this.placeholderCreatorService.create(placeholderParams);
 
     const documentFiles = await Promise.all(
-      params.map(param => {
+      params.map(async param => {
         const matchingParamPlaceholders = placeholders.filter(placeholder =>
           param.placeholders.find(placeholderParam => placeholderParam.id === placeholder.id),
         );
 
-        return this.orpcClient.documentProcessor.generate({
-          template,
+        const input = {
+          file: new Uint8Array(await template.arrayBuffer()),
           filename: param.documentFilename,
           data: matchingParamPlaceholders,
+        } as GenerateDocumentRequest;
+
+        const fileBuffer = (await firstValueFrom(this.documentProcessorService.generate(input))).file;
+        const file = new File([new Uint8Array(fileBuffer)], param.documentFilename, {
+          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         });
+        return file;
       }),
     );
 

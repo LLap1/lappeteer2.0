@@ -20,7 +20,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,  
     "resolveJsonModule": true,
-    "types": ["node", "bun"]
+    "types": ["node", "bun"],
+
   },
   "references": []
 }

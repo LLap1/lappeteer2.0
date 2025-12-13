@@ -7,15 +7,10 @@ loadDotenv();
 export const configSchema = z.object({
   server: z.object({
     port: z.coerce.number(),
+    host: z.string(),
+    appName: z.string(),
   }),
-  openApi: z.object({
-    title: z.string(),
-    version: z.string(),
-    description: z.string(),
-  }),
-  documentFileGenerator: z.object({
-    url: z.string().url(),
-  }),
+
   MapCreator: z.object({
     orthoTileLayerUrl: z.url(),
     mapPoolUrl: z.string().url(),
@@ -35,14 +30,8 @@ export const configSchema = z.object({
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT!),
-  },
-  openApi: {
-    title: packageJson.name,
-    version: packageJson.version,
-    description: packageJson.description,
-  },
-  documentFileGenerator: {
-    url: process.env.DOCUMENT_FILE_GENERATOR_URL!,
+    host: process.env.HOST!,
+    appName: packageJson.name.split('/').pop()!,
   },
   MapCreator: {
     orthoTileLayerUrl: process.env.ORTHO_TILE_LAYER_URL!,

@@ -6,10 +6,9 @@ import { DocumentsModule } from './documents/documents.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { Config } from './config';
-import { OrpcClientModule } from '@auto-document/nest/orpc-client.module';
 import { ORPCModule, onError } from '@orpc/nest';
 import { S3Module } from '@auto-document/nest/s3.module';
-import { rootClient } from './orpc';
+import { MicroservicesModule } from './microservices.module';
 import { REQUEST } from '@nestjs/core';
 @Module({
   imports: [
@@ -18,6 +17,7 @@ import { REQUEST } from '@nestjs/core';
       load: [() => config],
     }),
     S3Module,
+    MicroservicesModule,
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService<Config>) => {
@@ -25,7 +25,6 @@ import { REQUEST } from '@nestjs/core';
         return mongoOptions;
       },
     }),
-    OrpcClientModule.forRoot(rootClient),
     ORPCModule.forRootAsync({
       useFactory: (request: Request) => ({
         interceptors: [

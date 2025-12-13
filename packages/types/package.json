@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    "./*": "./src/*.types.ts"
+    "./*": "./src/*.types.ts",
+    "./proto/*": "./src/proto/*.ts"
   },
   "devDependencies": {
     "@auto-document/typescript-config": "workspace:*",
