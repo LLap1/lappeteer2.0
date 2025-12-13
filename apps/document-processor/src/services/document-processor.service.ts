@@ -46,7 +46,7 @@ export class DocumentProcessorService implements DocumentProcessorServiceControl
       throw error;
     }
   }
-  @Log(DocumentProcessorService.logger)
+
   async analyze(request: AnalyzeTemplateRequest): Promise<AnalyzeTemplateResponse> {
     const pythonPath = path.join(__dirname, 'python-scripts', 'parse.py');
     const tempDir = '/tmp';

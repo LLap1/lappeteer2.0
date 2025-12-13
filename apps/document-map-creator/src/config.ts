@@ -2,13 +2,15 @@ import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
 import { Cluster } from 'puppeteer-cluster';
 import packageJson from '../package.json';
+import { DOCUMENTMAPCREATOR_PACKAGE_NAME } from '@auto-document/types/proto/document-map-creator';
 loadDotenv();
 
 export const configSchema = z.object({
   server: z.object({
-    port: z.coerce.number(),
     host: z.string(),
-    appName: z.string(),
+    port: z.coerce.number(),
+    packageName: z.string(),
+    microserviceName: z.string(),
   }),
 
   MapCreator: z.object({
@@ -29,9 +31,10 @@ export const configSchema = z.object({
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
-    port: Number(process.env.PORT!),
     host: process.env.HOST!,
-    appName: packageJson.name.split('/').pop()!,
+    port: Number(process.env.PORT!),
+    packageName: DOCUMENTMAPCREATOR_PACKAGE_NAME,
+    microserviceName: packageJson.name.split('/').pop()!,
   },
   MapCreator: {
     orthoTileLayerUrl: process.env.ORTHO_TILE_LAYER_URL!,

@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { DocumentProcessorModule } from './services/document-processor.module';
 import { ConfigModule } from '@nestjs/config';
 import { config } from './config';
+import { LoggerModule } from '@auto-document/nest/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     DocumentProcessorModule,
     ConfigModule.forRoot({
       isGlobal: true,

@@ -7,7 +7,7 @@ import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class TemplateMetadataService {
-  private static readonly logger = new Logger(TemplateMetadataService.name);
+  private static readonly logger: Logger = new Logger(TemplateMetadataService.name);
   constructor(
     @InjectModel(TemplateMetadata.name)
     private readonly templateMetadataModel: Model<TemplateMetadataDocument>,

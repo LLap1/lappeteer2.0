@@ -6,6 +6,7 @@ import { type PlaceholderParams } from './placholder-creator/placeholder-creator
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import {
   type GenerateDocumentRequest,
+  DOCUMENT_PROCESSOR_SERVICE_NAME,
   type DocumentProcessorServiceClient,
 } from '@auto-document/types/proto/document-processor';
 import { firstValueFrom } from 'rxjs';
@@ -13,20 +14,21 @@ import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class DocumentCreatorService {
-  private static readonly logger = new Logger(DocumentCreatorService.name);
+  private static readonly logger: Logger = new Logger(DocumentCreatorService.name);
+
   constructor(
-    @Inject('DocumentProcessorServiceClient')
+    @Inject(DOCUMENT_PROCESSOR_SERVICE_NAME)
     private readonly documentProcessorService: DocumentProcessorServiceClient,
     private readonly placeholderCreatorService: PlaceholderCreatorService,
   ) {}
 
   @Log(DocumentCreatorService.logger)
   async create({
-    template,
+    file: templateFile,
     params,
     placeholderMetadata,
   }: {
-    template: File;
+    file: File;
     params: CreateDocumentParams[];
     placeholderMetadata: PlaceholderMetadata<PlaceholderType>[];
   }): Promise<PptxFile[]> {
@@ -41,7 +43,7 @@ export class DocumentCreatorService {
         );
 
         const input = {
-          file: new Uint8Array(await template.arrayBuffer()),
+          file: new Uint8Array(await templateFile.arrayBuffer()),
           filename: param.documentFilename,
           data: matchingParamPlaceholders,
         } as GenerateDocumentRequest;

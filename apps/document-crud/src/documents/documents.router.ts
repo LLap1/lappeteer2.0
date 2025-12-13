@@ -5,7 +5,6 @@ import {
   DownloadDocumentOutputSchema,
 } from './documents.router.schema';
 import { oc } from '@orpc/contract';
-import { createDocumentInputExample } from '../docs/examples/create-document-input.example';
 import { createDocumentInputWithNoMapsExample } from 'src/docs/examples/create-document-input-no-maps';
 
 const create = oc

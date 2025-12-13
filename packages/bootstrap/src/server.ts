@@ -4,6 +4,7 @@ import type { Type } from '@nestjs/common';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { ZodToJsonSchemaConverter } from '@orpc/zod/zod4';
 import { OpenAPIGenerator, type OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
+import { Logger } from 'nestjs-pino';
 
 export type ServerConfig = {
   server: {
@@ -22,6 +23,8 @@ export async function runServer({ config, appModule, appRouter }: ServeOptions) 
   const app = await NestFactory.create(appModule, {
     bodyParser: false,
   });
+
+  app.useLogger(app.get(Logger));
 
   const spec = await generateOpenAPIDocument(appRouter, config.openApi);
   app.use(

@@ -35,10 +35,10 @@
     "zod": "^4.1.12"
   },
   "dependencies": {
+    "@auto-document/bootstrap": "workspace:*",
     "@auto-document/document-map-creator": "workspace:*",
     "@auto-document/document-processor": "workspace:*",
     "@auto-document/nest": "workspace:*",
-    "@auto-document/bootstrap": "workspace:*",
     "@auto-document/types": "workspace:*",
     "@auto-document/utils": "workspace:*",
     "@grpc/grpc-js": "^1.12.0",
@@ -58,6 +58,8 @@
     "dotenv": "^17.2.3",
     "mongoose": "^9.0.0",
     "multer": "^2.0.2",
+    "nestjs-pino": "^4.5.0",
+    "pino-http": "^11.0.0",
     "rxjs": "^7.8.2",
     "uuid": "^13.0.0"
   }

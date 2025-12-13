@@ -20,9 +20,7 @@ import { Log } from '@auto-document/utils/logger';
 @Controller()
 @DocumentMapCreatorServiceControllerMethods()
 export class DocumentMapCreatorService implements DocumentMapCreatorServiceController {
-
-  private static readonly logger = new Logger(DocumentMapCreatorService.name);
-
+  private static readonly logger: Logger = new Logger(DocumentMapCreatorService.name);
 
   private cluster?: Cluster;
   private readonly config: Config['MapCreator'];

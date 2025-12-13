@@ -9,7 +9,8 @@ import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class DocumentsService {
-  private static readonly logger = new Logger(DocumentsService.name);
+  private static readonly logger: Logger = new Logger(DocumentsService.name);
+
   constructor(
     private readonly templateService: TemplateService,
     private readonly documentCreatorService: DocumentCreatorService,
@@ -27,7 +28,7 @@ export class DocumentsService {
 
     const templateFile = await this.templateService.download({ id: input.templateId });
     const documentFiles = await this.documentCreatorService.create({
-      template: templateFile,
+      file: templateFile,
       params: input.params,
       placeholderMetadata: templateMetadata.placeholders,
     });

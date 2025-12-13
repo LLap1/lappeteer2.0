@@ -40,10 +40,10 @@
     "zod": "^4.1.12"
   },
   "dependencies": {
-    "@auto-document/utils": "workspace:*",
     "@auto-document/document-map-pool": "workspace:*",
     "@auto-document/nest": "workspace:*",
     "@auto-document/types": "workspace:*",
+    "@auto-document/utils": "workspace:*",
     "@bufbuild/protobuf": "^2.10.2",
     "@grpc/grpc-js": "^1.12.0",
     "@grpc/proto-loader": "^0.7.15",
@@ -58,6 +58,8 @@
     "bun": "^1.3.2",
     "dotenv": "^17.2.3",
     "lodash": "^4.17.21",
+    "nestjs-pino": "^4.5.0",
+    "pino-http": "^11.0.0",
     "puppeteer": "^24.32.1",
     "puppeteer-cluster": "^0.24.0",
     "rxjs": "^7.8.2"

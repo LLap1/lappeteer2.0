@@ -10,8 +10,11 @@ import { ORPCModule, onError } from '@orpc/nest';
 import { S3Module } from '@auto-document/nest/s3.module';
 import { MicroservicesModule } from './microservices.module';
 import { REQUEST } from '@nestjs/core';
+import { LoggerModule } from '@auto-document/nest/logger.module';
+
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [() => config],

@@ -1,19 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PlaceholderParams } from './placeholder-creator.model';
-import { v4 as uuidv4 } from 'uuid';
 import type { Placeholder } from '@auto-document/types/document';
 import { firstValueFrom } from 'rxjs';
-import { type DocumentMapCreatorServiceClient } from '@auto-document/types/proto/document-map-creator';
-import { Log } from '@auto-document/utils/logger';
+import { DOCUMENT_MAP_CREATOR_SERVICE_NAME, type DocumentMapCreatorServiceClient } from '@auto-document/types/proto/document-map-creator';
 @Injectable()
 export class PlaceholderCreatorService {
-  private static readonly logger = new Logger(PlaceholderCreatorService.name);
   constructor(
-    @Inject('DocumentMapCreatorServiceClient')
+    @Inject(DOCUMENT_MAP_CREATOR_SERVICE_NAME)
     private readonly documentMapCreatorService: DocumentMapCreatorServiceClient,
   ) {}
 
-  @Log(PlaceholderCreatorService.logger)
   async create(params: PlaceholderParams[]): Promise<Placeholder[]> {
     const mapPlaceholderParmas = params.filter(p => p.type === 'map') as PlaceholderParams<'map'>[];
     const textPlaceholderParmas = params.filter(p => p.type === 'text') as PlaceholderParams<'text'>[];

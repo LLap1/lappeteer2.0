@@ -15,18 +15,21 @@ import {
 } from './templates.router.schema';
 import { FileStorageService } from '@auto-document/nest/file.service';
 import path from 'path';
-import { type DocumentProcessorServiceClient } from '@auto-document/types/proto/document-processor';
+import {
+  DOCUMENT_PROCESSOR_SERVICE_NAME,
+  type DocumentProcessorServiceClient,
+} from '@auto-document/types/proto/document-processor';
 import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
 import { firstValueFrom } from 'rxjs';
 import { Log } from '@auto-document/utils/logger';
 
 @Injectable()
 export class TemplateService {
-  private static readonly logger = new Logger(TemplateService.name);
+  private static readonly logger: Logger = new Logger(TemplateService.name);
   constructor(
     private readonly templateMetadataService: TemplateMetadataService,
     private readonly fileStorageService: FileStorageService,
-    @Inject('DocumentProcessorServiceClient')
+    @Inject(DOCUMENT_PROCESSOR_SERVICE_NAME)
     private readonly documentProcessorService: DocumentProcessorServiceClient,
   ) {}
 
