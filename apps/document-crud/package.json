@@ -45,7 +45,7 @@
     "@nestjs/common": "^11.1.9",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.9",
-    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/microservices": "^11.1.8",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.1.8",
     "@orpc/client": "^1.10.2",

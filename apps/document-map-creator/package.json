@@ -47,7 +47,7 @@
     "@grpc/proto-loader": "^0.7.15",
     "@grpc/reflection": "^1.0.4",
     "@nestjs/config": "^4.0.2",
-    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/microservices": "^11.1.8",
     "@nestjs/platform-express": "^11.1.8",
     "@orpc/client": "^1.10.2",
     "@orpc/nest": "^1.12.2",

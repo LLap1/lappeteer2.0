@@ -26,7 +26,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/microservices": "^11.1.8",
     "rxjs": "^7.8.2",
     "turbo": "^2.6.3"
   }
