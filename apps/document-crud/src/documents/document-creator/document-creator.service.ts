@@ -10,7 +10,7 @@ import {
   type DocumentProcessorServiceClient,
 } from '@auto-document/types/proto/document-processor';
 import { firstValueFrom } from 'rxjs';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Injectable()
 export class DocumentCreatorService {

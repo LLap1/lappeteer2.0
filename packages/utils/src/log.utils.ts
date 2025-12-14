@@ -56,7 +56,7 @@ export function Log(logger: Logger): any {
         logger.error({
           method: propertyKey,
           message: `error`,
-          error: (error as Error)?.message,
+          error: filterFiles((error as Error)?.message),
         });
         throw error;
       }

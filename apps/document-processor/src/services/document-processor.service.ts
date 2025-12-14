@@ -11,7 +11,7 @@ import {
   DocumentProcessorServiceControllerMethods,
   type DocumentProcessorServiceController,
 } from '@auto-document/types/proto/document-processor';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Controller()
 @DocumentProcessorServiceControllerMethods()

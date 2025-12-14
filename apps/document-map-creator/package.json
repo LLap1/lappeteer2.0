@@ -33,7 +33,6 @@
     "@types/geojson": "^7946.0.16",
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.15.30",
-    "ts-node": "^10.9.2",
     "ts-proto": "^2.8.3",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",

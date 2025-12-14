@@ -21,7 +21,7 @@ import {
 } from '@auto-document/types/proto/document-processor';
 import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
 import { firstValueFrom } from 'rxjs';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Injectable()
 export class TemplateService {

@@ -5,7 +5,7 @@ import { DocumentCreatorService } from './document-creator/document-creator.serv
 import { zipFiles } from '@auto-document/utils/file';
 import { FileStorageService } from '@auto-document/nest/file.service';
 import { v4 as uuidv4 } from 'uuid';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Injectable()
 export class DocumentsService {

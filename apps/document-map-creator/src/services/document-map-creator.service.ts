@@ -15,7 +15,7 @@ import {
   type DocumentMapCreatorServiceController,
   DocumentMapCreatorServiceControllerMethods,
 } from '@auto-document/types/proto/document-map-creator';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Controller()
 @DocumentMapCreatorServiceControllerMethods()

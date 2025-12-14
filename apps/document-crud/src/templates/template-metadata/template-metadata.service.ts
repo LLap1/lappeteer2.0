@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemplateMetadata, TemplateMetadataDocument, TemplateMetadataType } from './template-metadata.schema';
 import { PlaceholderType } from '@auto-document/types/document';
-import { Log } from '@auto-document/utils/logger';
+import { Log } from '@auto-document/utils/log';
 
 @Injectable()
 export class TemplateMetadataService {
