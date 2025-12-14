@@ -31,6 +31,7 @@ export async function runServer({ config, appModule, appRouter }: ServeOptions) 
     '/docs',
     apiReference({
       content: spec,
+      cdn: '/api-reference-cdn.js',
     }),
   );
 

@@ -48,6 +48,7 @@
     "@nestjs/microservices": "^11.1.8",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.1.8",
+    "@nestjs/serve-static": "5.0.3",
     "@orpc/client": "^1.10.2",
     "@orpc/json-schema": "^1.12.2",
     "@orpc/nest": "^1.11.3",

@@ -11,6 +11,8 @@ import { S3Module } from '@auto-document/nest/s3.module';
 import { MicroservicesModule } from './microservices.module';
 import { REQUEST } from '@nestjs/core';
 import { LoggerModule } from '@auto-document/nest/logger.module';
+import path from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -18,6 +20,9 @@ import { LoggerModule } from '@auto-document/nest/logger.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [() => config],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'public'),
     }),
     S3Module,
     MicroservicesModule,
