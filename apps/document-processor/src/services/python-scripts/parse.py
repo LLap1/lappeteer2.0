@@ -63,7 +63,6 @@ def main():
 
     try:
         result = parse_pptx(file_path)
-        print(result)
         print(json.dumps(result))
     except Exception as e:
         print(json.dumps({"error": str(e)}))
