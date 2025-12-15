@@ -3,9 +3,9 @@ import { TemplateService } from '../templates/templates.service';
 import type { CreateDocumentsInput, CreateDocumentsOutput, DownloadDocumentInput } from './documents.router.schema';
 import { DocumentCreatorService } from './document-creator/document-creator.service';
 import { zipFiles } from '@auto-document/utils/file';
-import { FileStorageService } from '@auto-document/nest/file.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Log } from '@auto-document/utils/log';
+import { S3Service } from '@auto-document/nest/s3.service';
 
 @Injectable()
 export class DocumentsService {
@@ -14,7 +14,7 @@ export class DocumentsService {
   constructor(
     private readonly templateService: TemplateService,
     private readonly documentCreatorService: DocumentCreatorService,
-    private readonly fileStorageService: FileStorageService,
+    private readonly s3Service: S3Service,
     @Inject('BASE_URL') private readonly baseUrl: string,
   ) {}
 
@@ -36,7 +36,7 @@ export class DocumentsService {
     const zippedDocumentsBlob = await zipFiles(documentFiles);
     const zippedDocumentsFile = new File([zippedDocumentsBlob], input.zipFilename, { type: zippedDocumentsBlob.type });
     const filePath = `documents/${uuidv4()}/${input.zipFilename}`;
-    await this.fileStorageService.upload(zippedDocumentsFile, filePath);
+    await this.s3Service.upload(zippedDocumentsFile, filePath);
     const downloadUrl = new URL('documents', this.baseUrl);
     downloadUrl.searchParams.set('filePath', filePath);
     return {
@@ -46,6 +46,6 @@ export class DocumentsService {
 
   @Log(DocumentsService.logger)
   async download(input: DownloadDocumentInput): Promise<File> {
-    return this.fileStorageService.download(input.filePath);
+    return this.s3Service.download(input.filePath);
   }
 }

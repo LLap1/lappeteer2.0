@@ -5,7 +5,6 @@ import base64
 import tempfile
 from io import BytesIO
 from pptx import Presentation
-from pptx.enum.text import MSO_AUTO_SIZE
 
 PLACEHOLDER_PATTERN = re.compile(r'\{\{([^:}]+):([^}:]+)\}\}')
 
@@ -34,8 +33,8 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
 
     return text_values, map_values
 
-def replace_text_in_frame(text_frame, text_values: dict[str, str]) -> None:
-    text = clean_bidi(text_frame.text)
+def replace_text_in_run(run, text_values: dict[str, str]) -> None:
+    text = clean_bidi(run.text)
     
     def replacer(match):
         key = match.group(1).strip()
@@ -44,9 +43,12 @@ def replace_text_in_frame(text_frame, text_values: dict[str, str]) -> None:
     new_text = PLACEHOLDER_PATTERN.sub(replacer, text)
     
     if new_text != text:
-        text_frame.text = new_text
-        text_frame.word_wrap = True
-        text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+        run.text = new_text
+
+def replace_text_in_frame(text_frame, text_values: dict[str, str]) -> None:
+    for paragraph in text_frame.paragraphs:
+        for run in paragraph.runs:
+            replace_text_in_run(run, text_values)
 
 def find_map_placeholder(text: str, map_values: dict[str, list[BytesIO]]) -> str | None:
     text = clean_bidi(text)

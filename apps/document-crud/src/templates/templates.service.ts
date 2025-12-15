@@ -13,7 +13,7 @@ import {
   type UpdateTemplateOutput,
   type CreateTemplateInput,
 } from './templates.router.schema';
-import { FileStorageService } from '@auto-document/nest/file.service';
+import { S3Service } from '@auto-document/nest/s3.service';
 import path from 'path';
 import {
   DOCUMENT_PROCESSOR_SERVICE_NAME,
@@ -28,7 +28,7 @@ export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
   constructor(
     private readonly templateMetadataService: TemplateMetadataService,
-    private readonly fileStorageService: FileStorageService,
+    private readonly s3Service: S3Service,
     @Inject(DOCUMENT_PROCESSOR_SERVICE_NAME)
     private readonly documentProcessorService: DocumentProcessorServiceClient,
   ) {}
@@ -36,9 +36,9 @@ export class TemplateService {
   @Log(TemplateService.logger)
   async create(input: CreateTemplateInput): Promise<TemplateMetadataType> {
     const filename = path.basename(input.file.name!);
-    const filepath = path.join('/templates', filename);
+    const filepath = path.join('templates', filename);
 
-    await this.fileStorageService.upload(input.file, filepath!);
+    await this.s3Service.upload(input.file, filepath!);
     const response = await firstValueFrom(
       this.documentProcessorService.analyze({
         file: new Uint8Array(await input.file.arrayBuffer()),
@@ -87,7 +87,7 @@ export class TemplateService {
     if (!templateMetadata) {
       throw new Error(`Template with id ${input.id} not found`);
     }
-    await this.fileStorageService.delete(templateMetadata.path);
+    await this.s3Service.delete(templateMetadata.path);
     await this.templateMetadataService.delete(input.id);
   }
 
@@ -97,6 +97,6 @@ export class TemplateService {
     if (!templateMetadata) {
       throw new Error(`Template with id ${input.id} not found`);
     }
-    return this.fileStorageService.download(templateMetadata.path);
+    return this.s3Service.download(templateMetadata.path);
   }
 }

@@ -3,12 +3,12 @@ import { DocumentsService } from './documents.service';
 import { DocumentsController } from './documents.controller';
 import { DocumentCreatorModule } from './document-creator/document-creator.module';
 import { TemplateModule } from '../templates/templates.module';
-import { FileStorageModule } from '@auto-document/nest/file.module';
 import { ConfigService } from '@nestjs/config';
 import type { Config } from '../config';
+import { S3Module } from 'node_modules/@auto-document/nest/src/s3/s3.module';
 
 @Module({
-  imports: [DocumentCreatorModule, TemplateModule, FileStorageModule],
+  imports: [DocumentCreatorModule, TemplateModule, S3Module],
   providers: [
     {
       provide: 'BASE_URL',
@@ -21,4 +21,3 @@ import type { Config } from '../config';
   controllers: [DocumentsController],
 })
 export class DocumentsModule {}
-
