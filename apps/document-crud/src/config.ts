@@ -4,7 +4,6 @@ import { CreateDocumentsInputSchema } from './documents/documents.router.schema'
 import packageJson from '../package.json';
 import { FileStorageConfigSchema } from '@auto-document/nest/file.module';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
-import { FileStorageType } from '@auto-document/nest/file.module';
 loadDotenv();
 
 export const configSchema = z.object({
@@ -27,7 +26,6 @@ export const configSchema = z.object({
     port: z.coerce.number(),
   }),
   ...S3ConfigSchema.shape,
-  ...FileStorageConfigSchema.shape,
   mongo: z.object({
     uri: z.string(),
   }),
@@ -60,9 +58,6 @@ const templatedConfig: z.infer<typeof configSchema> = {
     region: process.env.S3_REGION!,
     endpoint: process.env.S3_ENDPOINT!,
     bucket: process.env.S3_BUCKET!,
-  },
-  fileStorage: {
-    type: process.env.FILE_STORAGE_TYPE! as FileStorageType,
   },
   mongo: {
     uri: process.env.MONGODB_URI!,

@@ -22,7 +22,7 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
     map_values: dict[str, list[BytesIO]] = {}
 
     for item in placeholder_data:
-        key = item['key']
+        key = item['key'].strip()
         placeholder_type = item['type']
         value = item['value']
 
@@ -33,22 +33,35 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
 
     return text_values, map_values
 
-def replace_text_in_run(run, text_values: dict[str, str]) -> None:
-    text = clean_bidi(run.text)
+def replace_placeholders_in_text(text: str, text_values: dict[str, str]) -> str:
+    text = clean_bidi(text)
     
     def replacer(match):
         key = match.group(1).strip()
         return text_values.get(key, match.group(0))
 
-    new_text = PLACEHOLDER_PATTERN.sub(replacer, text)
-    
-    if new_text != text:
-        run.text = new_text
+    return PLACEHOLDER_PATTERN.sub(replacer, text)
+
+def replace_text_in_paragraph(paragraph, text_values: dict[str, str]) -> None:
+    runs = list(paragraph.runs)
+    if not runs:
+        return
+
+    full_text = ''.join(run.text for run in runs)
+    new_text = replace_placeholders_in_text(full_text, text_values)
+
+    if new_text == clean_bidi(full_text):
+        return
+
+    first_run = runs[0]
+    first_run.text = new_text
+
+    for run in runs[1:]:
+        run.text = ''
 
 def replace_text_in_frame(text_frame, text_values: dict[str, str]) -> None:
     for paragraph in text_frame.paragraphs:
-        for run in paragraph.runs:
-            replace_text_in_run(run, text_values)
+        replace_text_in_paragraph(paragraph, text_values)
 
 def find_map_placeholder(text: str, map_values: dict[str, list[BytesIO]]) -> str | None:
     text = clean_bidi(text)
