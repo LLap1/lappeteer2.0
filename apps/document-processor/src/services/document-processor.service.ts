@@ -29,7 +29,7 @@ export class DocumentProcessorService implements DocumentProcessorServiceControl
       await Bun.write(inputFilePath, request.file);
 
       const dataString = JSON.stringify(request.data);
-      const outputFilepath = await $`python3 ${pythonPath} ${inputFilePath} ${dataString}`.text();
+      const outputFilepath = await $`python ${pythonPath} ${inputFilePath} ${dataString}`.text();
       const outputPath = outputFilepath.trim();
 
       const outputFile = Bun.file(outputPath);
@@ -56,7 +56,7 @@ export class DocumentProcessorService implements DocumentProcessorServiceControl
     try {
       await Bun.write(inputFilePath, request.file);
 
-      const output = await $`python3 ${pythonPath} ${inputFilePath}`.text();
+      const output = await $`python ${pythonPath} ${inputFilePath}`.text();
       const result = JSON.parse(output);
 
       await unlink(inputFilePath).catch(() => {});
