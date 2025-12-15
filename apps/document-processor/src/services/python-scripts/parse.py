@@ -48,10 +48,10 @@ def record_placeholder(
         print(f"  Skipping duplicate placeholder: {key} (already recorded)", file=sys.stderr)
 
 
-def find_placeholders_in_shape(shape: BaseShape) -> List[tuple[str, str]]:
+def find_placeholders_in_text_frame(text_frame: TextFrame) -> List[tuple[str, str]]:
     found_placeholders_set: set[tuple[str, str]] = set()
 
-    for paragraph in shape.text_frame.paragraphs:
+    for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if run.text:
                 text = run.text
@@ -63,8 +63,14 @@ def find_placeholders_in_shape(shape: BaseShape) -> List[tuple[str, str]]:
                 for key, type in matches:
                     found_placeholders_set.add((key, type))
 
-
     return list(found_placeholders_set)
+
+
+def find_placeholders_in_shape(shape: BaseShape) -> List[tuple[str, str]]:
+    if not hasattr(shape, 'text_frame') or not shape.text_frame:
+        return []
+    
+    return find_placeholders_in_text_frame(shape.text_frame)
 
 
 def process_shape_for_placeholders(
@@ -83,6 +89,26 @@ def process_shape_for_placeholders(
         record_placeholder(placeholders, key, type, width, height)
 
 
+def process_table_for_placeholders(
+    shape: BaseShape,
+    placeholders: Dict[str, Dict[str, str | float]]
+) -> None:
+    if not hasattr(shape, 'table') or not shape.table:
+        return
+    
+    for row in shape.table.rows:
+        for cell in row.cells:
+            if cell.text_frame:
+                found_placeholders = find_placeholders_in_text_frame(cell.text_frame)
+                
+                if found_placeholders:
+                    cell_width = getattr(cell, 'width', None)
+                    cell_height = getattr(cell, 'height', None)
+                    
+                    for key, type in found_placeholders:
+                        record_placeholder(placeholders, key, type, cell_width, cell_height)
+
+
 def extract_placeholders_from_presentation(pptx_data: BytesIO) -> List[Dict[str, str | float]]:
     prs: Presentation = Presentation(pptx_data)
     placeholders: Dict[str, Dict[str, str | float]] = {}
@@ -91,9 +117,12 @@ def extract_placeholders_from_presentation(pptx_data: BytesIO) -> List[Dict[str,
     
     for slide_idx, slide in enumerate(prs.slides):
         print(f"Processing slide {slide_idx}...", file=sys.stderr)
-        text_shapes = [shape for shape in slide.shapes if hasattr(shape, 'text_frame') and shape.text_frame ]
-        for shape in text_shapes:
-            process_shape_for_placeholders(shape, placeholders)
+        
+        for shape in slide.shapes:
+            if hasattr(shape, 'table') and shape.table:
+                process_table_for_placeholders(shape, placeholders)
+            elif hasattr(shape, 'text_frame') and shape.text_frame:
+                process_shape_for_placeholders(shape, placeholders)
     
     print(f"\nTotal unique placeholders found: {len(placeholders)}", file=sys.stderr)
     
@@ -110,18 +139,17 @@ def main() -> None:
     try:
         with open(filepath, 'rb') as f:
             pptx_data: BytesIO = BytesIO(f.read())
-    except Exception as e:
+    except Exception:
         trace = traceback.format_exc()
         sys.stderr.write(f"Error reading file {filepath}: {trace}\n")
         sys.exit(1)
     
     try:
-        placeholders: List[Dict[str, str | float]] = extract_placeholders_from_presentation(pptx_data)
-        output_data: str = json.dumps(placeholders)
+        placeholders = extract_placeholders_from_presentation(pptx_data)
+        output_data = json.dumps(placeholders)
         print(output_data, file=sys.stdout)
         sys.exit(0)
-    except Exception as e:
-        import traceback
+    except Exception:
         trace = traceback.format_exc()
         sys.stderr.write(trace)
         sys.exit(1)
