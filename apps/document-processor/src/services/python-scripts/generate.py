@@ -13,17 +13,9 @@ from typing import Dict, List, Optional, Tuple, Any
 from pptx import Presentation
 from pptx.shapes.base import BaseShape
 from pptx.text.text import TextFrame
-from pptx.util import Pt, Length
 from pptx.enum.text import MSO_AUTO_SIZE
 
-PLACEHOLDER_PATTERN = re.compile(r'\{\{\s*(.*?)\s*\:\s*(.*?)\s*\}\}')
-EMU_PER_INCH = 914400
-POINTS_PER_INCH = 72
-MIN_FONT_SIZE = 6.0
-FONT_SIZE_STEP = 0.1
-DEFAULT_FONT_SIZE = 12
-CHAR_WIDTH_FACTOR = 0.6
-LINE_HEIGHT_FACTOR = 1.2
+PLACEHOLDER_PATTERN = re.compile(r'\{\{\s*([^:}]+?)\s*\:\s*([^}]*?)\s*\}\}')
 
 
 def load_presentation(pptx_data: BytesIO | str) -> Presentation:
@@ -53,151 +45,11 @@ def prepare_placeholders(parse_data: List[Dict[str, Any]]) -> Tuple[Dict[str, st
     return string_placeholders, map_placeholders
 
 
-def get_text_frame_font_size(text_frame: TextFrame) -> Optional[float]:
-    for paragraph in text_frame.paragraphs:
-        for run in paragraph.runs:
-            if run.font and run.font.size:
-                return run.font.size.pt
-    return None
-
-
-def set_text_frame_font_size(text_frame: TextFrame, font_size_pt: float) -> None:
-    for paragraph in text_frame.paragraphs:
-        for run in paragraph.runs:
-            if run.font:
-                run.font.size = Pt(font_size_pt)
-
-
-def emu_to_points(emu_value: Optional[Length | int]) -> float:
-    if not emu_value:
-        return 0.0
-    return (float(emu_value) / EMU_PER_INCH) * POINTS_PER_INCH
-
-
-def get_text_frame_margins_pt(text_frame: TextFrame) -> Dict[str, float]:
-    margin_attrs: List[str] = ['margin_top', 'margin_bottom', 'margin_left', 'margin_right']
-    margins: Dict[str, float] = {}
-    
-    for attr in margin_attrs:
-        margin_emu = getattr(text_frame, attr, None) if hasattr(text_frame, attr) else None
-        margins[attr] = emu_to_points(margin_emu) if margin_emu else 0.0
-    
-    return margins
-
-
-def estimate_text_fits(
-    text_frame: TextFrame,
-    text_content: str,
-    frame_height_emu: Length | int,
-    frame_width_emu: Length | int
-) -> bool:
-    if not text_frame or not text_content or not frame_height_emu or not frame_width_emu:
-        return True
-    
-    frame_height_pt: float = emu_to_points(frame_height_emu)
-    frame_width_pt: float = emu_to_points(frame_width_emu)
-    
-    margins: Dict[str, float] = get_text_frame_margins_pt(text_frame)
-    available_height_pt: float = frame_height_pt - margins['margin_top'] - margins['margin_bottom']
-    available_width_pt: float = frame_width_pt - margins['margin_left'] - margins['margin_right']
-    
-    if available_height_pt <= 0 or available_width_pt <= 0:
-        return True
-    
-    font_size: float = get_text_frame_font_size(text_frame) or DEFAULT_FONT_SIZE
-    avg_char_width_pt: float = font_size * CHAR_WIDTH_FACTOR
-    
-    words = text_content.split()
-    if not words:
-        return True
-    
-    lines: List[str] = []
-    current_line = ""
-    
-    for word in words:
-        test_line = current_line + (" " if current_line else "") + word
-        test_width = len(test_line) * avg_char_width_pt
-        
-        if test_width <= available_width_pt:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-    
-    if current_line:
-        lines.append(current_line)
-    
-    line_height_pt: float = font_size * LINE_HEIGHT_FACTOR
-    total_height_pt: float = len(lines) * line_height_pt
-    
-    safety_margin_pt = 2.0
-    return total_height_pt <= (available_height_pt - safety_margin_pt)
-
-
-def adjust_text_frame_font_size(
-    text_frame: TextFrame,
-    shape_height_emu: Length | int,
-    shape_width_emu: Length | int
-) -> None:
-    if not text_frame:
-        return
-    
-    text_frame.word_wrap = True
-    text_frame.auto_size = None
-    
-    full_text = text_frame.text
-    if not full_text:
-        return
-    
-    if not shape_height_emu or not shape_width_emu:
-        return
-    
-    original_font_size = get_text_frame_font_size(text_frame)
-    if not original_font_size:
-        original_font_size = DEFAULT_FONT_SIZE
-        set_text_frame_font_size(text_frame, original_font_size)
-    
-    if estimate_text_fits(text_frame, full_text, shape_height_emu, shape_width_emu):
-        return
-    
-    original_size = float(original_font_size)
-    
-    low = MIN_FONT_SIZE
-    high = original_size
-    best_fit = MIN_FONT_SIZE
-    
-    while high - low >= FONT_SIZE_STEP:
-        mid = round((low + high) / 2.0, 1)
-        set_text_frame_font_size(text_frame, mid)
-        
-        if estimate_text_fits(text_frame, full_text, shape_height_emu, shape_width_emu):
-            best_fit = mid
-            low = mid + FONT_SIZE_STEP
-        else:
-            high = mid - FONT_SIZE_STEP
-    
-    set_text_frame_font_size(text_frame, best_fit)
-    
-    if not estimate_text_fits(text_frame, full_text, shape_height_emu, shape_width_emu):
-        set_text_frame_font_size(text_frame, MIN_FONT_SIZE)
-        return
-    
-    max_increase_steps = 3
-    current_fit = best_fit
-    
-    for i in range(1, max_increase_steps + 1):
-        test_size = best_fit + (FONT_SIZE_STEP * i)
-        if test_size > original_size:
-            break
-        
-        set_text_frame_font_size(text_frame, test_size)
-        if estimate_text_fits(text_frame, full_text, shape_height_emu, shape_width_emu):
-            current_fit = test_size
-        else:
-            break
-    
-    set_text_frame_font_size(text_frame, current_fit)
+def clean_bidi_text(text: str) -> str:
+    return ''.join(
+        char for char in text 
+        if not (0x200B <= ord(char) <= 0x200F or 0x202A <= ord(char) <= 0x202E or 0x2066 <= ord(char) <= 0x2069)
+    )
 
 
 def replace_text_in_text_frame(
@@ -213,13 +65,22 @@ def replace_text_in_text_frame(
     if not original_text:
         return
     
+    clean_text = clean_bidi_text(original_text)
+    
     def replace_placeholder(match: re.Match[str]) -> str:
         key = match.group(1).strip()
+        type_val = match.group(2).strip()
+        
+        if not type_val and ':' in key:
+            parts = key.split(':', 1)
+            if len(parts) == 2:
+                key = parts[0].strip()
+        
         return placeholders.get(key, match.group(0))
     
-    new_text = pattern.sub(replace_placeholder, original_text)
+    new_text = pattern.sub(replace_placeholder, clean_text)
     
-    if new_text != original_text:
+    if new_text != clean_text:
         text_frame.text = new_text
 
 
@@ -228,9 +89,19 @@ def find_placeholders_in_text_frame(text_frame: TextFrame) -> List[tuple[str, st
     
     full_text = text_frame.text if hasattr(text_frame, 'text') else ""
     if full_text:
-        matches = PLACEHOLDER_PATTERN.findall(full_text)
+        clean_text = clean_bidi_text(full_text)
+        matches = PLACEHOLDER_PATTERN.findall(clean_text)
         for key, type in matches:
-            found_placeholders_set.add((key.strip(), (type or '').strip()))
+            key = key.strip()
+            type = type.strip()
+            
+            if not type and ':' in key:
+                parts = key.split(':', 1)
+                if len(parts) == 2:
+                    key = parts[0].strip()
+                    type = parts[1].strip()
+            
+            found_placeholders_set.add((key, type))
 
     return list(found_placeholders_set)
 
@@ -330,6 +201,7 @@ def process_shape_for_placeholders(
             if has_text_frame:
                 shape.text_frame.word_wrap = True
                 shape.text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+                shape.text_frame.fit_text()
     
     return None, None
 

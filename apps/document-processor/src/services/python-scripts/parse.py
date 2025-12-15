@@ -16,7 +16,7 @@ from pptx.util import Length
 
 EMU_PER_INCH = 914400
 DPI = 96
-PLACEHOLDER_PATTERN = re.compile(r'\{\{\s*(.*?)\s*\:\s*(.*?)\s*\}\}')
+PLACEHOLDER_PATTERN = re.compile(r'\{\{\s*([^:}]+?)\s*\:\s*([^}]*?)\s*\}\}')
 
 
 def emu_to_px(value: Length | int) -> float:
@@ -50,18 +50,30 @@ def record_placeholder(
 
 def find_placeholders_in_text_frame(text_frame: TextFrame) -> List[tuple[str, str]]:
     found_placeholders_set: set[tuple[str, str]] = set()
+    text = text_frame.text
+    
+    clean_text = ''.join(
+        char for char in text 
+        if not (0x200B <= ord(char) <= 0x200F or 0x202A <= ord(char) <= 0x202E or 0x2066 <= ord(char) <= 0x2069)
+    )
+    
+    matches = PLACEHOLDER_PATTERN.findall(clean_text)
+    if matches:
+        print(f"  Found text: {text}", file=sys.stderr)
+        print(f"  Clean text: {clean_text}", file=sys.stderr)
+        print(f"  Matches: {matches}", file=sys.stderr)
 
-    for paragraph in text_frame.paragraphs:
-        for run in paragraph.runs:
-            if run.text:
-                text = run.text
-                matches = PLACEHOLDER_PATTERN.findall(text)
-                if matches:
-                    print(f"  Found run text: {text}", file=sys.stderr)
-                    print(f"  Matches: {matches}", file=sys.stderr)
-
-                for key, type in matches:
-                    found_placeholders_set.add((key, type))
+    for key, type in matches:
+        key = key.strip()
+        type = type.strip()
+        
+        if not type and ':' in key:
+            parts = key.split(':', 1)
+            if len(parts) == 2:
+                key = parts[0].strip()
+                type = parts[1].strip()
+        
+        found_placeholders_set.add((key, type))
 
     return list(found_placeholders_set)
 
