@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
 import { DocumentMapCreatorModule } from './services/document-map-creator.module';
-import { config } from './config';
-import { ConfigModule } from '@nestjs/config';
+import { Config, config } from './config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from '@auto-document/nest/logger.module';
 
 @Module({
   imports: [
-    LoggerModule,
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService<Config>) => {
+        const loggerConfig = configService.get<Config['logger']>('logger')?.pino!;
+        return loggerConfig;
+      },
+    }),
     DocumentMapCreatorModule,
     ConfigModule.forRoot({
       isGlobal: true,

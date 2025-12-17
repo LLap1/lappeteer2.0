@@ -7,17 +7,11 @@ export const configSchema = z.object({
   server: z.object({
     port: z.coerce.number(),
   }),
-  maps: z.object({
-    maxParallelMaps: z.coerce.number(),
-  }),
 });
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT) || 8080,
-  },
-  maps: {
-    maxParallelMaps: Number(process.env.MAX_PARALLEL_MAPS) || 10,
   },
 };
 

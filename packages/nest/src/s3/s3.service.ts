@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { S3Client } from 'bun';
-import { FileStorageService } from '../file/file.service';
 import { basename } from 'path';
 
 @Injectable()
-export class S3Service implements FileStorageService {
+export class S3Service {
   constructor(private readonly s3Client: S3Client) {}
 
   async upload(file: File, path: string): Promise<number> {

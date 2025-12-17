@@ -3,6 +3,11 @@ import { config as loadDotenv } from 'dotenv';
 import { Cluster } from 'puppeteer-cluster';
 import packageJson from '../package.json';
 import { DOCUMENTMAPCREATOR_PACKAGE_NAME } from '@auto-document/types/proto/document-map-creator';
+import { LoggerConfigSchema } from '@auto-document/nest/logger.module';
+import { multistream } from 'pino';
+import pinoElastic from 'pino-elasticsearch';
+import pinoPretty from 'pino-pretty';
+
 loadDotenv();
 
 export const configSchema = z.object({
@@ -27,6 +32,7 @@ export const configSchema = z.object({
     }),
     mapsPerPage: z.coerce.number(),
   }),
+  ...LoggerConfigSchema.shape,
 });
 
 const templatedConfig: z.infer<typeof configSchema> = {
@@ -49,6 +55,20 @@ const templatedConfig: z.infer<typeof configSchema> = {
       },
     },
     mapsPerPage: Number(process.env.MAPS_PER_PAGE!),
+  },
+  logger: {
+    pino: multistream([
+      process.env.ENV === 'produciton'
+        ? pinoElastic({
+            index: process.env.ELASTICSEARCH_INDEX!,
+            node: process.env.ELASTICSEARCH_NODE!,
+            esVersion: Number(process.env.ELASTICSEARCH_ES_VERSION!),
+          })
+        : pinoPretty({
+            colorize: true,
+            singleLine: false,
+          }),
+    ]),
   },
 };
 

@@ -1,36 +1,39 @@
-import { Global, Module } from '@nestjs/common';
+import { type DynamicModule, type Type } from '@nestjs/common';
 import { Logger, LoggerModule as PinoNestLoggerModule } from 'nestjs-pino';
-import pino from 'pino';
+import { type DestinationStream } from 'pino';
+import { config, z } from 'zod';
 
-@Global()
-@Module({
-  imports: [
-    PinoNestLoggerModule.forRoot({
-      pinoHttp: {
-        transport: {
-          targets: [
-            {
-              target: 'pino-pretty',
-              options: { singleLine: false, colorize: true },
+export const LoggerConfigSchema = z.object({
+  logger: z.object({
+    pino: z.custom<DestinationStream>(),
+  }),
+});
+
+export type LoggerConfig = z.infer<typeof LoggerConfigSchema>;
+
+export class LoggerModule {
+  static forRootAsync({
+    inject,
+    useFactory,
+  }: {
+    inject: Type[];
+    useFactory: (...args: any[]) => DestinationStream;
+  }): DynamicModule {
+    return {
+      global: true,
+      module: LoggerModule,
+      imports: [
+        PinoNestLoggerModule.forRootAsync({
+          inject,
+          useFactory: (...args: any[]) => ({
+            pinoHttp: {
+              stream: useFactory(...args),
             },
-            {
-              target: 'pino-elasticsearch',
-              options: {
-                singleLine: true,
-                colorize: false,
-                index: 'an-index',
-                node: 'http://localhost:9200',
-                esVersion: 7,
-                flushBytes: 1000,
-              },
-            },
-          ],
-        },
-        timestamp: pino.stdTimeFunctions.isoTime,
-      },
-    }),
-  ],
-  providers: [Logger],
-  exports: [Logger],
-})
-export class LoggerModule {}
+          }),
+        }),
+      ],
+      providers: [Logger],
+      exports: [Logger],
+    };
+  }
+}
