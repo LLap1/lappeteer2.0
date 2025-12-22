@@ -5,6 +5,8 @@ import tempfile
 from io import BytesIO
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.util import Pt
+from pptx.enum.text import MSO_AUTO_SIZE
 
 def decode_data_url(data_url: str) -> BytesIO:
     base64_data = data_url.split(',', 1)[1]
@@ -53,7 +55,46 @@ def is_placeholder_run(run) -> bool:
     font = run.font
     return font.bold and font.italic and font.underline
 
-def process_text_frame(text_frame, text_values: dict[str, str]) -> None:
+def get_font_size_pt(run) -> float:
+    if run.font.size:
+        return run.font.size.pt
+    return 18.0
+
+def estimate_text_width(text: str, font_size_pt: float) -> float:
+    avg_char_width_ratio = 0.6
+    return len(text) * font_size_pt * avg_char_width_ratio
+
+def estimate_text_height(text: str, font_size_pt: float, frame_width: float) -> float:
+    if frame_width <= 0:
+        return font_size_pt
+    
+    chars_per_line = frame_width / (font_size_pt * 0.6)
+    if chars_per_line <= 0:
+        chars_per_line = 1
+    
+    num_lines = max(1, len(text) / chars_per_line)
+    line_height = font_size_pt * 1.2
+    return num_lines * line_height
+
+def calculate_optimal_font_size(text: str, original_size_pt: float, frame_width: float, frame_height: float, min_size_pt: float = 6.0) -> float:
+    if frame_width <= 0 or frame_height <= 0:
+        return original_size_pt
+    
+    current_size = original_size_pt
+    
+    while current_size > min_size_pt:
+        estimated_height = estimate_text_height(text, current_size, frame_width)
+        
+        if estimated_height <= frame_height:
+            return current_size
+        
+        current_size -= 0.5
+    
+    return min_size_pt
+
+def process_text_frame(text_frame, text_values: dict[str, str], shape=None) -> None:
+    modified_runs = []
+    
     for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if not is_placeholder_run(run):
@@ -69,11 +110,38 @@ def process_text_frame(text_frame, text_values: dict[str, str]) -> None:
             if placeholder_type != 'text':
                 continue
             
+            original_font_size = get_font_size_pt(run)
             run.text = text_values[key]
             run.font.bold = False
             run.font.italic = False
             run.font.underline = False
             run.font.color.rgb = RGBColor(0, 0, 0)
+            
+            modified_runs.append((run, text_values[key], original_font_size))
+    
+    if modified_runs and shape is not None:
+        try:
+            frame_width = shape.width.pt if hasattr(shape, 'width') else 0
+            frame_height = shape.height.pt if hasattr(shape, 'height') else 0
+            
+            if frame_width > 0 and frame_height > 0:
+                for run, text, original_size in modified_runs:
+                    optimal_size = calculate_optimal_font_size(
+                        text, 
+                        original_size, 
+                        frame_width, 
+                        frame_height
+                    )
+                    
+                    if optimal_size < original_size:
+                        run.font.size = Pt(optimal_size)
+        except Exception:
+            pass
+    
+    try:
+        text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+    except Exception:
+        pass
 
 def find_image_placeholder_in_shape(shape, image_values: dict[str, list[bytes]]) -> tuple[str, str] | None:
     if not hasattr(shape, 'text_frame'):
@@ -112,7 +180,7 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
         return True
 
     if hasattr(shape, 'text_frame'):
-        process_text_frame(shape.text_frame, text_values)
+        process_text_frame(shape.text_frame, text_values, shape)
     
     return False
 
@@ -120,7 +188,7 @@ def process_table(table, text_values: dict[str, str], image_values: dict[str, li
     for row in table.rows:
         for cell in row.cells:
             if hasattr(cell, 'text_frame'):
-                process_text_frame(cell.text_frame, text_values)
+                process_text_frame(cell.text_frame, text_values, cell)
 
 def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[bytes]]) -> None:
     shapes_list = list(shapes)

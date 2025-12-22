@@ -9,7 +9,7 @@ import {
   DOCUMENT_PROCESSOR_SERVICE_NAME,
   type DocumentProcessorServiceClient,
 } from '@auto-document/types/proto/document-processor';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map, of } from 'rxjs';
 import { Log } from '@auto-document/utils/log';
 
 @Injectable()
@@ -48,8 +48,8 @@ export class DocumentCreatorService {
           data: matchingParamPlaceholders,
         } as GenerateDocumentRequest;
 
-        const fileBuffer = (await firstValueFrom(this.documentProcessorService.generate(input))).file;
-        const file = new File([new Uint8Array(fileBuffer)], param.documentFilename, {
+        const fileBuffer = await firstValueFrom(this.documentProcessorService.generate(input));
+        const file = new File([new Uint8Array(fileBuffer.file)], param.documentFilename, {
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         });
         return file;

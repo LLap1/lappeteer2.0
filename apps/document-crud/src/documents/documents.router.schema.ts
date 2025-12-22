@@ -6,15 +6,8 @@ import {
   TextPlaceholderParams,
   ImagePlaceholderParams,
 } from './document-creator/placholder-creator/placeholder-creator.model';
+import type { Document } from '@auto-document/types/document';
 import { v4 as uuidv4 } from 'uuid';
-
-export type CreateDocumentsInput = {
-  templateId: string;
-  zipFilename: string;
-  params: CreateDocumentParams[];
-};
-export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;
-
 export type CreateDocumentParams = {
   placeholders: CreatePlaceholderParams<PlaceholderType>[];
   documentFilename: string;
@@ -72,8 +65,10 @@ export const CreateDocumentsInputSchema = z
   })
   .strict();
 
-export const CreateDocumentsOutputSchema = z.object({
-  url: z.url(),
+export const CreateDocumentsOutputSchema: z.ZodType<Document> = z.object({
+  id: z.string(),
+  templateId: z.string(),
+  downloadUrl: z.url(),
 });
 
 export const DownloadDocumentInputSchema = z.object({
@@ -82,4 +77,32 @@ export const DownloadDocumentInputSchema = z.object({
 
 export const DownloadDocumentOutputSchema = z.file();
 
+const ListDocumentsOutputSchema = z.array(
+  z.object({
+    id: z.string(),
+    templateId: z.string(),
+    downloadUrl: z.url(),
+  }),
+);
+
+export const ListDocumentsAllInputSchema = z.object();
+export const ListDocumentsAllOutputSchema = ListDocumentsOutputSchema;
+export const ListDocumentsByTemplateIdInputSchema = z.object({ templateId: z.string() });
+
+export const ListDocumentsByTemplateIdOutputSchema = ListDocumentsOutputSchema;
+
 export type DownloadDocumentInput = z.infer<typeof DownloadDocumentInputSchema>;
+export type DownloadDocumentOutput = z.infer<typeof DownloadDocumentOutputSchema>;
+
+export type ListDocumentsAllInput = z.infer<typeof ListDocumentsAllInputSchema>;
+export type ListDocumentsAllOutput = z.infer<typeof ListDocumentsAllOutputSchema>;
+
+export type ListDocumentsByTemplateIdInput = z.infer<typeof ListDocumentsByTemplateIdInputSchema>;
+export type ListDocumentsByTemplateIdOutput = z.infer<typeof ListDocumentsByTemplateIdOutputSchema>;
+
+export type CreateDocumentsInput = {
+  templateId: string;
+  zipFilename: string;
+  params: CreateDocumentParams[];
+};
+export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;

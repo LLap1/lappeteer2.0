@@ -2,7 +2,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PlaceholderParams } from './placeholder-creator.model';
 import type { Placeholder } from '@auto-document/types/document';
 import { firstValueFrom } from 'rxjs';
-import { DOCUMENT_MAP_CREATOR_SERVICE_NAME, type DocumentMapCreatorServiceClient } from '@auto-document/types/proto/document-map-creator';
+import {
+  DOCUMENT_MAP_CREATOR_SERVICE_NAME,
+  type DocumentMapCreatorServiceClient,
+} from '@auto-document/types/proto/document-map-creator';
 @Injectable()
 export class PlaceholderCreatorService {
   constructor(

@@ -1,7 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { TemplateMetadataType } from './template-metadata/template-metadata.schema';
-import { TemplateMetadataService } from './template-metadata/template-metadata.service';
-
+import { templatesTable } from '../schemas/template.schema';
 import {
   type DeleteTemplateInput,
   type DownloadTemplateInput,
@@ -9,9 +7,8 @@ import {
   type GetTemplateInput,
   type GetTemplateOutput,
   type ListTemplatesOutput,
-  type UpdateTemplateInput,
-  type UpdateTemplateOutput,
   type CreateTemplateInput,
+  type CreateTemplateOutput,
 } from './templates.router.schema';
 import { S3Service } from '@auto-document/nest/s3.service';
 import path from 'path';
@@ -19,84 +16,99 @@ import {
   DOCUMENT_PROCESSOR_SERVICE_NAME,
   type DocumentProcessorServiceClient,
 } from '@auto-document/types/proto/document-processor';
-import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
+import { type PlaceholderMetadata, type PlaceholderType, type Template } from '@auto-document/types/document';
 import { firstValueFrom } from 'rxjs';
 import { Log } from '@auto-document/utils/log';
-
+import { DRIZZLE } from '@auto-document/nest/drizzle.module';
+import { eq } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { v4 as uuidv4 } from 'uuid';
+import { appRouter } from 'src/app.router';
+import { type RouterErrorMap } from '@auto-document/types/orpc';
 @Injectable()
 export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
+
   constructor(
-    private readonly templateMetadataService: TemplateMetadataService,
+    @Inject(DRIZZLE)
+    private readonly db: PostgresJsDatabase,
     private readonly s3Service: S3Service,
     @Inject(DOCUMENT_PROCESSOR_SERVICE_NAME)
     private readonly documentProcessorService: DocumentProcessorServiceClient,
   ) {}
 
   @Log(TemplateService.logger)
-  async create(input: CreateTemplateInput): Promise<TemplateMetadataType> {
+  async create(input: CreateTemplateInput): Promise<CreateTemplateOutput> {
+    const templateId = uuidv4();
     const filename = path.basename(input.file.name!);
-    const filepath = path.join('templates', filename);
+    const filepath = path.join('templates', templateId, filename);
 
-    await this.s3Service.upload(input.file, filepath!);
+    await this.s3Service.upload(input.file, filepath);
+
     const response = await firstValueFrom(
       this.documentProcessorService.analyze({
         file: new Uint8Array(await input.file.arrayBuffer()),
       }),
     );
 
-    const templateMetadata = await this.templateMetadataService.create({
-      name: filename,
-      path: filepath,
-      placeholders: response.placeholders as PlaceholderMetadata<PlaceholderType>[],
-    });
+    const placeholders = response.placeholders as PlaceholderMetadata<PlaceholderType>[];
 
-    return templateMetadata;
+    const [template] = await this.db
+      .insert(templatesTable)
+      .values({
+        id: templateId,
+        name: filename,
+        path: filepath,
+        placeholders,
+      })
+      .returning();
+
+    return template as Template;
   }
 
   @Log(TemplateService.logger)
-  async get(input: GetTemplateInput): Promise<GetTemplateOutput> {
-    const templateMetadata = await this.templateMetadataService.getById(input.id);
-    if (!templateMetadata) {
-      throw new Error(`Template with id ${input.id} not found`);
+  async get(
+    input: GetTemplateInput,
+    errors: RouterErrorMap<typeof appRouter.templates.get>,
+  ): Promise<GetTemplateOutput> {
+    const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.id));
+
+    if (!template) {
+      throw errors.TEMPLATE_NOT_FOUND({ data: { templateId: input.id } });
     }
-    return templateMetadata;
+
+    return template as Template;
   }
 
   @Log(TemplateService.logger)
   async list(): Promise<ListTemplatesOutput> {
-    return await this.templateMetadataService.list();
+    const result = await this.db.select().from(templatesTable);
+    return result as Template[];
   }
 
   @Log(TemplateService.logger)
-  async update(input: UpdateTemplateInput): Promise<UpdateTemplateOutput> {
-    const existing = await this.templateMetadataService.getById(input.id);
-    if (!existing) {
-      throw new Error(`Template with id ${input.id} not found`);
+  async delete(input: DeleteTemplateInput, errors: RouterErrorMap<typeof appRouter.templates.delete>): Promise<void> {
+    const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.id));
+
+    if (!template) {
+      throw errors.TEMPLATE_NOT_FOUND({ data: { templateId: input.id } });
     }
-    await this.templateMetadataService.update(input.id, { placeholders: input.placeholders });
-    return {
-      ...existing,
-      placeholders: input.placeholders,
-    };
+
+    await this.s3Service.delete(template.path);
+    await this.db.delete(templatesTable).where(eq(templatesTable.id, input.id));
   }
 
   @Log(TemplateService.logger)
-  async delete(input: DeleteTemplateInput): Promise<void> {
-    const templateMetadata = await this.templateMetadataService.getById(input.id);
-    if (!templateMetadata) {
-      throw new Error(`Template with id ${input.id} not found`);
-    }
-    await this.s3Service.delete(templateMetadata.path);
-    await this.templateMetadataService.delete(input.id);
-  }
+  async download(
+    input: DownloadTemplateInput,
+    errors: RouterErrorMap<typeof appRouter.templates.download>,
+  ): Promise<DownloadTemplateOutput> {
+    const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.id));
 
-  @Log(TemplateService.logger)
-  async download(input: DownloadTemplateInput): Promise<DownloadTemplateOutput> {
-    const templateMetadata = await this.templateMetadataService.getById(input.id);
-    if (!templateMetadata) {
-      throw new Error(`Template with id ${input.id} not found`);
+    if (!template) {
+      throw errors.TEMPLATE_NOT_FOUND({ data: { templateId: input.id } });
     }
-    return this.s3Service.download(templateMetadata.path);
+
+    return this.s3Service.download(template.path);
   }
 }

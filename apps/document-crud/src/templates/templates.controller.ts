@@ -1,53 +1,45 @@
 import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { TemplateService } from './templates.service';
 import { implement, Implement } from '@orpc/nest';
-import templateRouter from './templates.router';
-
+import { appRouter } from 'src/app.router';
 @Controller()
 export class TemplatesController {
   constructor(private readonly templateService: TemplateService) {}
 
-  @Implement(templateRouter.create)
+  @Implement(appRouter.templates.create)
   create() {
-    return implement(templateRouter.create).handler(async ({ input }) => {
+    return implement(appRouter.templates.create).handler(async ({ input, errors }) => {
       return this.templateService.create({
         file: input.file,
       });
     });
   }
 
-  @Implement(templateRouter.get)
+  @Implement(appRouter.templates.get)
   get() {
-    return implement(templateRouter.get).handler(async ({ input }) => {
-      return this.templateService.get(input);
+    return implement(appRouter.templates.get).handler(async ({ input, errors }) => {
+      return this.templateService.get(input, errors);
     });
   }
 
-  @Implement(templateRouter.list)
+  @Implement(appRouter.templates.list)
   list() {
-    return implement(templateRouter.list).handler(async () => {
+    return implement(appRouter.templates.list).handler(async () => {
       return this.templateService.list();
     });
   }
 
-  @Implement(templateRouter.update)
-  update() {
-    return implement(templateRouter.update).handler(async ({ input }) => {
-      return this.templateService.update(input);
-    });
-  }
-
-  @Implement(templateRouter.delete)
+  @Implement(appRouter.templates.delete)
   delete() {
-    return implement(templateRouter.delete).handler(async ({ input }) => {
-      return this.templateService.delete(input);
+    return implement(appRouter.templates.delete).handler(async ({ input, errors }) => {
+      return this.templateService.delete(input, errors);
     });
   }
 
-  @Implement(templateRouter.download)
+  @Implement(appRouter.templates.download)
   download() {
-    return implement(templateRouter.download).handler(async ({ input }) => {
-      return this.templateService.download(input);
+    return implement(appRouter.templates.download).handler(async ({ input, errors }) => {
+      return this.templateService.download(input, errors);
     });
   }
 }

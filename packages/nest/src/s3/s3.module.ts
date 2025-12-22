@@ -1,7 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { S3Service } from './s3.service';
 import { S3Client } from 'bun';
-import { ConfigService } from '@nestjs/config';
 import { z } from 'zod';
 
 const S3OptionsSchema = z.object({
@@ -12,22 +11,19 @@ const S3OptionsSchema = z.object({
   bucket: z.string(),
 });
 
+export type S3Options = z.infer<typeof S3OptionsSchema>;
 export const S3ConfigSchema = z.object({
   s3: S3OptionsSchema,
 });
 
-export type S3Config = z.infer<typeof S3ConfigSchema>;
-type S3Options = z.infer<typeof S3OptionsSchema>;
-
+@Global()
 @Module({
   providers: [
     {
       provide: S3Client,
-      useFactory: (configService: ConfigService) => {
-        const s3ClientConfig = configService.get<S3Options>('s3')!;
-        return new S3Client(s3ClientConfig);
+      useFactory: (config: S3Options) => {
+        return new S3Client(config);
       },
-      inject: [ConfigService],
     },
     S3Service,
   ],

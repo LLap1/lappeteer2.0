@@ -1,5 +1,10 @@
 import { z } from 'zod/v4';
-import { PptxFileSchema } from './file.types';
+
+export type Document = {
+  id: string;
+  templateId: string;
+  downloadUrl: string;
+};
 
 export type PlaceholderType = 'map' | 'text' | 'image';
 export type PlaceholderMetadata<T extends PlaceholderType> = {
@@ -30,8 +35,11 @@ export const MapPlaceholderDataSchema: z.ZodType<MapPlaceholderData> = z.array(z
 export const TextPlaceholderDataSchema: z.ZodType<TextPlaceholderData> = z.string();
 export const ImagePlaceholderDataSchema: z.ZodType<ImagePlaceholderData> = z.string();
 
-export const DocumentSchema = PptxFileSchema;
-export const TemplateSchema = PptxFileSchema;
+export const DocumentSchema: z.ZodType<Document> = z.object({
+  id: z.string(),
+  templateId: z.string(),
+  downloadUrl: z.url(),
+});
 
 export const PlaceholderTypeSchema: z.ZodType<PlaceholderType> = z.literal(['map', 'text', 'image']);
 
@@ -66,5 +74,11 @@ export const PlaceholderMetadataSchema: z.ZodType<PlaceholderMetadata<Placeholde
   height: z.coerce.number(),
 });
 
-export type Document = z.infer<typeof DocumentSchema>;
+export const TemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  path: z.string(),
+  placeholders: z.array(PlaceholderMetadataSchema),
+});
+
 export type Template = z.infer<typeof TemplateSchema>;

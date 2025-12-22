@@ -39,7 +39,9 @@ export type MapRouterActions =
       params: Omit<MapPoolObject, 'map'>[];
     };
 
-export const mapRouter: Router<{ maps: MapPoolState; dispatch: Dispatch<MapPoolAction> }, MapRouterActions> = {
+type MapRouterDependencies = { maps: MapPoolState; dispatch: Dispatch<MapPoolAction> };
+
+export const mapRouter: Router<MapRouterActions, MapRouterDependencies> = {
   addTileLayer: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
     if (!map) {
@@ -76,7 +78,7 @@ export const mapRouter: Router<{ maps: MapPoolState; dispatch: Dispatch<MapPoolA
 
     return MapUtils.setView({ map, center: params.center, zoom: params.zoom });
   },
-  
+
   addGeoJsonLayer: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
     if (!map) {

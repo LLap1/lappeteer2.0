@@ -1,8 +1,7 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ClientGrpc, ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
 import path from 'path';
-import type { Config } from './config';
+import { config } from './config';
 import {
   DOCUMENT_PROCESSOR_SERVICE_NAME,
   DOCUMENTPROCESSOR_PACKAGE_NAME,
@@ -20,9 +19,9 @@ import {
     ClientsModule.registerAsync([
       {
         name: 'DOCUMENT_PROCESSOR_CLIENT',
-        useFactory: (configService: ConfigService<Config>) => {
-          const host = configService.get('documentProcessor')!.host;
-          const port = configService.get('documentProcessor')!.port;
+        useFactory: () => {
+          const host = config.documentProcessor.host;
+          const port = config.documentProcessor.port;
           return {
             transport: Transport.GRPC,
             options: {
@@ -34,13 +33,12 @@ import {
             },
           };
         },
-        inject: [ConfigService],
       },
-      {
+      { 
         name: 'DOCUMENT_MAP_CREATOR_CLIENT',
-        useFactory: (configService: ConfigService<Config>) => {
-          const host = configService.get('documentMapCreator')!.host;
-          const port = configService.get('documentMapCreator')!.port;
+        useFactory: () => {
+          const host = config.documentMapCreator.host;
+          const port = config.documentMapCreator.port;
           return {
             transport: Transport.GRPC,
             options: {
@@ -52,7 +50,6 @@ import {
             },
           };
         },
-        inject: [ConfigService],
       },
     ]),
   ],

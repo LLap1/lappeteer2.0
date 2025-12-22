@@ -1,15 +1,13 @@
 import { Page } from 'puppeteer';
-import type { WindowActions } from '@auto-document/document-map-pool/routers/root';
+import type { WindowAction } from '@auto-document/document-map-pool/routers/root';
 import { z } from 'zod/v4';
 import { Base64DataURLSchema } from '@auto-document/types/file';
-
-export type WindowAction<T extends WindowActions['type'] = WindowActions['type']> = Extract<WindowActions, { type: T }>;
 
 export class WindowActionSender {
   constructor(private readonly page: Page) {}
 
-  async send<T extends WindowActions['type']>(action: WindowAction<T>): Promise<any> {
-    const result = await this.page.evaluate((action: WindowActions) => {
+  async send(action: WindowAction): Promise<any> {
+    const result = await this.page.evaluate((action: WindowAction) => {
       return window[action.type](action.params);
     }, action);
     return result as never;

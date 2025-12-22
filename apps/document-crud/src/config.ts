@@ -1,12 +1,24 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
-import { CreateDocumentsInputSchema } from './documents/documents.router.schema';
+import {
+  CreateDocumentsInputSchema,
+  CreateDocumentsOutputSchema,
+  DownloadDocumentInputSchema,
+  DownloadDocumentOutputSchema,
+  ListDocumentsAllInputSchema,
+  ListDocumentsAllOutputSchema,
+  ListDocumentsByTemplateIdInputSchema,
+  ListDocumentsByTemplateIdOutputSchema,
+} from './documents/documents.router.schema';
 import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
 import { LoggerConfigSchema } from '@auto-document/nest/logger.module';
 import { multistream } from 'pino';
 import pinoElastic from 'pino-elasticsearch';
 import pinoPretty from 'pino-pretty';
+import { DrizzleConfigSchema } from '@auto-document/nest/drizzle.module';
+import type { OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
+import { CreateTemplateInputSchema } from './templates/templates.router.schema';
 
 loadDotenv();
 
@@ -18,12 +30,7 @@ export const configSchema = z.object({
     baseUrl: z.url(),
     environment: EnvironmentSchema.default('development'),
   }),
-  openApi: z.object({
-    title: z.string(),
-    version: z.string(),
-    description: z.string(),
-    commonSchemas: z.record(z.string(), z.object({ schema: z.any() })),
-  }),
+  openApi: z.custom<OpenAPIGeneratorGenerateOptions>(),
   documentProcessor: z.object({
     host: z.string(),
     port: z.coerce.number(),
@@ -34,9 +41,7 @@ export const configSchema = z.object({
   }),
   ...S3ConfigSchema.shape,
   ...LoggerConfigSchema.shape,
-  mongo: z.object({
-    uri: z.string(),
-  }),
+  ...DrizzleConfigSchema.shape,
 });
 
 const templatedConfig: z.infer<typeof configSchema> = {
@@ -46,11 +51,10 @@ const templatedConfig: z.infer<typeof configSchema> = {
     environment: process.env.ENV as Environment,
   },
   openApi: {
-    title: packageJson.name,
-    version: packageJson.version,
-    description: packageJson.description,
-    commonSchemas: {
-      CreateDocumentsInput: { schema: CreateDocumentsInputSchema },
+    info: {
+      title: packageJson.name,
+      version: packageJson.version,
+      description: packageJson.description,
     },
   },
   documentProcessor: {
@@ -68,8 +72,8 @@ const templatedConfig: z.infer<typeof configSchema> = {
     endpoint: process.env.S3_ENDPOINT!,
     bucket: process.env.S3_BUCKET!,
   },
-  mongo: {
-    uri: process.env.MONGODB_URI!,
+  drizzle: {
+    connectionString: process.env.DRIZZLE_CONNECTION_STRING!,
   },
   logger: {
     pino: multistream([

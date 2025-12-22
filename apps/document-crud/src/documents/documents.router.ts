@@ -3,17 +3,30 @@ import {
   CreateDocumentsOutputSchema,
   DownloadDocumentInputSchema,
   DownloadDocumentOutputSchema,
+  ListDocumentsAllInputSchema,
+  ListDocumentsAllOutputSchema,
+  ListDocumentsByTemplateIdInputSchema,
+  ListDocumentsByTemplateIdOutputSchema,
 } from './documents.router.schema';
 import { oc } from '@orpc/contract';
 import { createDocumentInputWithNoMapsExample } from 'src/docs/examples/create-document-input-no-maps';
 
-const create = oc
+const root = oc;
+
+const create = root
   .route({
     method: 'POST',
     path: '/documents',
     summary: 'Create documents',
     tags: ['Documents'],
     description: 'Create documents from a template with provided data',
+  })
+  .errors({
+    DOCUMENT_CREATION_FAILED: {
+      status: 400,
+      message: 'Document creation failed',
+      data: undefined,
+    },
   })
   .input(
     CreateDocumentsInputSchema.meta({
@@ -22,7 +35,7 @@ const create = oc
   )
   .output(CreateDocumentsOutputSchema);
 
-const download = oc
+const download = root
   .route({
     method: 'GET',
     path: '/documents',
@@ -33,9 +46,33 @@ const download = oc
   .input(DownloadDocumentInputSchema)
   .output(DownloadDocumentOutputSchema);
 
-const router = oc.router({
+const listByTemplateId = root
+  .route({
+    method: 'GET',
+    path: '/documents/{templateId}/list',
+    summary: 'List Documents by Template ID',
+    tags: ['Documents'],
+    description: 'List all documents that were created from a specific template.',
+  })
+  .input(
+    ListDocumentsByTemplateIdInputSchema.meta({ examples: [{ templateId: 'b5a38848-6723-4cb6-a969-cf7170826280' }] }),
+  )
+  .output(ListDocumentsByTemplateIdOutputSchema);
+
+const listAll = root
+  .route({
+    method: 'GET',
+    path: '/documents/list',
+    summary: 'List Documents',
+    tags: ['Documents'],
+    description: 'List all documents that were created.',
+  })
+  .input(ListDocumentsAllInputSchema)
+  .output(ListDocumentsAllOutputSchema);
+
+export const documents = root.router({
   create,
   download,
+  listByTemplateId,
+  listAll,
 });
-
-export default router;

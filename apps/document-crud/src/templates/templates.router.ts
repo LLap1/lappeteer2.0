@@ -4,11 +4,10 @@ import {
   GetTemplateInputSchema,
   GetTemplateOutputSchema,
   ListTemplatesOutputSchema,
-  UpdateTemplateInputSchema,
-  UpdateTemplateOutputSchema,
   DeleteTemplateInputSchema,
   DownloadTemplateOutputSchema,
   DownloadTemplateInputSchema,
+  ListTemplatesInputSchema,
 } from './templates.router.schema';
 import { oc } from '@orpc/contract';
 
@@ -16,9 +15,26 @@ const create = oc
   .route({
     method: 'POST',
     path: '/templates',
-    summary: 'Create a new template',
-    tags: ['Templates'],
-    description: 'Upload a PowerPoint template file and create metadata',
+    spec: {
+      summary: 'Create a new template',
+      tags: ['Templates'],
+      description: 'Upload a PowerPoint template file and create metadata',
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              type: 'object',
+              properties: {
+                file: {
+                  type: 'string',
+                  format: 'binary',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   })
   .input(CreateTemplateInputSchema)
   .output(CreateTemplateOutputSchema);
@@ -42,18 +58,8 @@ const list = oc
     tags: ['Templates'],
     description: 'Get a list of all template metadata',
   })
+  .input(ListTemplatesInputSchema)
   .output(ListTemplatesOutputSchema);
-
-const update = oc
-  .route({
-    method: 'PUT',
-    path: '/templates/:id',
-    summary: 'Update template metadata',
-    tags: ['Templates'],
-    description: 'Update placeholders for an existing template',
-  })
-  .input(UpdateTemplateInputSchema)
-  .output(UpdateTemplateOutputSchema);
 
 const deleteTemplate = oc
   .route({
@@ -76,13 +82,10 @@ const download = oc
   .input(DownloadTemplateInputSchema)
   .output(DownloadTemplateOutputSchema);
 
-const router = oc.router({
+export const templates = oc.router({
   create,
   get,
   list,
-  update,
   download,
   delete: deleteTemplate,
 });
-
-export default router;

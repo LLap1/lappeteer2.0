@@ -1,8 +1,7 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
-import { ConfigService } from '@nestjs/config';
-import { Config } from 'src/config';
+import { type Config } from 'src/config';
 import { chunk } from 'lodash';
 import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.model';
 import { WindowActionSender } from './document-map-creator.model';
@@ -23,11 +22,8 @@ export class DocumentMapCreatorService implements DocumentMapCreatorServiceContr
   private static readonly logger: Logger = new Logger(DocumentMapCreatorService.name);
 
   private cluster?: Cluster;
-  private readonly config: Config['MapCreator'];
 
-  constructor(private readonly configService: ConfigService) {
-    this.config = this.configService.get<Config['MapCreator']>('MapCreator')!;
-  }
+  constructor(@Inject('MAP_CREATOR_CONFIG') private readonly config: Config['MapCreator']) {}
 
   @GrpcMethod()
   @Log(DocumentMapCreatorService.logger)
@@ -91,6 +87,7 @@ export class DocumentMapCreatorService implements DocumentMapCreatorServiceContr
       type: 'exportMap',
       params: { id: params.id },
     });
+
     await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
 
     return {

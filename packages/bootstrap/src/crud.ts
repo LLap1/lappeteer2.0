@@ -19,7 +19,7 @@ export interface ServeOptions {
   appModule: Type<any>;
 }
 
-export async function runServer({ config, appModule, appRouter }: ServeOptions) {
+export async function runCrud({ config, appModule, appRouter }: ServeOptions) {
   const app = await NestFactory.create(appModule, {
     bodyParser: false,
   });
