@@ -9,7 +9,6 @@ import type {
   ListDocumentsByTemplateIdOutput,
 } from './documents.router.schema';
 import { DocumentCreatorService } from './document-creator/document-creator.service';
-import { zipFiles } from '@auto-document/utils/file';
 import { v4 as uuidv4 } from 'uuid';
 import { Log } from '@auto-document/utils/log';
 import { S3Service } from '@auto-document/nest/s3.service';
@@ -20,6 +19,7 @@ import { eq } from 'drizzle-orm';
 import path from 'path';
 import { appRouter } from 'src/app.router';
 import { type RouterErrorMap } from '@auto-document/types/orpc';
+import { firstValueFrom, switchMap, tap } from 'rxjs';
 
 @Injectable()
 export class DocumentsService {
@@ -43,23 +43,18 @@ export class DocumentsService {
     const template = await this.templateService.get({ id: input.templateId }, errors);
     const templateFile = await this.templateService.download({ id: input.templateId }, errors);
 
-    const documentFiles = await this.documentCreatorService.create({
-      file: templateFile,
+    const downloadPath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
+    const downloadUrl = new URL('documents', this.baseUrl);
+    downloadUrl.searchParams.set('filePath', downloadPath);
+
+    const zipFile = await this.documentCreatorService.create({
+      templateFile,
       params: input.params,
       placeholderMetadata: template.placeholders,
+      zipFilename: input.zipFilename,
     });
 
-    const downloadDocumentsFilePath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
-
-    const downloadUrl = new URL('documents', this.baseUrl);
-    downloadUrl.searchParams.set('filePath', downloadDocumentsFilePath);
-
-    const zippedDocumentsBlob = await zipFiles(documentFiles);
-    const zippedDocumentsFile = new File([zippedDocumentsBlob], input.zipFilename, {
-      type: zippedDocumentsBlob.type,
-    });
-
-    await this.s3Service.upload(zippedDocumentsFile, downloadDocumentsFilePath);
+    await this.s3Service.upload(zipFile, downloadPath);
 
     const [document] = await this.db
       .insert(documentsTable)

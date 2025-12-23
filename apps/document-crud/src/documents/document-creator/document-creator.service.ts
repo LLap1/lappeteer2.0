@@ -1,16 +1,26 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { CreateDocumentParams, CreatePlaceholderParams } from '../documents.router.schema';
 import type { PptxFile } from '@auto-document/types/file';
-import type { PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
+import type { Placeholder, PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
 import { type PlaceholderParams } from './placholder-creator/placeholder-creator.model';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import {
-  type GenerateDocumentRequest,
+  type GenerateDocumentParams,
+  type GeneratedDocument,
+  type GenerateResponse,
   DOCUMENT_PROCESSOR_SERVICE_NAME,
   type DocumentProcessorServiceClient,
 } from '@auto-document/types/proto/document-processor';
-import { firstValueFrom, map, of } from 'rxjs';
+import { from, map, Observable, of, switchMap, take, concatMap, withLatestFrom } from 'rxjs';
 import { Log } from '@auto-document/utils/log';
+import { zipFiles } from '@auto-document/utils/file';
+
+type CreateInput = {
+  templateFile: File;
+  params: CreateDocumentParams[];
+  placeholderMetadata: PlaceholderMetadata<PlaceholderType>[];
+  zipFilename: string;
+};
 
 @Injectable()
 export class DocumentCreatorService {
@@ -23,52 +33,72 @@ export class DocumentCreatorService {
   ) {}
 
   @Log(DocumentCreatorService.logger)
-  async create({
-    file: templateFile,
-    params,
-    placeholderMetadata,
-  }: {
-    file: File;
-    params: CreateDocumentParams[];
-    placeholderMetadata: PlaceholderMetadata<PlaceholderType>[];
-  }): Promise<PptxFile[]> {
-    const allParamsFlattened = params.map(param => param.placeholders).flat();
-    const placeholderParams = this.mergePlaceholderWithMetadata(allParamsFlattened, placeholderMetadata);
-    const placeholders = await this.placeholderCreatorService.create(placeholderParams);
+  async create({ templateFile, params, placeholderMetadata, zipFilename }: CreateInput): Promise<File> {
+    const filenames = params.map(p => p.documentFilename);
 
-    const documentFiles = await Promise.all(
-      params.map(async param => {
-        const matchingParamPlaceholders = placeholders.filter(placeholder =>
-          param.placeholders.find(placeholderParam => placeholderParam.id === placeholder.id),
-        );
-
-        const input = {
-          file: new Uint8Array(await templateFile.arrayBuffer()),
-          filename: param.documentFilename,
-          data: matchingParamPlaceholders,
-        } as GenerateDocumentRequest;
-
-        const fileBuffer = await firstValueFrom(this.documentProcessorService.generate(input));
-        const file = new File([new Uint8Array(fileBuffer.file)], param.documentFilename, {
-          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        });
-        return file;
-      }),
+    const files$ = this.buildPlaceholderParams(params, placeholderMetadata).pipe(
+      switchMap(placeholderParams => this.placeholderCreatorService.create(placeholderParams)),
+      switchMap(placeholders => this.buildGenerateParams(templateFile, params, placeholders)),
+      switchMap(generateParams => this.streamDocuments(generateParams, filenames)),
     );
 
-    return documentFiles;
+    const zipBlob = await zipFiles(files$);
+    return new File([zipBlob], zipFilename, { type: zipBlob.type });
   }
 
-  private mergePlaceholderWithMetadata(
-    placeholderParams: CreatePlaceholderParams<PlaceholderType>[],
+  private buildPlaceholderParams(
+    params: CreateDocumentParams[],
     placeholderMetadata: PlaceholderMetadata<PlaceholderType>[],
-  ): PlaceholderParams<PlaceholderType>[] {
-    return placeholderParams.map(placeholder => {
-      const matchingMetadata = placeholderMetadata.find(metadata => metadata.key === placeholder.key);
-      if (!matchingMetadata) {
+  ): Observable<PlaceholderParams<PlaceholderType>[]> {
+    const allPlaceholderParams = params.flatMap(param => param.placeholders);
+    const merged = allPlaceholderParams.map(placeholder => {
+      const metadata = placeholderMetadata.find(m => m.key === placeholder.key);
+      if (!metadata) {
         throw new Error(`Placeholder metadata not found for key ${placeholder.key}`);
       }
-      return { ...matchingMetadata, ...placeholder };
+      return { ...metadata, ...placeholder };
+    });
+    return of(merged);
+  }
+
+  private buildGenerateParams(
+    templateFile: File,
+    params: CreateDocumentParams[],
+    placeholders: Placeholder<PlaceholderType>[],
+  ): Observable<GenerateDocumentParams[]> {
+    return from(templateFile.arrayBuffer()).pipe(
+      map(buffer => {
+        const templateBytes = new Uint8Array(buffer);
+        return params.map(param => ({
+          file: templateBytes,
+          data: placeholders
+            .filter(p => param.placeholders.some(pp => pp.id === p.id))
+            .map(p => ({
+              id: p.id,
+              key: p.key,
+              type: p.type,
+              value: Array.isArray(p.value) ? JSON.stringify(p.value) : p.value,
+              width: p.width,
+              height: p.height,
+            })),
+        }));
+      }),
+    );
+  }
+
+  private streamDocuments(params: GenerateDocumentParams[], filenames: string[]): Observable<PptxFile> {
+    const requests$ = from(params).pipe(map(param => ({ params: [param] })));
+
+    return this.documentProcessorService.generate(requests$).pipe(
+      take(params.length),
+      concatMap((response, index) => from(response.documents).pipe(map(doc => this.toFile(doc, filenames[index])))),
+    );
+  }
+
+  private toFile(doc: GeneratedDocument, filename: string): PptxFile {
+    const buffer = doc.file.buffer.slice(doc.file.byteOffset, doc.file.byteOffset + doc.file.byteLength) as ArrayBuffer;
+    return new File([buffer], filename, {
+      type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     });
   }
 }

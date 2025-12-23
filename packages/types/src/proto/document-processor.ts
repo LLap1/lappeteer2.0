@@ -10,9 +10,12 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "documentprocessor";
 
-export interface GenerateDocumentRequest {
+export interface GenerateRequest {
+  params: GenerateDocumentParams[];
+}
+
+export interface GenerateDocumentParams {
   file: Uint8Array;
-  filename: string;
   data: PlaceholderData[];
 }
 
@@ -29,12 +32,28 @@ export interface MapValue {
   layerDataUrls: string[];
 }
 
-export interface GenerateDocumentResponse {
+export interface GenerateResponse {
+  documents: GeneratedDocument[];
+}
+
+export interface GeneratedDocument {
   file: Uint8Array;
 }
 
-export interface AnalyzeTemplateRequest {
+export interface AnalyzeRequest {
+  params: AnalyzeTemplateParams[];
+}
+
+export interface AnalyzeTemplateParams {
   file: Uint8Array;
+}
+
+export interface AnalyzeResponse {
+  templates: AnalyzedTemplate[];
+}
+
+export interface AnalyzedTemplate {
+  placeholders: PlaceholderMetadata[];
 }
 
 export interface PlaceholderMetadata {
@@ -44,36 +63,28 @@ export interface PlaceholderMetadata {
   height: number;
 }
 
-export interface AnalyzeTemplateResponse {
-  placeholders: PlaceholderMetadata[];
-}
-
 export const DOCUMENTPROCESSOR_PACKAGE_NAME = "documentprocessor";
 
 export interface DocumentProcessorServiceClient {
-  generate(request: GenerateDocumentRequest): Observable<GenerateDocumentResponse>;
+  generate(request: Observable<GenerateRequest>): Observable<GenerateResponse>;
 
-  analyze(request: AnalyzeTemplateRequest): Observable<AnalyzeTemplateResponse>;
+  analyze(request: Observable<AnalyzeRequest>): Observable<AnalyzeResponse>;
 }
 
 export interface DocumentProcessorServiceController {
-  generate(
-    request: GenerateDocumentRequest,
-  ): Promise<GenerateDocumentResponse> | Observable<GenerateDocumentResponse> | GenerateDocumentResponse;
+  generate(request: Observable<GenerateRequest>): Observable<GenerateResponse>;
 
-  analyze(
-    request: AnalyzeTemplateRequest,
-  ): Promise<AnalyzeTemplateResponse> | Observable<AnalyzeTemplateResponse> | AnalyzeTemplateResponse;
+  analyze(request: Observable<AnalyzeRequest>): Observable<AnalyzeResponse>;
 }
 
 export function DocumentProcessorServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["generate", "analyze"];
+    const grpcMethods: string[] = [];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("DocumentProcessorService", method)(constructor.prototype[method], method, descriptor);
     }
-    const grpcStreamMethods: string[] = [];
+    const grpcStreamMethods: string[] = ["generate", "analyze"];
     for (const method of grpcStreamMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcStreamMethod("DocumentProcessorService", method)(constructor.prototype[method], method, descriptor);

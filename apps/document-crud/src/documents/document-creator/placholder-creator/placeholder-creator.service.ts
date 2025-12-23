@@ -1,11 +1,12 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { PlaceholderParams } from './placeholder-creator.model';
-import type { Placeholder } from '@auto-document/types/document';
-import { firstValueFrom } from 'rxjs';
+import type { Placeholder, PlaceholderType } from '@auto-document/types/document';
+import { forkJoin, map, Observable, of } from 'rxjs';
 import {
   DOCUMENT_MAP_CREATOR_SERVICE_NAME,
   type DocumentMapCreatorServiceClient,
 } from '@auto-document/types/proto/document-map-creator';
+
 @Injectable()
 export class PlaceholderCreatorService {
   constructor(
@@ -13,23 +14,21 @@ export class PlaceholderCreatorService {
     private readonly documentMapCreatorService: DocumentMapCreatorServiceClient,
   ) {}
 
-  async create(params: PlaceholderParams[]): Promise<Placeholder[]> {
-    const mapPlaceholderParmas = params.filter(p => p.type === 'map') as PlaceholderParams<'map'>[];
-    const textPlaceholderParmas = params.filter(p => p.type === 'text') as PlaceholderParams<'text'>[];
-    const imagePlaceholderParmas = params.filter(p => p.type === 'image') as PlaceholderParams<'image'>[];
+  create(params: PlaceholderParams[]): Observable<Placeholder<PlaceholderType>[]> {
+    const mapParams = params.filter((p): p is PlaceholderParams<'map'> => p.type === 'map');
+    const textParams = params.filter((p): p is PlaceholderParams<'text'> => p.type === 'text');
+    const imageParams = params.filter((p): p is PlaceholderParams<'image'> => p.type === 'image');
 
-    const placeholders = await Promise.all([
-      ...(await this.createMapPlaceholder(mapPlaceholderParmas)),
-      ...(await this.createTextPlaceholder(textPlaceholderParmas)),
-      ...(await this.createImagePlaceholder(imagePlaceholderParmas)),
-    ]);
-
-    return placeholders;
+    return forkJoin({
+      maps: this.createMapPlaceholders(mapParams),
+      texts: this.createTextPlaceholders(textParams),
+      images: this.createImagePlaceholders(imageParams),
+    }).pipe(map(({ maps, texts, images }) => [...maps, ...texts, ...images]));
   }
 
-  private async createMapPlaceholder(params: PlaceholderParams<'map'>[]): Promise<Placeholder<'map'>[]> {
+  private createMapPlaceholders(params: PlaceholderParams<'map'>[]): Observable<Placeholder<'map'>[]> {
     if (params.length === 0) {
-      return [];
+      return of([]);
     }
 
     const createMapsParams = params.map(p => ({
@@ -41,35 +40,24 @@ export class PlaceholderCreatorService {
       geojson: p.params.geojson,
     }));
 
-    const maps = (await firstValueFrom(this.documentMapCreatorService.create({ maps: createMapsParams }))).maps;
-    const mapPlaceholders = params.map(p => {
-      const map = maps.find(m => m.id === p.id);
-      if (!map) {
-        throw new Error(`Map not found for placeholder ${p.id}`);
-      }
-      return {
-        ...p,
-        value: map.layerDataUrls,
-      };
-    });
-
-    return mapPlaceholders;
+    return this.documentMapCreatorService.create({ maps: createMapsParams }).pipe(
+      map(response =>
+        params.map(param => {
+          const mapResult = response.maps.find(m => m.id === param.id);
+          if (!mapResult) {
+            throw new Error(`Map not found for placeholder ${param.id}`);
+          }
+          return { ...param, value: mapResult.layerDataUrls };
+        }),
+      ),
+    );
   }
 
-  private async createTextPlaceholder(params: PlaceholderParams<'text'>[]): Promise<Placeholder<'text'>[]> {
-    const textPlaceholders: Placeholder<'text'>[] = params.map(p => ({
-      ...p,
-      value: p.params,
-    }));
-
-    return textPlaceholders;
+  private createTextPlaceholders(params: PlaceholderParams<'text'>[]): Observable<Placeholder<'text'>[]> {
+    return of(params.map(p => ({ ...p, value: p.params })));
   }
-  private async createImagePlaceholder(params: PlaceholderParams<'image'>[]): Promise<Placeholder<'image'>[]> {
-    const imagePlaceholders: Placeholder<'image'>[] = params.map(p => ({
-      ...p,
-      value: p.params,
-    }));
 
-    return imagePlaceholders;
+  private createImagePlaceholders(params: PlaceholderParams<'image'>[]): Observable<Placeholder<'image'>[]> {
+    return of(params.map(p => ({ ...p, value: p.params })));
   }
 }

@@ -3,13 +3,16 @@ syntax = "proto3";
 package documentprocessor;
 
 service DocumentProcessorService {
-  rpc generate (GenerateDocumentRequest) returns (GenerateDocumentResponse);
-  rpc analyze (AnalyzeTemplateRequest) returns (AnalyzeTemplateResponse);
+  rpc generate (stream GenerateRequest) returns (stream GenerateResponse);
+  rpc analyze (stream AnalyzeRequest) returns (stream AnalyzeResponse);
 }
 
-message GenerateDocumentRequest {
+message GenerateRequest {
+  repeated GenerateDocumentParams params = 1;
+}
+
+message GenerateDocumentParams {
   bytes file = 1;
-  string filename = 2;
   repeated PlaceholderData data = 3;
 }
 
@@ -26,12 +29,28 @@ message MapValue {
   repeated string layerDataUrls = 1;
 }
 
-message GenerateDocumentResponse {
+message GenerateResponse {
+  repeated GeneratedDocument documents = 1;
+}
+
+message GeneratedDocument {
   bytes file = 1;
 }
 
-message AnalyzeTemplateRequest {
+message AnalyzeRequest {
+  repeated AnalyzeTemplateParams params = 1;
+}
+
+message AnalyzeTemplateParams {
   bytes file = 1;
+}
+
+message AnalyzeResponse {
+  repeated AnalyzedTemplate templates = 1;
+}
+
+message AnalyzedTemplate {
+  repeated PlaceholderMetadata placeholders = 1;
 }
 
 message PlaceholderMetadata {
@@ -39,9 +58,4 @@ message PlaceholderMetadata {
   string type = 2;
   double width = 3;
   double height = 4;
-}
-
-
-message AnalyzeTemplateResponse {
-  repeated PlaceholderMetadata placeholders = 1;
 }
