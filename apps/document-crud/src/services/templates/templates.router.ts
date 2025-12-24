@@ -11,7 +11,9 @@ import {
 } from './templates.router.schema';
 import { oc } from '@orpc/contract';
 
-const create = oc
+const root = oc;
+
+const create = root
   .route({
     method: 'POST',
     path: '/templates',
@@ -39,7 +41,7 @@ const create = oc
   .input(CreateTemplateInputSchema)
   .output(CreateTemplateOutputSchema);
 
-const get = oc
+const get = root
   .route({
     method: 'GET',
     path: '/templates/:id',
@@ -50,7 +52,7 @@ const get = oc
   .input(GetTemplateInputSchema)
   .output(GetTemplateOutputSchema);
 
-const list = oc
+const list = root
   .route({
     method: 'GET',
     path: '/templates',
@@ -61,7 +63,7 @@ const list = oc
   .input(ListTemplatesInputSchema)
   .output(ListTemplatesOutputSchema);
 
-const deleteTemplate = oc
+const deleteTemplate = root
   .route({
     method: 'DELETE',
     path: '/templates/:id',
@@ -71,7 +73,7 @@ const deleteTemplate = oc
   })
   .input(DeleteTemplateInputSchema);
 
-const download = oc
+const download = root
   .route({
     method: 'GET',
     path: '/templates/:id/download',
@@ -82,7 +84,7 @@ const download = oc
   .input(DownloadTemplateInputSchema)
   .output(DownloadTemplateOutputSchema);
 
-export const templates = oc.router({
+export const templates = root.router({
   create,
   get,
   list,

@@ -53,10 +53,6 @@ const templatedConfig: z.infer<typeof configSchema> = {
       description: packageJson.description,
     },
   },
-  documentMapCreator: {
-    host: process.env.DOCUMENT_MAP_CREATOR_HOST!,
-    port: Number(process.env.DOCUMENT_MAP_CREATOR_PORT!),
-  },
   s3: {
     accessKeyId: process.env.S3_ACCESS_KEY_ID!,
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,

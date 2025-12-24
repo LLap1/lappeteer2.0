@@ -85,6 +85,9 @@ const ListDocumentsOutputSchema = z.array(
   }),
 );
 
+export const DeleteDocumentByIdInputSchema = z.object({ id: z.string() });
+export const DeleteDocumentByIdOutputSchema = z.void();
+
 export const ListDocumentsAllInputSchema = z.object();
 export const ListDocumentsAllOutputSchema = ListDocumentsOutputSchema;
 export const ListDocumentsByTemplateIdInputSchema = z.object({ templateId: z.string() });
@@ -99,6 +102,9 @@ export type ListDocumentsAllOutput = z.infer<typeof ListDocumentsAllOutputSchema
 
 export type ListDocumentsByTemplateIdInput = z.infer<typeof ListDocumentsByTemplateIdInputSchema>;
 export type ListDocumentsByTemplateIdOutput = z.infer<typeof ListDocumentsByTemplateIdOutputSchema>;
+
+export type DeleteDocumentByIdInput = z.infer<typeof DeleteDocumentByIdInputSchema>;
+export type DeleteDocumentByIdOutput = z.infer<typeof DeleteDocumentByIdOutputSchema>;
 
 export type CreateDocumentsInput = {
   templateId: string;

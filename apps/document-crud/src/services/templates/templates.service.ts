@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { templatesTable } from '../schemas/template.schema';
+import { templatesTable } from '../../schemas/template.schema';
 import {
   type DeleteTemplateInput,
   type DownloadTemplateInput,
@@ -12,12 +12,7 @@ import {
 } from './templates.router.schema';
 import { S3Service } from '@auto-document/nest/s3.service';
 import path from 'path';
-import {
-  DOCUMENT_PROCESSOR_SERVICE_NAME,
-  type DocumentProcessorServiceClient,
-} from '@auto-document/types/proto/document-processor';
 import { type PlaceholderMetadata, type PlaceholderType, type Template } from '@auto-document/types/document';
-import { firstValueFrom } from 'rxjs';
 import { Log } from '@auto-document/utils/log';
 import { DRIZZLE } from '@auto-document/nest/drizzle.module';
 import { eq } from 'drizzle-orm';
@@ -25,7 +20,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { v4 as uuidv4 } from 'uuid';
 import { appRouter } from 'src/app.router';
 import { type RouterErrorMap } from '@auto-document/types/orpc';
-import { DocumentProcessorService } from '../documents/document-processor/document-processor.service';
+import { DocumentProcessorService } from '../document-processor/document-processor.service';
 @Injectable()
 export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
@@ -38,28 +33,36 @@ export class TemplateService {
   ) {}
 
   @Log(TemplateService.logger)
-  async create(input: CreateTemplateInput): Promise<CreateTemplateOutput> {
+  async create(
+    input: CreateTemplateInput,
+    errors: RouterErrorMap<typeof appRouter.templates.create>,
+  ): Promise<CreateTemplateOutput> {
     const templateId = uuidv4();
     const filename = path.basename(input.file.name!);
     const filepath = path.join('templates', templateId, filename);
+    try {
+      await this.s3Service.upload(input.file, filepath);
 
-    await this.s3Service.upload(input.file, filepath);
+      const response = await this.documentProcessorService.analyze(new Uint8Array(await input.file.arrayBuffer()));
 
-    const response = await this.documentProcessorService.analyze(new Uint8Array(await input.file.arrayBuffer()));
+      const placeholders = response.placeholders as PlaceholderMetadata<PlaceholderType>[];
 
-    const placeholders = response.placeholders as PlaceholderMetadata<PlaceholderType>[];
+      const [template] = await this.db
+        .insert(templatesTable)
+        .values({
+          id: templateId,
+          name: filename,
+          path: filepath,
+          placeholders,
+        })
+        .returning();
 
-    const [template] = await this.db
-      .insert(templatesTable)
-      .values({
-        id: templateId,
-        name: filename,
-        path: filepath,
-        placeholders,
-      })
-      .returning();
-
-    return template as Template;
+      return template as Template;
+    } catch (error) {
+      throw errors.TEMPLATE_UPLOAD_FAILED({
+        data: { error, templateId },
+      });
+    }
   }
 
   @Log(TemplateService.logger)

@@ -7,6 +7,7 @@ import type {
   ListDocumentsAllOutput,
   ListDocumentsByTemplateIdInput,
   ListDocumentsByTemplateIdOutput,
+  DeleteDocumentByIdInput,
 } from './documents.router.schema';
 import { DocumentCreatorService } from './document-creator/document-creator.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -47,25 +48,30 @@ export class DocumentsService {
     const downloadUrl = new URL('documents', this.baseUrl);
     downloadUrl.searchParams.set('filePath', downloadPath);
 
-    const zipFile = await this.documentCreatorService.create({
-      templateFile,
-      params: input.params,
-      placeholderMetadata: template.placeholders,
-      zipFilename: input.zipFilename,
-    });
+    try {
+      const zipFile = await this.documentCreatorService.create({
+        templateFile,
+        params: input.params,
+        placeholderMetadata: template.placeholders,
+        zipFilename: input.zipFilename,
+      });
 
-    await this.s3Service.upload(zipFile, downloadPath);
+      await this.s3Service.upload(zipFile, downloadPath);
 
-    const [document] = await this.db
-      .insert(documentsTable)
-      .values({
-        id: uuidv4(),
-        templateId: template.id,
-        downloadUrl: downloadUrl.toString(),
-      })
-      .returning();
+      const [document] = await this.db
+        .insert(documentsTable)
+        .values({
+          id: uuidv4(),
+          templateId: template.id,
+          downloadUrl: downloadUrl.toString(),
+        })
+        .returning();
 
-    return document;
+      return document;
+    } catch (error) {
+      console.error(error);
+      throw errors.DOCUMENT_CREATION_FAILED({ data: { error, templateId: input.templateId } });
+    }
   }
 
   @Log(DocumentsService.logger)
@@ -76,19 +82,42 @@ export class DocumentsService {
     try {
       return this.s3Service.download(input.filePath);
     } catch (error) {
-      throw errors.DOCUMENT_NOT_FOUND({ data: { filePath: input.filePath } });
+      throw errors.DOCUMENT_NOT_FOUND({ data: { error, filePath: input.filePath } });
     }
   }
 
   @Log(DocumentsService.logger)
-  async listByTemplateId(input: ListDocumentsByTemplateIdInput): Promise<ListDocumentsByTemplateIdOutput> {
-    const result = await this.db.select().from(documentsTable).where(eq(documentsTable.templateId, input.templateId));
-    return result as ListDocumentsByTemplateIdOutput;
+  async listByTemplateId(
+    input: ListDocumentsByTemplateIdInput,
+    errors: RouterErrorMap<typeof appRouter.documents.listByTemplateId>,
+  ): Promise<ListDocumentsByTemplateIdOutput> {
+    try {
+      const result = await this.db.select().from(documentsTable).where(eq(documentsTable.templateId, input.templateId));
+      return result as ListDocumentsByTemplateIdOutput;
+    } catch (error) {
+      throw errors.DOCUMENT_LIST_BY_TEMPLATE_ID_FAILED({ data: { error, templateId: input.templateId } });
+    }
   }
 
   @Log(DocumentsService.logger)
-  async listAll(): Promise<ListDocumentsAllOutput> {
-    const result = await this.db.select().from(documentsTable);
-    return result as ListDocumentsAllOutput;
+  async listAll(errors: RouterErrorMap<typeof appRouter.documents.listAll>): Promise<ListDocumentsAllOutput> {
+    try {
+      const result = await this.db.select().from(documentsTable);
+      return result as ListDocumentsAllOutput;
+    } catch (error) {
+      throw errors.DOCUMENT_LIST_ALL_FAILED({ data: { error } });
+    }
+  }
+
+  @Log(DocumentsService.logger)
+  async deleteById(
+    input: DeleteDocumentByIdInput,
+    errors: RouterErrorMap<typeof appRouter.documents.deleteById>,
+  ): Promise<void> {
+    try {
+      await this.db.delete(documentsTable).where(eq(documentsTable.id, input.id));
+    } catch (error) {
+      throw errors.DOCUMENT_DELETION_FAILED({ data: { error, documentId: input.id } });
+    }
   }
 }

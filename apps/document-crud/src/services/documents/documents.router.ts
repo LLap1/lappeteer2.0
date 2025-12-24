@@ -1,6 +1,8 @@
 import {
   CreateDocumentsInputSchema,
   CreateDocumentsOutputSchema,
+  DeleteDocumentByIdInputSchema,
+  DeleteDocumentByIdOutputSchema,
   DownloadDocumentInputSchema,
   DownloadDocumentOutputSchema,
   ListDocumentsAllInputSchema,
@@ -20,13 +22,6 @@ const create = root
     summary: 'Create documents',
     tags: ['Documents'],
     description: 'Create documents from a template with provided data',
-  })
-  .errors({
-    DOCUMENT_CREATION_FAILED: {
-      status: 400,
-      message: 'Document creation failed',
-      data: undefined,
-    },
   })
   .input(
     CreateDocumentsInputSchema.meta({
@@ -70,9 +65,21 @@ const listAll = root
   .input(ListDocumentsAllInputSchema)
   .output(ListDocumentsAllOutputSchema);
 
-export const documents = root.router({
+const deleteById = root
+  .route({
+    method: 'DELETE',
+    path: '/documents/{id}',
+    summary: 'Delete All Documents',
+    tags: ['Documents'],
+    description: 'Deletes all generated documents that were created.',
+  })
+  .input(DeleteDocumentByIdInputSchema)
+  .output(DeleteDocumentByIdOutputSchema);
+
+export const documents = oc.router({
   create,
   download,
   listByTemplateId,
   listAll,
+  deleteById,
 });

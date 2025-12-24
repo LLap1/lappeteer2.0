@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DocumentMapCreatorService } from './document-map-creator.service';
-import { config } from '../../../../config';
+import { config } from '../../../../../config';
 
 @Module({
   providers: [

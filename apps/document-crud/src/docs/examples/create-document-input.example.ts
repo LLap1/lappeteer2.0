@@ -6,7 +6,7 @@ import {
   CreatePlaceholderParamsSchema,
   type CreateDocumentsInput,
   type CreatePlaceholderParams,
-} from '../../documents/documents.router.schema';
+} from '../../services/documents/documents.router.schema';
 import z from 'zod';
 
 const inlandCities = [

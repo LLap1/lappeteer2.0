@@ -1,12 +1,12 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { CreateDocumentParams, CreatePlaceholderParams } from '../documents.router.schema';
+import { Injectable, Logger } from '@nestjs/common';
+import type { CreateDocumentParams } from '../documents.router.schema';
 import type { PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
 import { type PlaceholderParams } from './placholder-creator/placeholder-creator.model';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import { Log } from '@auto-document/utils/log';
 import { zipFiles } from '@auto-document/utils/file';
-import { DocumentProcessorService } from '../document-processor/document-processor.service';
-import { GenerateRequest } from '../document-processor/document-processor.model';
+import { DocumentProcessorService } from '../../document-processor/document-processor.service';
+import { GenerateRequest } from '../../document-processor/document-processor.model';
 
 type CreateInput = {
   templateFile: File;
@@ -28,7 +28,6 @@ export class DocumentCreatorService {
   async create({ templateFile, params, placeholderMetadata, zipFilename }: CreateInput): Promise<File> {
     const placeholderParams = this.buildPlaceholderParams(params, placeholderMetadata);
     const placeholders = await this.placeholderCreatorService.create(placeholderParams);
-
     const generateRequests: GenerateRequest[] = await Promise.all(
       params.map(async param => ({
         templateFile: new Uint8Array(await templateFile.arrayBuffer()),

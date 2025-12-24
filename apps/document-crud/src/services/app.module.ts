@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { config } from './config';
+import { config } from '../config';
 import { TemplateModule } from './templates/templates.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ORPCModule, onError } from '@orpc/nest';
@@ -14,7 +14,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
   imports: [
     LoggerModule.forRoot(config.logger),
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'public'),
+      rootPath: path.join(__dirname, '..', '..', 'public'),
     }),
     DrizzleModule.forRoot(config.drizzle),
     S3Module,

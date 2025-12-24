@@ -32,7 +32,6 @@ export class DocumentProcessorService {
     const fileUint8Array = new Uint8Array(fileBytes);
 
     await unlink(inputFilePath).catch(() => {});
-
     return new File([fileUint8Array], request.outputFilename);
   }
 
