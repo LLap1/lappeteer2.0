@@ -22,5 +22,9 @@
     "resolveJsonModule": true,
     "types": ["node", "bun"]
   },
-  "references": []
+  "references": [
+    {
+      "path": "../document-map-pool"
+    }
+  ]
 }

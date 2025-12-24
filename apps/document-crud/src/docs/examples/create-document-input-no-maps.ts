@@ -1,7 +1,7 @@
 import {} from '../../documents/documents.router.schema';
 
 export const createDocumentInputWithNoMapsExample = {
-  templateId: '693d5dfacb77435822da5cef',
+  templateId: 'b5a38848-6723-4cb6-a969-cf7170826280',
   zipFilename: 'documents.zip',
   params: Array.from({ length: 100 }, (_, index) => ({
     placeholders: [

@@ -1,15 +1,5 @@
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
-import {
-  CreateDocumentsInputSchema,
-  CreateDocumentsOutputSchema,
-  DownloadDocumentInputSchema,
-  DownloadDocumentOutputSchema,
-  ListDocumentsAllInputSchema,
-  ListDocumentsAllOutputSchema,
-  ListDocumentsByTemplateIdInputSchema,
-  ListDocumentsByTemplateIdOutputSchema,
-} from './documents/documents.router.schema';
 import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
 import { LoggerConfigSchema } from '@auto-document/nest/logger.module';
@@ -18,8 +8,7 @@ import pinoElastic from 'pino-elasticsearch';
 import pinoPretty from 'pino-pretty';
 import { DrizzleConfigSchema } from '@auto-document/nest/drizzle.module';
 import type { OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
-import { CreateTemplateInputSchema } from './templates/templates.router.schema';
-
+import { Cluster } from 'puppeteer-cluster';
 loadDotenv();
 
 export const EnvironmentSchema = z.enum(['production', 'development', 'test']);
@@ -31,14 +20,21 @@ export const configSchema = z.object({
     environment: EnvironmentSchema.default('development'),
   }),
   openApi: z.custom<OpenAPIGeneratorGenerateOptions>(),
-  documentProcessor: z.object({
-    host: z.string(),
-    port: z.coerce.number(),
+  mapCreator: z.object({
+    orthoTileLayerUrl: z.url(),
+    mapPoolUrl: z.string().url(),
+    launchOptions: z.object({
+      timeout: z.coerce.number().optional(),
+      concurrency: z.coerce.number().min(Cluster.CONCURRENCY_PAGE).max(Cluster.CONCURRENCY_BROWSER),
+      maxConcurrency: z.coerce.number(),
+      puppeteerOptions: z.object({
+        headless: z.boolean(),
+        devtools: z.boolean(),
+      }),
+    }),
+    mapsPerPage: z.coerce.number(),
   }),
-  documentMapCreator: z.object({
-    host: z.string(),
-    port: z.coerce.number(),
-  }),
+
   ...S3ConfigSchema.shape,
   ...LoggerConfigSchema.shape,
   ...DrizzleConfigSchema.shape,
@@ -57,10 +53,6 @@ const templatedConfig: z.infer<typeof configSchema> = {
       description: packageJson.description,
     },
   },
-  documentProcessor: {
-    host: process.env.DOCUMENT_PROCESSOR_HOST!,
-    port: Number(process.env.DOCUMENT_PROCESSOR_PORT!),
-  },
   documentMapCreator: {
     host: process.env.DOCUMENT_MAP_CREATOR_HOST!,
     port: Number(process.env.DOCUMENT_MAP_CREATOR_PORT!),
@@ -74,6 +66,20 @@ const templatedConfig: z.infer<typeof configSchema> = {
   },
   drizzle: {
     connectionString: process.env.DRIZZLE_CONNECTION_STRING!,
+  },
+  mapCreator: {
+    orthoTileLayerUrl: process.env.ORTHO_TILE_LAYER_URL!,
+    mapPoolUrl: process.env.MAP_POOL_URL!,
+    launchOptions: {
+      timeout: process.env.PUPPETEER_TIMEOUT ? Number(process.env.PUPPETEER_TIMEOUT) : undefined,
+      concurrency: Number(process.env.PUPPETEER_CONCURRENCY!),
+      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY!),
+      puppeteerOptions: {
+        headless: process.env.PUPPETEER_HEADLESS === 'true',
+        devtools: process.env.PUPPETEER_DEVTOOLS === 'true',
+      },
+    },
+    mapsPerPage: Number(process.env.MAPS_PER_PAGE!),
   },
   logger: {
     pino: multistream([
@@ -90,6 +96,6 @@ const templatedConfig: z.infer<typeof configSchema> = {
     ]),
   },
 };
-console.log(process.env.ENV);
+
 export const config = configSchema.parse(templatedConfig);
 export type Config = z.infer<typeof configSchema>;

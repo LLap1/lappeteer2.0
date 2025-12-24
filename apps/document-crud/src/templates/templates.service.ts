@@ -25,6 +25,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { v4 as uuidv4 } from 'uuid';
 import { appRouter } from 'src/app.router';
 import { type RouterErrorMap } from '@auto-document/types/orpc';
+import { DocumentProcessorService } from '../documents/document-processor/document-processor.service';
 @Injectable()
 export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
@@ -33,8 +34,7 @@ export class TemplateService {
     @Inject(DRIZZLE)
     private readonly db: PostgresJsDatabase,
     private readonly s3Service: S3Service,
-    @Inject(DOCUMENT_PROCESSOR_SERVICE_NAME)
-    private readonly documentProcessorService: DocumentProcessorServiceClient,
+    private readonly documentProcessorService: DocumentProcessorService,
   ) {}
 
   @Log(TemplateService.logger)
@@ -45,11 +45,7 @@ export class TemplateService {
 
     await this.s3Service.upload(input.file, filepath);
 
-    const response = await firstValueFrom(
-      this.documentProcessorService.analyze({
-        file: new Uint8Array(await input.file.arrayBuffer()),
-      }),
-    );
+    const response = await this.documentProcessorService.analyze(new Uint8Array(await input.file.arrayBuffer()));
 
     const placeholders = response.placeholders as PlaceholderMetadata<PlaceholderType>[];
 
