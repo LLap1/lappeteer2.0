@@ -17,9 +17,6 @@ export class DocumentsController {
       download: implement(appRouter.documents.download).handler(async ({ input, errors }) => {
         return this.documentService.download(input, errors);
       }),
-      listByTemplateId: implement(appRouter.documents.listByTemplateId).handler(async ({ input, errors }) => {
-        return this.documentService.listByTemplateId(input, errors);
-      }),
       listAll: implement(appRouter.documents.listAll).handler(async ({ errors }) => {
         return this.documentService.listAll(errors);
       }),

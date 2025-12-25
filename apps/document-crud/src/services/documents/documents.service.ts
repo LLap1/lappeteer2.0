@@ -15,7 +15,7 @@ import { Log } from '@auto-document/utils/log';
 import { S3Service } from '@auto-document/nest/s3.service';
 import { DRIZZLE } from '@auto-document/nest/drizzle.module';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { documentsTable } from 'src/schemas/document.schema';
+import { documentsTable } from 'src/schemas/documents.schema';
 import { eq } from 'drizzle-orm';
 import path from 'path';
 import { appRouter } from 'src/app.router';
@@ -87,18 +87,7 @@ export class DocumentsService {
     }
   }
 
-  @Log(DocumentsService.logger)
-  async listByTemplateId(
-    input: ListDocumentsByTemplateIdInput,
-    errors: RouterErrorMap<typeof appRouter.documents.listByTemplateId>,
-  ): Promise<ListDocumentsByTemplateIdOutput> {
-    try {
-      const result = await this.db.select().from(documentsTable).where(eq(documentsTable.templateId, input.templateId));
-      return result as ListDocumentsByTemplateIdOutput;
-    } catch (error) {
-      throw errors.DOCUMENT_LIST_BY_TEMPLATE_ID_FAILED({ data: { error, templateId: input.templateId } });
-    }
-  }
+ 
 
   @Log(DocumentsService.logger)
   async listAll(errors: RouterErrorMap<typeof appRouter.documents.listAll>): Promise<ListDocumentsAllOutput> {

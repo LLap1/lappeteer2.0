@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { templatesTable } from '../../schemas/template.schema';
+import { templatesTable } from '../../schemas/templates.schema';
 import {
   type DeleteTemplateInput,
   type DownloadTemplateInput,
@@ -9,6 +9,8 @@ import {
   type ListTemplatesOutput,
   type CreateTemplateInput,
   type CreateTemplateOutput,
+  type ListDocumentsInput,
+  type ListDocumentsOutput,
 } from './templates.router.schema';
 import { S3Service } from '@auto-document/nest/s3.service';
 import path from 'path';
@@ -21,6 +23,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { appRouter } from 'src/app.router';
 import { type RouterErrorMap } from '@auto-document/types/orpc';
 import { DocumentProcessorService } from '../document-processor/document-processor.service';
+import { ListDocumentsByTemplateIdInput, ListDocumentsByTemplateIdOutput } from '../documents/documents.router.schema';
+import { documentsTable } from 'src/schemas/documents.schema';
 @Injectable()
 export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
@@ -109,5 +113,18 @@ export class TemplateService {
     }
 
     return this.s3Service.download(template.path);
+  }
+
+  @Log(TemplateService.logger)
+  async listDocuments(
+    input: ListDocumentsInput,
+    errors: RouterErrorMap<typeof appRouter.templates.listDocuments>,
+  ): Promise<ListDocumentsOutput> {
+    try {
+      const result = await this.db.select().from(documentsTable).where(eq(documentsTable.templateId, input.id));
+      return result as ListDocumentsOutput;
+    } catch (error) {
+      throw errors.TEMPLATE_LIST_DOCUMENTS_FAILED({ data: { error, templateId: input.id } });
+    }
   }
 }

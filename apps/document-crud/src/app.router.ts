@@ -73,6 +73,14 @@ export const errors = {
       templateId: z.string(),
     }),
   },
+  TEMPLATE_LIST_DOCUMENTS_FAILED: {
+    status: 500,
+    message: 'Template list documents failed',
+    data: z.object({
+      error: z.any(),
+      templateId: z.string(),
+    }),
+  },
 };
 
 export const appRouter = oc.errors(errors).router({

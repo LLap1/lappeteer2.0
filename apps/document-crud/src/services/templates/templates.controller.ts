@@ -24,6 +24,9 @@ export class TemplatesController {
       download: implement(appRouter.templates.download).handler(async ({ input, errors }) => {
         return this.templateService.download(input, errors);
       }),
+      listDocuments: implement(appRouter.templates.listDocuments).handler(async ({ input, errors }) => {
+        return this.templateService.listDocuments(input, errors);
+      }),
     };
   }
 }

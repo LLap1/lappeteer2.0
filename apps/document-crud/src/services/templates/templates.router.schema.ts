@@ -1,5 +1,10 @@
 import { z } from 'zod/v4';
-import type { Template, PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
+import {
+  type Template,
+  type PlaceholderMetadata,
+  type PlaceholderType,
+  DocumentSchema,
+} from '@auto-document/types/document';
 
 export const PlaceholderMetadataSchema: z.ZodType<PlaceholderMetadata<PlaceholderType>> = z.object({
   key: z.string(),
@@ -40,6 +45,12 @@ export const DownloadTemplateInputSchema = z.object({
 
 export const DownloadTemplateOutputSchema = z.file();
 
+export const ListDocumentsInputSchema = z.object({
+  id: z.uuid(),
+});
+
+export const ListDocumentsOutputSchema = z.array(DocumentSchema);
+
 export type CreateTemplateInput = z.infer<typeof CreateTemplateInputSchema>;
 export type CreateTemplateOutput = z.infer<typeof CreateTemplateOutputSchema>;
 export type GetTemplateInput = z.infer<typeof GetTemplateInputSchema>;
@@ -49,3 +60,5 @@ export type ListTemplatesOutput = z.infer<typeof ListTemplatesOutputSchema>;
 export type DeleteTemplateInput = z.infer<typeof DeleteTemplateInputSchema>;
 export type DownloadTemplateInput = z.infer<typeof DownloadTemplateInputSchema>;
 export type DownloadTemplateOutput = z.infer<typeof DownloadTemplateOutputSchema>;
+export type ListDocumentsInput = z.infer<typeof ListDocumentsInputSchema>;
+export type ListDocumentsOutput = z.infer<typeof ListDocumentsOutputSchema>;

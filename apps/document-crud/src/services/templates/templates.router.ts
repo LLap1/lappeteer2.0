@@ -8,6 +8,8 @@ import {
   DownloadTemplateOutputSchema,
   DownloadTemplateInputSchema,
   ListTemplatesInputSchema,
+  ListDocumentsInputSchema,
+  ListDocumentsOutputSchema,
 } from './templates.router.schema';
 import { oc } from '@orpc/contract';
 
@@ -84,10 +86,22 @@ const download = root
   .input(DownloadTemplateInputSchema)
   .output(DownloadTemplateOutputSchema);
 
+const listDocuments = root
+  .route({
+    method: 'GET',
+    path: '/templates/:id/documents',
+    summary: 'List all documents for a template',
+    tags: ['Templates'],
+    description: 'List all documents for a template by ID',
+  })
+  .input(ListDocumentsInputSchema)
+  .output(ListDocumentsOutputSchema);
+
 export const templates = root.router({
   create,
   get,
   list,
   download,
   delete: deleteTemplate,
+  listDocuments,
 });

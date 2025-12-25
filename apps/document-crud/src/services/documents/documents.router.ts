@@ -43,19 +43,6 @@ const download = root
   .input(DownloadDocumentInputSchema)
   .output(DownloadDocumentOutputSchema);
 
-const listByTemplateId = root
-  .route({
-    method: 'GET',
-    path: '/documents/{templateId}/list',
-    summary: 'List Documents by Template ID',
-    tags: ['Documents'],
-    description: 'List all documents that were created from a specific template.',
-  })
-  .input(
-    ListDocumentsByTemplateIdInputSchema.meta({ examples: [{ templateId: 'b5a38848-6723-4cb6-a969-cf7170826280' }] }),
-  )
-  .output(ListDocumentsByTemplateIdOutputSchema);
-
 const listAll = root
   .route({
     method: 'GET',
@@ -91,7 +78,6 @@ const deleteAll = root
 export const documents = oc.router({
   create,
   download,
-  listByTemplateId,
   listAll,
   deleteById,
   deleteAll,
