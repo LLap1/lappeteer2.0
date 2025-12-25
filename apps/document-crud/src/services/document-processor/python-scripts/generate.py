@@ -92,7 +92,7 @@ def calculate_optimal_font_size(text: str, original_size_pt: float, frame_width:
     
     return min_size_pt
 
-def process_text_frame(text_frame, text_values: dict[str, str], shape=None) -> None:
+def process_text_frame(text_frame, text_values: dict[str, str], shape=None, cell_dimensions: tuple[float, float] | None = None) -> None:
     modified_runs = []
     
     for paragraph in text_frame.paragraphs:
@@ -119,13 +119,22 @@ def process_text_frame(text_frame, text_values: dict[str, str], shape=None) -> N
             
             modified_runs.append((run, text_values[key], original_font_size))
     
-    if modified_runs and shape is not None:
-        try:
-            frame_width = shape.width.pt if hasattr(shape, 'width') else 0
-            frame_height = shape.height.pt if hasattr(shape, 'height') else 0
-            
-            if frame_width > 0 and frame_height > 0:
-                for run, text, original_size in modified_runs:
+    if modified_runs:
+        frame_width = 0
+        frame_height = 0
+        
+        if cell_dimensions is not None:
+            frame_width, frame_height = cell_dimensions
+        elif shape is not None:
+            try:
+                frame_width = shape.width.pt if hasattr(shape, 'width') else 0
+                frame_height = shape.height.pt if hasattr(shape, 'height') else 0
+            except Exception:
+                pass
+        
+        if frame_width > 0 and frame_height > 0:
+            for run, text, original_size in modified_runs:
+                try:
                     optimal_size = calculate_optimal_font_size(
                         text, 
                         original_size, 
@@ -135,8 +144,8 @@ def process_text_frame(text_frame, text_values: dict[str, str], shape=None) -> N
                     
                     if optimal_size < original_size:
                         run.font.size = Pt(optimal_size)
-        except Exception:
-            pass
+                except Exception:
+                    pass
     
     try:
         text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
@@ -184,11 +193,25 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
     
     return False
 
+def get_cell_dimensions(table, row_idx: int, col_idx: int) -> tuple[float, float]:
+    try:
+        col_width = table.columns[col_idx].width.pt if table.columns[col_idx].width else 0
+        row_height = table.rows[row_idx].height.pt if table.rows[row_idx].height else 0
+        
+        padding = 6.0
+        effective_width = max(0, col_width - (padding * 2))
+        effective_height = max(0, row_height - (padding * 2))
+        
+        return (effective_width, effective_height)
+    except Exception:
+        return (0, 0)
+
 def process_table(table, text_values: dict[str, str], image_values: dict[str, list[bytes]], slide) -> None:
-    for row in table.rows:
-        for cell in row.cells:
+    for row_idx, row in enumerate(table.rows):
+        for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
-                process_text_frame(cell.text_frame, text_values, cell)
+                cell_dimensions = get_cell_dimensions(table, row_idx, col_idx)
+                process_text_frame(cell.text_frame, text_values, None, cell_dimensions)
 
 def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[bytes]]) -> None:
     shapes_list = list(shapes)
