@@ -4,14 +4,10 @@ package documentprocessor;
 
 service DocumentProcessorService {
   rpc generate (stream GenerateRequest) returns (stream GenerateResponse);
-  rpc analyze (stream AnalyzeRequest) returns (stream AnalyzeResponse);
+  rpc analyze (AnalyzeRequest) returns (AnalyzeResponse);
 }
 
 message GenerateRequest {
-  repeated GenerateDocumentParams params = 1;
-}
-
-message GenerateDocumentParams {
   bytes file = 1;
   repeated PlaceholderData data = 3;
 }
@@ -30,26 +26,15 @@ message MapValue {
 }
 
 message GenerateResponse {
-  repeated GeneratedDocument documents = 1;
-}
-
-message GeneratedDocument {
   bytes file = 1;
 }
 
-message AnalyzeRequest {
-  repeated AnalyzeTemplateParams params = 1;
-}
 
-message AnalyzeTemplateParams {
+message AnalyzeRequest {
   bytes file = 1;
 }
 
 message AnalyzeResponse {
-  repeated AnalyzedTemplate templates = 1;
-}
-
-message AnalyzedTemplate {
   repeated PlaceholderMetadata placeholders = 1;
 }
 

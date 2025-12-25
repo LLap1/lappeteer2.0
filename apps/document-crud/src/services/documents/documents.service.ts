@@ -41,14 +41,14 @@ export class DocumentsService {
     input: CreateDocumentsInput,
     errors: RouterErrorMap<typeof appRouter.documents.create>,
   ): Promise<CreateDocumentsOutput> {
-    const template = await this.templateService.get({ id: input.templateId }, errors);
-    const templateFile = await this.templateService.download({ id: input.templateId }, errors);
-
-    const downloadPath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
-    const downloadUrl = new URL('documents', this.baseUrl);
-    downloadUrl.searchParams.set('filePath', downloadPath);
-
     try {
+      const template = await this.templateService.get({ id: input.templateId }, errors);
+      const templateFile = await this.templateService.download({ id: input.templateId }, errors);
+
+      const downloadPath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
+      const downloadUrl = new URL('documents', this.baseUrl);
+      downloadUrl.searchParams.set('filePath', downloadPath);
+
       const zipFile = await this.documentCreatorService.create({
         templateFile,
         params: input.params,

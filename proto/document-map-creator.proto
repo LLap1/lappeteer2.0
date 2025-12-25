@@ -3,7 +3,7 @@ syntax = "proto3";
 package documentmapcreator;
 
 service DocumentMapCreatorService {
-  rpc create (CreateMapsRequest) returns (CreateMapsResponse);
+  rpc create (CreateMapsRequest) returns (stream CreateMapsResponse);
 }
 
 message CreateMapsRequest {
@@ -26,10 +26,7 @@ message GeoJsonFeature {
 }
 
 message CreateMapsResponse {
-  repeated MapResult maps = 1;
-}
-
-message MapResult {
   string id = 1;
   repeated string layerDataUrls = 2;
 }
+

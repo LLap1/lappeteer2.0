@@ -11,7 +11,7 @@
   "devDependencies": {
     "@auto-document/typescript-config": "workspace:*",
     "@orpc/contract": "^1.13.0",
-    "@orpc/server": "^1.13.0",
+    "@orpc/server": "^1.11.3",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^22.15.30",
     "typescript": "^5.9.3",

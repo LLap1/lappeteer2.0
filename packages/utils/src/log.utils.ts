@@ -14,7 +14,7 @@ function filterFiles(data: any): any {
   }
   if (Array.isArray(data)) {
     return data.map(item => filterFiles(item));
-  }
+  } 
 
   if (typeof data === 'object') {
     const filtered: any = {};
@@ -35,22 +35,22 @@ export function Log(logger: Logger): any {
 
     descriptor.value = function (...args: any[]) {
       const startTime = Date.now();
-      // logger.log({
-      //   method: propertyKey,
-      //   message: `start`,
-      //   args: filterFiles(args),
-      //   startTime: new Date(startTime).toISOString(),
-      // });
+      logger.log({
+        method: propertyKey,
+        message: `start`,
+        args: filterFiles(args),
+        startTime: new Date(startTime).toISOString(),
+      });
       try {
         const result = originalMethod.apply(this, args);
         const endTime = Date.now();
-        // logger.log({
-        //   method: propertyKey,
-        //   message: `finish`,
-        //   result: filterFiles(result),
-        //   endTime: new Date(endTime).toISOString(),
-        //   executionTime: `${endTime - startTime} ms`,
-        // });
+        logger.log({
+          method: propertyKey,
+          message: `finish`,
+          result: filterFiles(result),
+          endTime: new Date(endTime).toISOString(),
+          executionTime: `${endTime - startTime} ms`,
+        });
         return result;
       } catch (error) {
         logger.error({
