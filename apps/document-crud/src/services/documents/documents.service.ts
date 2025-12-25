@@ -54,6 +54,7 @@ export class DocumentsService {
         params: input.params,
         placeholderMetadata: template.placeholders,
         zipFilename: input.zipFilename,
+        slidesToRemove: input.slidesToRemove,
       });
 
       await this.s3Service.upload(zipFile, downloadPath);
@@ -117,7 +118,16 @@ export class DocumentsService {
     try {
       await this.db.delete(documentsTable).where(eq(documentsTable.id, input.id));
     } catch (error) {
-      throw errors.DOCUMENT_DELETION_FAILED({ data: { error, documentId: input.id } });
+      throw errors.DOCUMENT_DELETION_BY_ID_FAILED({ data: { error, documentId: input.id } });
+    }
+  }
+
+  @Log(DocumentsService.logger)
+  async deleteAll(errors: RouterErrorMap<typeof appRouter.documents.deleteAll>): Promise<void> {
+    try {
+      await this.db.delete(documentsTable);
+    } catch (error) {
+      throw errors.DOCUMENT_DELETION_ALL_FAILED({ data: { error } });
     }
   }
 }

@@ -62,6 +62,7 @@ export const CreateDocumentsInputSchema = z
     templateId: z.string().min(1),
     zipFilename: z.string().min(1),
     params: z.array(CreateDocumentParamsSchema).min(1),
+    slidesToRemove: z.array(z.number().int().nonnegative()).optional(),
   })
   .strict();
 
@@ -88,6 +89,9 @@ const ListDocumentsOutputSchema = z.array(
 export const DeleteDocumentByIdInputSchema = z.object({ id: z.string() });
 export const DeleteDocumentByIdOutputSchema = z.void();
 
+export const DeleteAllDocumentsInputSchema = z.object();
+export const DeleteAllDocumentsOutputSchema = z.void();
+
 export const ListDocumentsAllInputSchema = z.object();
 export const ListDocumentsAllOutputSchema = ListDocumentsOutputSchema;
 export const ListDocumentsByTemplateIdInputSchema = z.object({ templateId: z.string() });
@@ -106,9 +110,13 @@ export type ListDocumentsByTemplateIdOutput = z.infer<typeof ListDocumentsByTemp
 export type DeleteDocumentByIdInput = z.infer<typeof DeleteDocumentByIdInputSchema>;
 export type DeleteDocumentByIdOutput = z.infer<typeof DeleteDocumentByIdOutputSchema>;
 
+export type DeleteAllDocumentsInput = z.infer<typeof DeleteAllDocumentsInputSchema>;
+export type DeleteAllDocumentsOutput = z.infer<typeof DeleteAllDocumentsOutputSchema>;
+
 export type CreateDocumentsInput = {
   templateId: string;
   zipFilename: string;
   params: CreateDocumentParams[];
+  slidesToRemove?: number[];
 };
 export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;

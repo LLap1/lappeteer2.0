@@ -2,6 +2,7 @@ export interface GenerateRequest {
   templateFile: Uint8Array;
   outputFilename: string;
   data: PlaceholderData[];
+  slidesToRemove?: number[];
 }
 
 export interface PlaceholderData {

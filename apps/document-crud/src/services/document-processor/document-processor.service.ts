@@ -24,7 +24,8 @@ export class DocumentProcessorService {
     await Bun.write(inputFilePath, request.templateFile);
 
     const dataString = JSON.stringify(request.data);
-    const outputFilepath = await $`python ${pythonPath} ${inputFilePath} ${dataString}`.text();
+    const slidesToRemoveString = request.slidesToRemove ? JSON.stringify(request.slidesToRemove) : '[]';
+    const outputFilepath = await $`python ${pythonPath} ${inputFilePath} ${dataString} ${slidesToRemoveString}`.text();
     const outputPath = outputFilepath.trim();
 
     const outputFile = Bun.file(outputPath);

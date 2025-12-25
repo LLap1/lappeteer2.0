@@ -1,6 +1,8 @@
 import {
   CreateDocumentsInputSchema,
   CreateDocumentsOutputSchema,
+  DeleteAllDocumentsInputSchema,
+  DeleteAllDocumentsOutputSchema,
   DeleteDocumentByIdInputSchema,
   DeleteDocumentByIdOutputSchema,
   DownloadDocumentInputSchema,
@@ -69,17 +71,28 @@ const deleteById = root
   .route({
     method: 'DELETE',
     path: '/documents/{id}',
-    summary: 'Delete All Documents',
+    summary: 'Delete Document by ID',
     tags: ['Documents'],
-    description: 'Deletes all generated documents that were created.',
+    description: 'Deletes a document that was created.',
   })
   .input(DeleteDocumentByIdInputSchema)
   .output(DeleteDocumentByIdOutputSchema);
 
+const deleteAll = root
+  .route({
+    method: 'DELETE',
+    path: '/documents/delete-all',
+    summary: 'Delete All Documents',
+    tags: ['Documents'],
+    description: 'Deletes all documents that were created.',
+  })
+  .input(DeleteAllDocumentsInputSchema)
+  .output(DeleteAllDocumentsOutputSchema);
 export const documents = oc.router({
   create,
   download,
   listByTemplateId,
   listAll,
   deleteById,
+  deleteAll,
 });

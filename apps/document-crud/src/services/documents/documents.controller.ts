@@ -26,6 +26,9 @@ export class DocumentsController {
       deleteById: implement(appRouter.documents.deleteById).handler(async ({ input, errors }) => {
         return this.documentService.deleteById(input, errors);
       }),
+      deleteAll: implement(appRouter.documents.deleteAll).handler(async ({ errors }) => {
+        return this.documentService.deleteAll(errors);
+      }),
     };
   }
 }

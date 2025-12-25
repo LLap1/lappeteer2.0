@@ -50,12 +50,19 @@ export const errors = {
       error: z.any(),
     }),
   },
-  DOCUMENT_DELETION_FAILED: {
+  DOCUMENT_DELETION_BY_ID_FAILED: {
     status: 500,
     message: 'Document deletion failed',
     data: z.object({
       error: z.any(),
       documentId: z.string(),
+    }),
+  },
+  DOCUMENT_DELETION_ALL_FAILED: {
+    status: 500,
+    message: 'Document deletion all failed',
+    data: z.object({
+      error: z.any(),
     }),
   },
   TEMPLATE_UPLOAD_FAILED: {
