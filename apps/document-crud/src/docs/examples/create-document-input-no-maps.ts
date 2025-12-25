@@ -1,9 +1,9 @@
 import {} from '../../services/documents/documents.router.schema';
 
 export const createDocumentInputWithNoMapsExample = {
-  templateId: 'b5a38848-6723-4cb6-a969-cf7170826280',
+  templateId: '0494364e-50d1-4c45-b25c-146fb760b171',
   zipFilename: 'documents.zip',
-  params: Array.from({ length: 100 }, (_, index) => ({
+  params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
       {
         type: 'text',
@@ -13,7 +13,9 @@ export const createDocumentInputWithNoMapsExample = {
       {
         type: 'text',
         key: 'תיאור',
-        params: `This is a description of the world maps document ${index + 1}`,
+        params: `This is a description of the world maps document This is a description of the world maps document ${
+          index + 1
+        }`,
       },
     ],
     documentFilename: `world_maps_${index + 1}.pptx`,
