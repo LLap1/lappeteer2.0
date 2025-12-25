@@ -55,46 +55,47 @@ def is_placeholder_run(run) -> bool:
     font = run.font
     return font.bold and font.italic and font.underline
 
-def get_font_size_pt(run) -> float:
+def get_font_name(run, paragraph) -> str:
+    if run.font.name:
+        return run.font.name
+    if paragraph.font.name:
+        return paragraph.font.name
+    return 'Arial'
+
+def get_original_font_size(run) -> int:
     if run.font.size:
-        return run.font.size.pt
-    return 18.0
+        return int(run.font.size.pt)
+    return 18
 
-def estimate_text_width(text: str, font_size_pt: float) -> float:
-    avg_char_width_ratio = 0.6
-    return len(text) * font_size_pt * avg_char_width_ratio
+def estimate_text_needs_wrap(text: str, font_size_pt: float, width_pt: float) -> int:
+    avg_char_width = font_size_pt * 0.5
+    chars_per_line = max(1, int(width_pt / avg_char_width))
+    num_lines = max(1, (len(text) + chars_per_line - 1) // chars_per_line)
+    return num_lines
 
-def estimate_text_height(text: str, font_size_pt: float, frame_width: float) -> float:
-    if frame_width <= 0:
-        return font_size_pt
-    
-    chars_per_line = frame_width / (font_size_pt * 0.6)
-    if chars_per_line <= 0:
-        chars_per_line = 1
-    
-    num_lines = max(1, len(text) / chars_per_line)
-    line_height = font_size_pt * 1.2
+def estimate_text_height(num_lines: int, font_size_pt: float) -> float:
+    line_height = font_size_pt * 1.1
     return num_lines * line_height
 
-def calculate_optimal_font_size(text: str, original_size_pt: float, frame_width: float, frame_height: float, min_size_pt: float = 6.0) -> float:
-    if frame_width <= 0 or frame_height <= 0:
-        return original_size_pt
+def calculate_best_font_size(text: str, original_size: int, width_pt: float, height_pt: float, min_size: int = 6) -> int:
+    if width_pt <= 0 or height_pt <= 0:
+        return original_size
     
-    current_size = original_size_pt
-    
-    while current_size > min_size_pt:
-        estimated_height = estimate_text_height(text, current_size, frame_width)
+    for size in range(original_size, min_size - 1, -1):
+        num_lines = estimate_text_needs_wrap(text, size, width_pt)
+        text_height = estimate_text_height(num_lines, size)
         
-        if estimated_height <= frame_height:
-            return current_size
-        
-        current_size -= 0.5
+        if text_height <= height_pt:
+            return size
     
-    return min_size_pt
+    return min_size
 
-def process_text_frame(text_frame, text_values: dict[str, str], shape=None, cell_dimensions: tuple[float, float] | None = None) -> None:
-    modified_runs = []
-    
+def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = False, cell_width: float = 0, cell_height: float = 0) -> None:
+    font_name = 'Arial'
+    original_size = 18
+    modified = False
+    new_text = ""
+
     for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if not is_placeholder_run(run):
@@ -110,47 +111,33 @@ def process_text_frame(text_frame, text_values: dict[str, str], shape=None, cell
             if placeholder_type != 'text':
                 continue
             
-            original_font_size = get_font_size_pt(run)
-            run.text = text_values[key]
+            font_name = get_font_name(run, paragraph)
+            original_size = get_original_font_size(run)
+            new_text = text_values[key]
+            run.text = new_text
             run.font.bold = False
             run.font.italic = False
             run.font.underline = False
             run.font.color.rgb = RGBColor(0, 0, 0)
-            
-            modified_runs.append((run, text_values[key], original_font_size))
+            modified = True
     
-    if modified_runs:
-        frame_width = 0
-        frame_height = 0
-        
-        if cell_dimensions is not None:
-            frame_width, frame_height = cell_dimensions
-        elif shape is not None:
+    if not modified:
+        return
+    
+    if is_cell and cell_width > 0 and cell_height > 0:
+        best_size = calculate_best_font_size(new_text, original_size, cell_width, cell_height)
+        for paragraph in text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.size = Pt(best_size)
+    elif not is_cell:
+        for size in range(original_size, 1, -1):
             try:
-                frame_width = shape.width.pt if hasattr(shape, 'width') else 0
-                frame_height = shape.height.pt if hasattr(shape, 'height') else 0
-            except Exception:
+                text_frame.fit_text(font_family=font_name, max_size=size, bold=False, italic=False)
+                break
+            except TypeError:
                 pass
-        
-        if frame_width > 0 and frame_height > 0:
-            for run, text, original_size in modified_runs:
-                try:
-                    optimal_size = calculate_optimal_font_size(
-                        text, 
-                        original_size, 
-                        frame_width, 
-                        frame_height
-                    )
-                    
-                    if optimal_size < original_size:
-                        run.font.size = Pt(optimal_size)
-                except Exception:
-                    pass
-    
-    try:
-        text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
-    except Exception:
-        pass
+  
+
 
 def find_image_placeholder_in_shape(shape, image_values: dict[str, list[bytes]]) -> tuple[str, str] | None:
     if not hasattr(shape, 'text_frame'):
@@ -189,29 +176,27 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
         return True
 
     if hasattr(shape, 'text_frame'):
-        process_text_frame(shape.text_frame, text_values, shape)
+        process_text_frame(shape.text_frame, text_values)
     
     return False
 
-def get_cell_dimensions(table, row_idx: int, col_idx: int) -> tuple[float, float]:
-    try:
-        col_width = table.columns[col_idx].width.pt if table.columns[col_idx].width else 0
-        row_height = table.rows[row_idx].height.pt if table.rows[row_idx].height else 0
-        
-        padding = 6.0
-        effective_width = max(0, col_width - (padding * 2))
-        effective_height = max(0, row_height - (padding * 2))
-        
-        return (effective_width, effective_height)
-    except Exception:
-        return (0, 0)
 
 def process_table(table, text_values: dict[str, str], image_values: dict[str, list[bytes]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
-                cell_dimensions = get_cell_dimensions(table, row_idx, col_idx)
-                process_text_frame(cell.text_frame, text_values, None, cell_dimensions)
+                cell_width = 0
+                cell_height = 0
+                
+                try:
+                    if table.columns[col_idx].width:
+                        cell_width = table.columns[col_idx].width.pt - 12
+                    if row.height:
+                        cell_height = row.height.pt - 12
+                except Exception:
+                    pass
+                
+                process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
 
 def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[bytes]]) -> None:
     shapes_list = list(shapes)
