@@ -18,7 +18,7 @@
     "@nestjs/core": "^11.1.9",
     "@nestjs/microservices": "^11.1.8",
     "@nestjs/platform-express": "^11.1.8",
-    "@orpc/contract": "^1.11.3",
+    "@orpc/contract": "^1.12.2",
     "@orpc/openapi": "^1.11.3",
     "@orpc/server": "^1.11.3",
     "@orpc/standard-server": "^1.11.3",

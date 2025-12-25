@@ -1,5 +1,5 @@
 {
-  "name": "@auto-document/document-template-crud",
+  "name": "@auto-document/document-crud",
   "version": "0.0.0",
   "description": "",
   "private": true,
@@ -26,7 +26,7 @@
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.8",
-    "@orpc/contract": "^1.10.2",
+    "@orpc/contract": "^1.12.2",
     "@orpc/openapi": "^1.10.2",
     "@orpc/openapi-client": "^1.10.2",
     "@orpc/zod": "^1.12.2",
@@ -42,8 +42,6 @@
   },
   "dependencies": {
     "@auto-document/bootstrap": "workspace:*",
-    "@auto-document/document-map-creator": "workspace:*",
-    "@auto-document/document-processor": "workspace:*",
     "@auto-document/nest": "workspace:*",
     "@auto-document/types": "workspace:*",
     "@auto-document/utils": "workspace:*",
