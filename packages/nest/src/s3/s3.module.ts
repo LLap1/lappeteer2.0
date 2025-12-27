@@ -1,9 +1,8 @@
 import { Global, Module } from '@nestjs/common';
-import { S3Service } from './s3.service';
-import { S3Client } from 'bun';
+import { S3Client, type S3Options } from 'bun';
 import { z } from 'zod';
 
-const S3OptionsSchema = z.object({
+const S3OptionsSchema: z.ZodType<S3Options> = z.object({
   accessKeyId: z.string(),
   secretAccessKey: z.string(),
   region: z.string(),
@@ -11,7 +10,6 @@ const S3OptionsSchema = z.object({
   bucket: z.string(),
 });
 
-export type S3Options = z.infer<typeof S3OptionsSchema>;
 export const S3ConfigSchema = z.object({
   s3: S3OptionsSchema,
 });
@@ -25,8 +23,7 @@ export const S3ConfigSchema = z.object({
         return new S3Client(config);
       },
     },
-    S3Service,
   ],
-  exports: [S3Service],
+  exports: [S3Client],
 })
 export class S3Module {}

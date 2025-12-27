@@ -1,21 +1,18 @@
 import {
   CreateDocumentsInputSchema,
   CreateDocumentsOutputSchema,
-  DeleteAllDocumentsInputSchema,
-  DeleteAllDocumentsOutputSchema,
   DeleteDocumentByIdInputSchema,
   DeleteDocumentByIdOutputSchema,
-  DownloadDocumentInputSchema,
-  DownloadDocumentOutputSchema,
-  ListDocumentsAllInputSchema,
   ListDocumentsAllOutputSchema,
-  ListDocumentsByTemplateIdInputSchema,
-  ListDocumentsByTemplateIdOutputSchema,
+  GetDocumentByIdInputSchema,
+  GetDocumentByIdOutputSchema,
 } from './documents.router.schema';
 import { oc } from '@orpc/contract';
 import { createDocumentInputWithNoMapsExample } from 'src/docs/examples/create-document-input-no-maps';
-
-const root = oc;
+import generalErrors from 'src/app.router.errors';
+import documentErrors from './document.router.errors';
+import templateErrors from '../templates/templates.router.errors';
+const root = oc.errors(generalErrors);
 
 const create = root
   .route({
@@ -25,6 +22,10 @@ const create = root
     tags: ['Documents'],
     description: 'Create documents from a template with provided data',
   })
+  .errors({
+    DOCUMENT_CREATION_FAILED: documentErrors.DOCUMENT_CREATION_FAILED,
+    TEMPLATE_NOT_FOUND: templateErrors.TEMPLATE_NOT_FOUND,
+  })
   .input(
     CreateDocumentsInputSchema.meta({
       examples: [createDocumentInputWithNoMapsExample],
@@ -32,26 +33,27 @@ const create = root
   )
   .output(CreateDocumentsOutputSchema);
 
-const download = root
+const getById = root
+  .route({
+    method: 'GET',
+    path: '/documents/{id}',
+    summary: 'Get Document by ID',
+    tags: ['Documents'],
+    description: 'Get a document by ID',
+  })
+  .errors({ DOCUMENT_NOT_FOUND: documentErrors.DOCUMENT_NOT_FOUND })
+  .input(GetDocumentByIdInputSchema)
+  .output(GetDocumentByIdOutputSchema);
+
+const list = root
   .route({
     method: 'GET',
     path: '/documents',
-    summary: 'Download document',
-    tags: ['Documents'],
-    description: 'Download a document file from storage',
-  })
-  .input(DownloadDocumentInputSchema)
-  .output(DownloadDocumentOutputSchema);
-
-const listAll = root
-  .route({
-    method: 'GET',
-    path: '/documents/list',
-    summary: 'List Documents',
+    summary: 'List All Documents',
     tags: ['Documents'],
     description: 'List all documents that were created.',
   })
-  .input(ListDocumentsAllInputSchema)
+  .errors({ DOCUMENT_LIST_ALL_FAILED: documentErrors.DOCUMENT_LIST_ALL_FAILED })
   .output(ListDocumentsAllOutputSchema);
 
 const deleteById = root
@@ -62,23 +64,16 @@ const deleteById = root
     tags: ['Documents'],
     description: 'Deletes a document that was created.',
   })
+  .errors({
+    DOCUMENT_NOT_FOUND: documentErrors.DOCUMENT_NOT_FOUND,
+    DOCUMENT_DELETION_BY_ID_FAILED: documentErrors.DOCUMENT_DELETION_BY_ID_FAILED,
+  })
   .input(DeleteDocumentByIdInputSchema)
   .output(DeleteDocumentByIdOutputSchema);
 
-const deleteAll = root
-  .route({
-    method: 'DELETE',
-    path: '/documents/delete-all',
-    summary: 'Delete All Documents',
-    tags: ['Documents'],
-    description: 'Deletes all documents that were created.',
-  })
-  .input(DeleteAllDocumentsInputSchema)
-  .output(DeleteAllDocumentsOutputSchema);
 export const documents = oc.router({
   create,
-  download,
-  listAll,
+  getById,
+  list,
   deleteById,
-  deleteAll,
 });

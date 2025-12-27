@@ -6,11 +6,12 @@ import {
   TextPlaceholderParams,
   ImagePlaceholderParams,
 } from './document-creator/placholder-creator/placeholder-creator.model';
-import type { Document } from '@auto-document/types/document';
 import { v4 as uuidv4 } from 'uuid';
+
 export type CreateDocumentParams = {
   placeholders: CreatePlaceholderParams<PlaceholderType>[];
   documentFilename: string;
+  slidesToRemove?: number[];
 };
 
 export type CreatePlaceholderParams<T extends PlaceholderType = PlaceholderType> = {
@@ -31,7 +32,8 @@ export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> =
 export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> = z.string();
 export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.url();
 
-export const CreatePlaceholderParamsSchema = z
+//@ts-ignore id is present...
+export const CreatePlaceholderParamsSchema: z.ZodType<CreatePlaceholderParams> = z
   .object({
     id: z
       .string()
@@ -54,6 +56,7 @@ export const CreateDocumentParamsSchema = z
   .object({
     placeholders: z.array(CreatePlaceholderParamsSchema),
     documentFilename: z.string(),
+    slidesToRemove: z.array(z.number().int().nonnegative()).optional(),
   })
   .strict();
 
@@ -62,21 +65,20 @@ export const CreateDocumentsInputSchema = z
     templateId: z.string().min(1),
     zipFilename: z.string().min(1),
     params: z.array(CreateDocumentParamsSchema).min(1),
-    slidesToRemove: z.array(z.number().int().nonnegative()).optional(),
   })
   .strict();
 
-export const CreateDocumentsOutputSchema: z.ZodType<Document> = z.object({
-  id: z.string(),
-  templateId: z.string(),
+export const CreateDocumentsOutputSchema = z.object({
   downloadUrl: z.url(),
 });
 
 export const DownloadDocumentInputSchema = z.object({
-  filePath: z.string().min(1),
+  id: z.string().min(1),
 });
 
-export const DownloadDocumentOutputSchema = z.file();
+export const DownloadDocumentOutputSchema = z.object({
+  downloadUrl: z.url(),
+});
 
 const ListDocumentsOutputSchema = z.array(
   z.object({
@@ -86,13 +88,16 @@ const ListDocumentsOutputSchema = z.array(
   }),
 );
 
+export const GetDocumentByIdInputSchema = z.object({ id: z.string() });
+export const GetDocumentByIdOutputSchema = z.object({
+  id: z.string(),
+  templateId: z.string(),
+  downloadUrl: z.url(),
+});
+
 export const DeleteDocumentByIdInputSchema = z.object({ id: z.string() });
 export const DeleteDocumentByIdOutputSchema = z.void();
 
-export const DeleteAllDocumentsInputSchema = z.object();
-export const DeleteAllDocumentsOutputSchema = z.void();
-
-export const ListDocumentsAllInputSchema = z.object();
 export const ListDocumentsAllOutputSchema = ListDocumentsOutputSchema;
 export const ListDocumentsByTemplateIdInputSchema = z.object({ templateId: z.string() });
 
@@ -101,7 +106,6 @@ export const ListDocumentsByTemplateIdOutputSchema = ListDocumentsOutputSchema;
 export type DownloadDocumentInput = z.infer<typeof DownloadDocumentInputSchema>;
 export type DownloadDocumentOutput = z.infer<typeof DownloadDocumentOutputSchema>;
 
-export type ListDocumentsAllInput = z.infer<typeof ListDocumentsAllInputSchema>;
 export type ListDocumentsAllOutput = z.infer<typeof ListDocumentsAllOutputSchema>;
 
 export type ListDocumentsByTemplateIdInput = z.infer<typeof ListDocumentsByTemplateIdInputSchema>;
@@ -110,13 +114,12 @@ export type ListDocumentsByTemplateIdOutput = z.infer<typeof ListDocumentsByTemp
 export type DeleteDocumentByIdInput = z.infer<typeof DeleteDocumentByIdInputSchema>;
 export type DeleteDocumentByIdOutput = z.infer<typeof DeleteDocumentByIdOutputSchema>;
 
-export type DeleteAllDocumentsInput = z.infer<typeof DeleteAllDocumentsInputSchema>;
-export type DeleteAllDocumentsOutput = z.infer<typeof DeleteAllDocumentsOutputSchema>;
+export type GetDocumentByIdInput = z.infer<typeof GetDocumentByIdInputSchema>;
+export type GetDocumentByIdOutput = z.infer<typeof GetDocumentByIdOutputSchema>;
 
 export type CreateDocumentsInput = {
   templateId: string;
   zipFilename: string;
   params: CreateDocumentParams[];
-  slidesToRemove?: number[];
 };
 export type CreateDocumentsOutput = z.infer<typeof CreateDocumentsOutputSchema>;

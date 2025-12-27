@@ -14,17 +14,14 @@ export class DocumentsController {
       create: implement(appRouter.documents.create).handler(async ({ input, errors }) => {
         return this.documentService.create(input as CreateDocumentsInput, errors);
       }),
-      download: implement(appRouter.documents.download).handler(async ({ input, errors }) => {
-        return this.documentService.download(input, errors);
+      getById: implement(appRouter.documents.getById).handler(async ({ input, errors }) => {
+        return this.documentService.getById(input, errors);
       }),
-      listAll: implement(appRouter.documents.listAll).handler(async ({ errors }) => {
-        return this.documentService.listAll(errors);
+      list: implement(appRouter.documents.list).handler(async ({ errors }) => {
+        return this.documentService.list(errors);
       }),
       deleteById: implement(appRouter.documents.deleteById).handler(async ({ input, errors }) => {
         return this.documentService.deleteById(input, errors);
-      }),
-      deleteAll: implement(appRouter.documents.deleteAll).handler(async ({ errors }) => {
-        return this.documentService.deleteAll(errors);
       }),
     };
   }

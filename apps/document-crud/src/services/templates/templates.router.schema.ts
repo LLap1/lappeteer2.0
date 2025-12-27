@@ -1,10 +1,5 @@
 import { z } from 'zod/v4';
-import {
-  type Template,
-  type PlaceholderMetadata,
-  type PlaceholderType,
-  DocumentSchema,
-} from '@auto-document/types/document';
+import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
 
 export const PlaceholderMetadataSchema: z.ZodType<PlaceholderMetadata<PlaceholderType>> = z.object({
   key: z.string(),
@@ -13,10 +8,10 @@ export const PlaceholderMetadataSchema: z.ZodType<PlaceholderMetadata<Placeholde
   height: z.number(),
 });
 
-export const TemplateSchema: z.ZodType<Template> = z.object({
-  id: z.uuid(),
+export const TemplateSchema = z.object({
+  id: z.string(),
   name: z.string(),
-  path: z.string(),
+  downloadUrl: z.url(),
   placeholders: z.array(PlaceholderMetadataSchema),
 });
 
@@ -27,29 +22,42 @@ export const CreateTemplateInputSchema = z.object({
 export const CreateTemplateOutputSchema = TemplateSchema;
 
 export const GetTemplateInputSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
 });
 
-export const GetTemplateOutputSchema = TemplateSchema;
+export const GetTemplateOutputSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  downloadUrl: z.url(),
+  placeholders: z.array(PlaceholderMetadataSchema),
+});
 
 export const ListTemplatesInputSchema = z.object();
 export const ListTemplatesOutputSchema = z.array(TemplateSchema);
 
 export const DeleteTemplateInputSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
 });
 
 export const DownloadTemplateInputSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
 });
 
-export const DownloadTemplateOutputSchema = z.file();
+export const DownloadTemplateOutputSchema = z.object({
+  downloadUrl: z.url(),
+});
 
 export const ListDocumentsInputSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
 });
 
-export const ListDocumentsOutputSchema = z.array(DocumentSchema);
+export const ListDocumentsOutputSchema = z.array(
+  z.object({
+    id: z.string(),
+    templateId: z.string(),
+    downloadUrl: z.url(),
+  }),
+);
 
 export type CreateTemplateInput = z.infer<typeof CreateTemplateInputSchema>;
 export type CreateTemplateOutput = z.infer<typeof CreateTemplateOutputSchema>;

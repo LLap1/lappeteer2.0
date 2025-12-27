@@ -2,10 +2,7 @@ import { Feature, Polygon } from 'geojson';
 import type { PathOptions } from 'leaflet';
 import {
   CreateDocumentsInputSchema,
-  CreateMapPlaceholderParamsSchema,
   CreatePlaceholderParamsSchema,
-  type CreateDocumentsInput,
-  type CreatePlaceholderParams,
 } from '../../services/documents/documents.router.schema';
 import z from 'zod';
 

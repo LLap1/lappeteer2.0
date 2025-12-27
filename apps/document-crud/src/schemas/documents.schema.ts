@@ -6,7 +6,7 @@ export const documentsTable = pgTable('documents', {
   templateId: uuid('tempalte_id')
     .references(() => templatesTable.id)
     .notNull(),
-  downloadUrl: varchar('download_url', { length: 1024 }).notNull(),
+  filePath: varchar('file_path', { length: 1024 }).notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

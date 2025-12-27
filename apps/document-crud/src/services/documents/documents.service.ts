@@ -1,18 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { TemplateService } from '../templates/templates.service';
 import type {
   CreateDocumentsInput,
   CreateDocumentsOutput,
-  DownloadDocumentInput,
-  ListDocumentsAllOutput,
-  ListDocumentsByTemplateIdInput,
-  ListDocumentsByTemplateIdOutput,
   DeleteDocumentByIdInput,
+  GetDocumentByIdInput,
+  GetDocumentByIdOutput,
+  ListDocumentsAllOutput,
 } from './documents.router.schema';
 import { DocumentCreatorService } from './document-creator/document-creator.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Log } from '@auto-document/utils/log';
-import { S3Service } from '@auto-document/nest/s3.service';
 import { DRIZZLE } from '@auto-document/nest/drizzle.module';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { documentsTable } from 'src/schemas/documents.schema';
@@ -20,18 +17,16 @@ import { eq } from 'drizzle-orm';
 import path from 'path';
 import { appRouter } from 'src/app.router';
 import { type RouterErrorMap } from '@auto-document/types/orpc';
-import { firstValueFrom, switchMap, tap } from 'rxjs';
+import { S3Client } from 'bun';
+import { templatesTable } from 'src/schemas/templates.schema';
 
 @Injectable()
 export class DocumentsService {
   private static readonly logger: Logger = new Logger(DocumentsService.name);
 
   constructor(
-    private readonly templateService: TemplateService,
     private readonly documentCreatorService: DocumentCreatorService,
-    private readonly s3Service: S3Service,
-    @Inject('BASE_URL')
-    private readonly baseUrl: string,
+    private readonly s3Client: S3Client,
     @Inject(DRIZZLE)
     private readonly db: PostgresJsDatabase,
   ) {}
@@ -41,34 +36,43 @@ export class DocumentsService {
     input: CreateDocumentsInput,
     errors: RouterErrorMap<typeof appRouter.documents.create>,
   ): Promise<CreateDocumentsOutput> {
-    try {
-      const template = await this.templateService.get({ id: input.templateId }, errors);
-      const templateFile = await this.templateService.download({ id: input.templateId }, errors);
+    const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.templateId));
 
-      const downloadPath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
-      const downloadUrl = new URL('documents', this.baseUrl);
-      downloadUrl.searchParams.set('filePath', downloadPath);
+    if (!template) {
+      throw errors.TEMPLATE_NOT_FOUND({ data: { templateId: input.templateId } });
+    }
+
+    try {
+      const templateFile = this.s3Client.file(template.filePath);
+
+      const filePath = path.join('documents', template.id, new Date().toISOString(), input.zipFilename);
 
       const zipFile = await this.documentCreatorService.create({
         templateFile,
         params: input.params,
         placeholderMetadata: template.placeholders,
         zipFilename: input.zipFilename,
-        slidesToRemove: input.slidesToRemove,
       });
 
-      await this.s3Service.upload(zipFile, downloadPath);
+      await this.s3Client.write(filePath, zipFile, {
+        type: zipFile.type,
+      });
 
-      const [document] = await this.db
-        .insert(documentsTable)
-        .values({
-          id: uuidv4(),
-          templateId: template.id,
-          downloadUrl: downloadUrl.toString(),
-        })
-        .returning();
+      const downloadUrl = this.s3Client.presign(filePath, {
+        expiresIn: 7 * 24 * 60 * 60, // 7 days
+        acl: 'public-read',
+        type: zipFile.type,
+      });
 
-      return document;
+      await this.db.insert(documentsTable).values({
+        id: uuidv4(),
+        templateId: template.id,
+        filePath,
+      });
+
+      return {
+        downloadUrl,
+      };
     } catch (error) {
       console.error(error);
       throw errors.DOCUMENT_CREATION_FAILED({ data: { error, templateId: input.templateId } });
@@ -76,24 +80,31 @@ export class DocumentsService {
   }
 
   @Log(DocumentsService.logger)
-  async download(
-    input: DownloadDocumentInput,
-    errors: RouterErrorMap<typeof appRouter.documents.download>,
-  ): Promise<File> {
-    try {
-      return this.s3Service.download(input.filePath);
-    } catch (error) {
-      throw errors.DOCUMENT_NOT_FOUND({ data: { error, filePath: input.filePath } });
+  async getById(
+    input: GetDocumentByIdInput,
+    errors: RouterErrorMap<typeof appRouter.documents.getById>,
+  ): Promise<GetDocumentByIdOutput> {
+    const [document] = await this.db.select().from(documentsTable).where(eq(documentsTable.id, input.id));
+
+    if (!document) {
+      throw errors.DOCUMENT_NOT_FOUND({ data: { documentId: input.id } });
     }
+
+    return {
+      ...document,
+      downloadUrl: this.s3Client.file(document.filePath).presign(),
+    };
   }
 
- 
-
   @Log(DocumentsService.logger)
-  async listAll(errors: RouterErrorMap<typeof appRouter.documents.listAll>): Promise<ListDocumentsAllOutput> {
+  async list(errors: RouterErrorMap<typeof appRouter.documents.list>): Promise<ListDocumentsAllOutput> {
     try {
-      const result = await this.db.select().from(documentsTable);
-      return result as ListDocumentsAllOutput;
+      const documents = await this.db.select().from(documentsTable);
+      console.log(documents);
+      return documents.map(document => ({
+        ...document,
+        downloadUrl: this.s3Client.file(document.filePath).presign(),
+      }));
     } catch (error) {
       throw errors.DOCUMENT_LIST_ALL_FAILED({ data: { error } });
     }
@@ -105,18 +116,16 @@ export class DocumentsService {
     errors: RouterErrorMap<typeof appRouter.documents.deleteById>,
   ): Promise<void> {
     try {
+      const [document] = await this.db.select().from(documentsTable).where(eq(documentsTable.id, input.id));
+
+      if (!document) {
+        throw errors.DOCUMENT_NOT_FOUND({ data: { documentId: input.id } });
+      }
+
+      await this.s3Client.delete(document.filePath);
       await this.db.delete(documentsTable).where(eq(documentsTable.id, input.id));
     } catch (error) {
       throw errors.DOCUMENT_DELETION_BY_ID_FAILED({ data: { error, documentId: input.id } });
-    }
-  }
-
-  @Log(DocumentsService.logger)
-  async deleteAll(errors: RouterErrorMap<typeof appRouter.documents.deleteAll>): Promise<void> {
-    try {
-      await this.db.delete(documentsTable);
-    } catch (error) {
-      throw errors.DOCUMENT_DELETION_ALL_FAILED({ data: { error } });
     }
   }
 }

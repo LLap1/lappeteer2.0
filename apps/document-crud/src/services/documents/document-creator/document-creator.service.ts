@@ -7,13 +7,13 @@ import { Log } from '@auto-document/utils/log';
 import { zipFiles } from '@auto-document/utils/file';
 import { DocumentProcessorService } from '../../document-processor/document-processor.service';
 import { GenerateRequest } from '../../document-processor/document-processor.model';
+import { S3File } from 'bun';
 
 type CreateInput = {
-  templateFile: File;
+  templateFile: S3File;
   params: CreateDocumentParams[];
   placeholderMetadata: PlaceholderMetadata<PlaceholderType>[];
   zipFilename: string;
-  slidesToRemove?: number[];
 };
 
 @Injectable()
@@ -26,7 +26,7 @@ export class DocumentCreatorService {
   ) {}
 
   @Log(DocumentCreatorService.logger)
-  async create({ templateFile, params, placeholderMetadata, zipFilename, slidesToRemove }: CreateInput): Promise<File> {
+  async create({ templateFile, params, placeholderMetadata, zipFilename }: CreateInput): Promise<File> {
     const placeholderParams = this.buildPlaceholderParams(params, placeholderMetadata);
     const placeholders = await this.placeholderCreatorService.create(placeholderParams);
     const generateRequests: GenerateRequest[] = await Promise.all(
@@ -39,7 +39,7 @@ export class DocumentCreatorService {
             value: Array.isArray(placeholder.value) ? JSON.stringify(placeholder.value) : placeholder.value,
           })),
         outputFilename: param.documentFilename,
-        slidesToRemove,
+        slidesToRemove: param.slidesToRemove,
       })),
     );
 

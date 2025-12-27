@@ -13,11 +13,10 @@ export const createDocumentInputWithNoMapsExample = {
       {
         type: 'text',
         key: 'תיאור',
-        params: `This is a description of the world maps document This is a description of the world maps document ${
-          index + 1
-        }`,
+        params: `This is a description of the world maps document This is a  ${index + 1}`,
       },
     ],
+    slidesToRemove: [0, 2],
     documentFilename: `world_maps_${index + 1}.pptx`,
   })),
 };

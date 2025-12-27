@@ -5,22 +5,20 @@ import {
   GetTemplateOutputSchema,
   ListTemplatesOutputSchema,
   DeleteTemplateInputSchema,
-  DownloadTemplateOutputSchema,
-  DownloadTemplateInputSchema,
   ListTemplatesInputSchema,
-  ListDocumentsInputSchema,
-  ListDocumentsOutputSchema,
 } from './templates.router.schema';
 import { oc } from '@orpc/contract';
+import generalErrors from 'src/app.router.errors';
+import templateErrors from './templates.router.errors';
 
-const root = oc;
+const root = oc.errors(generalErrors);
 
 const create = root
   .route({
     method: 'POST',
     path: '/templates',
     spec: {
-      summary: 'Create a new template',
+      summary: 'Create Template',
       tags: ['Templates'],
       description: 'Upload a PowerPoint template file and create metadata',
       requestBody: {
@@ -40,17 +38,19 @@ const create = root
       },
     },
   })
+  .errors({ TEMPLATE_UPLOAD_FAILED: templateErrors.TEMPLATE_UPLOAD_FAILED })
   .input(CreateTemplateInputSchema)
   .output(CreateTemplateOutputSchema);
 
 const get = root
   .route({
     method: 'GET',
-    path: '/templates/:id',
-    summary: 'Get template metadata',
+    path: '/templates/{id}',
+    summary: 'Get Template by ID',
     tags: ['Templates'],
     description: 'Get metadata for a template by ID',
   })
+  .errors({ TEMPLATE_NOT_FOUND: templateErrors.TEMPLATE_NOT_FOUND })
   .input(GetTemplateInputSchema)
   .output(GetTemplateOutputSchema);
 
@@ -58,7 +58,7 @@ const list = root
   .route({
     method: 'GET',
     path: '/templates',
-    summary: 'List all templates',
+    summary: 'List All Templates',
     tags: ['Templates'],
     description: 'Get a list of all template metadata',
   })
@@ -68,40 +68,17 @@ const list = root
 const deleteTemplate = root
   .route({
     method: 'DELETE',
-    path: '/templates/:id',
-    summary: 'Delete a template',
+    path: '/templates/{id}',
+    summary: 'Delete Template by ID',
     tags: ['Templates'],
     description: 'Delete a template file and its metadata',
   })
+  .errors({ TEMPLATE_NOT_FOUND: templateErrors.TEMPLATE_NOT_FOUND })
   .input(DeleteTemplateInputSchema);
-
-const download = root
-  .route({
-    method: 'GET',
-    path: '/templates/:id/download',
-    summary: 'Download a template file',
-    tags: ['Templates'],
-    description: 'Download the PowerPoint template file by ID',
-  })
-  .input(DownloadTemplateInputSchema)
-  .output(DownloadTemplateOutputSchema);
-
-const listDocuments = root
-  .route({
-    method: 'GET',
-    path: '/templates/:id/documents',
-    summary: 'List all documents for a template',
-    tags: ['Templates'],
-    description: 'List all documents for a template by ID',
-  })
-  .input(ListDocumentsInputSchema)
-  .output(ListDocumentsOutputSchema);
 
 export const templates = root.router({
   create,
   get,
   list,
-  download,
   delete: deleteTemplate,
-  listDocuments,
 });
