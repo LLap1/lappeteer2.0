@@ -1,7 +1,7 @@
 import archiver from 'archiver';
 import { PassThrough } from 'node:stream';
-
-export function zipFiles(files: File[]): Promise<Blob> {
+import path from 'path';
+export function zipFiles(files: Bun.BunFile[]): Promise<Blob> {
   return new Promise(async (resolve, reject) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
     const stream = new PassThrough();
@@ -15,7 +15,8 @@ export function zipFiles(files: File[]): Promise<Blob> {
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      archive.append(buffer, { name: file.name });
+      const filename = path.basename(file.name!);
+      archive.append(buffer, { name: filename });
     }
 
     archive.finalize();

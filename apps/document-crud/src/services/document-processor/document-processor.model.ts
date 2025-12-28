@@ -1,5 +1,5 @@
 export interface GenerateRequest {
-  templateFile: Uint8Array;
+  templateFile: Bun.S3File;
   outputFilename: string;
   data: PlaceholderData[];
   slidesToRemove?: number[];
@@ -18,7 +18,7 @@ export interface MapValue {
   layerDataUrls: string[];
 }
 
-export type GenerateResponse = File;
+export type GenerateResponse = Bun.BunFile;
 
 export type AnalyzeRequest = Uint8Array;
 

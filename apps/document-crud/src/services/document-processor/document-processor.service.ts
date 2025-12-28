@@ -20,20 +20,15 @@ export class DocumentProcessorService {
     const pythonPath = path.join(__dirname, 'python-scripts', 'generate.py');
     const tempDir = '/tmp';
     const inputFilePath = path.join(tempDir, `${Date.now()}.pptx`);
-
+    const outputFilePath = path.join(tempDir, request.outputFilename);
     await Bun.write(inputFilePath, request.templateFile);
 
     const dataString = JSON.stringify(request.data);
     const slidesToRemoveString = request.slidesToRemove ? JSON.stringify(request.slidesToRemove) : '[]';
-    const outputFilepath = await $`python ${pythonPath} ${inputFilePath} ${dataString} ${slidesToRemoveString}`.text();
-    const outputPath = outputFilepath.trim();
-
-    const outputFile = Bun.file(outputPath);
-    const fileBytes = await outputFile.arrayBuffer();
-    const fileUint8Array = new Uint8Array(fileBytes);
+    await $`python ${pythonPath} ${inputFilePath} ${dataString} ${outputFilePath} ${slidesToRemoveString}`.text();
 
     await unlink(inputFilePath).catch(() => {});
-    return new File([fileUint8Array], request.outputFilename);
+    return Bun.file(outputFilePath);
   }
 
   @Log(DocumentProcessorService.logger)

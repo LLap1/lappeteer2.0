@@ -2,24 +2,15 @@ import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
 import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
-import { LoggerConfigSchema } from '@auto-document/nest/logger.module';
-import { multistream } from 'pino';
-import pinoElastic from 'pino-elasticsearch';
-import pinoPretty from 'pino-pretty';
 import { DrizzleConfigSchema } from '@auto-document/nest/drizzle.module';
-import type { OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
 import { Cluster } from 'puppeteer-cluster';
+import { ServerConfigSchema } from '@auto-document/bootstrap/crud';
+
 loadDotenv();
 
 export const EnvironmentSchema = z.enum(['production', 'development', 'test']);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 export const configSchema = z.object({
-  server: z.object({
-    port: z.coerce.number(),
-    baseUrl: z.url(),
-    environment: EnvironmentSchema.default('development'),
-  }),
-  openApi: z.custom<OpenAPIGeneratorGenerateOptions>(),
   mapCreator: z.object({
     orthoTileLayerUrl: z.url(),
     mapPoolUrl: z.string().url(),
@@ -36,15 +27,28 @@ export const configSchema = z.object({
   }),
 
   ...S3ConfigSchema.shape,
-  ...LoggerConfigSchema.shape,
+  ...ServerConfigSchema.shape,
   ...DrizzleConfigSchema.shape,
 });
 
 const templatedConfig: z.infer<typeof configSchema> = {
   server: {
     port: Number(process.env.PORT!),
-    baseUrl: process.env.BASE_URL!,
-    environment: process.env.ENV as Environment,
+    serviceName: packageJson.name,
+    version: packageJson.version,
+    env: process.env.ENV!,
+  },
+  logger: {
+    elasticsearch: {
+      node: process.env.ELASTICSEARCH_NODE!,
+      isDataStream: process.env.ELASTICSEARCH_IS_DATA_STREAM === 'true',
+      index: process.env.ELASTICSEARCH_INDEX!,
+      username: process.env.ELASTICSEARCH_USERNAME!,
+      password: process.env.ELASTICSEARCH_PASSWORD!,
+      tls: {
+        rejectUnauthorized: process.env.ELASTICSEARCH_TLS_REJECT_UNAUTHORIZED === 'true',
+      },
+    },
   },
   openApi: {
     info: {
@@ -77,21 +81,8 @@ const templatedConfig: z.infer<typeof configSchema> = {
     },
     mapsPerPage: Number(process.env.MAPS_PER_PAGE!),
   },
-  logger: {
-    pino: multistream([
-      process.env.ENV === 'produciton'
-        ? pinoElastic({
-            index: process.env.ELASTICSEARCH_INDEX!,
-            node: process.env.ELASTICSEARCH_NODE!,
-            esVersion: Number(process.env.ELASTICSEARCH_ES_VERSION!),
-          })
-        : pinoPretty({
-            colorize: true,
-            singleLine: false,
-          }),
-    ]),
-  },
 };
 
 export const config = configSchema.parse(templatedConfig);
+
 export type Config = z.infer<typeof configSchema>;

@@ -3,7 +3,6 @@ import { type MicroserviceOptions, Transport } from '@nestjs/microservices';
 import path from 'path';
 import { ReflectionService } from '@grpc/reflection';
 import type { Type } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
 
 export type ServerConfig = {
   server: {
@@ -34,7 +33,6 @@ export async function runMicroservice({ config, appModule }: ServeOptions) {
       maxSendMessageLength: 50 * 1024 * 1024,
     },
   });
-  app.useLogger(app.get(Logger));
 
   await app.listen();
   console.log(`Microservice is listening on port ${config.server.port}`);

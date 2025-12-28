@@ -16,7 +16,7 @@ import { documentsTable } from 'src/schemas/documents.schema';
 import { eq } from 'drizzle-orm';
 import path from 'path';
 import { appRouter } from 'src/app.router';
-import { type RouterErrorMap } from '@auto-document/types/orpc';
+import { type RouterErrors } from '@auto-document/types/orpc';
 import { S3Client } from 'bun';
 import { templatesTable } from 'src/schemas/templates.schema';
 
@@ -34,7 +34,7 @@ export class DocumentsService {
   @Log(DocumentsService.logger)
   async create(
     input: CreateDocumentsInput,
-    errors: RouterErrorMap<typeof appRouter.documents.create>,
+    errors: RouterErrors<typeof appRouter.documents.create>,
   ): Promise<CreateDocumentsOutput> {
     const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.templateId));
 
@@ -65,7 +65,6 @@ export class DocumentsService {
       });
 
       await this.db.insert(documentsTable).values({
-        id: uuidv4(),
         templateId: template.id,
         filePath,
       });
@@ -82,7 +81,7 @@ export class DocumentsService {
   @Log(DocumentsService.logger)
   async getById(
     input: GetDocumentByIdInput,
-    errors: RouterErrorMap<typeof appRouter.documents.getById>,
+    errors: RouterErrors<typeof appRouter.documents.getById>,
   ): Promise<GetDocumentByIdOutput> {
     const [document] = await this.db.select().from(documentsTable).where(eq(documentsTable.id, input.id));
 
@@ -97,7 +96,7 @@ export class DocumentsService {
   }
 
   @Log(DocumentsService.logger)
-  async list(errors: RouterErrorMap<typeof appRouter.documents.list>): Promise<ListDocumentsAllOutput> {
+  async list(errors: RouterErrors<typeof appRouter.documents.list>): Promise<ListDocumentsAllOutput> {
     try {
       const documents = await this.db.select().from(documentsTable);
       console.log(documents);
@@ -113,7 +112,7 @@ export class DocumentsService {
   @Log(DocumentsService.logger)
   async deleteById(
     input: DeleteDocumentByIdInput,
-    errors: RouterErrorMap<typeof appRouter.documents.deleteById>,
+    errors: RouterErrors<typeof appRouter.documents.deleteById>,
   ): Promise<void> {
     try {
       const [document] = await this.db.select().from(documentsTable).where(eq(documentsTable.id, input.id));

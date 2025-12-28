@@ -16,7 +16,7 @@ import { DRIZZLE } from '@auto-document/nest/drizzle.module';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { v4 as uuidv4 } from 'uuid';
-import { type RouterErrorMap } from '@auto-document/types/orpc';
+import { type RouterErrors } from '@auto-document/types/orpc';
 import { DocumentProcessorService } from '../document-processor/document-processor.service';
 import { documentsTable } from 'src/schemas/documents.schema';
 import { S3Client } from 'bun';
@@ -35,7 +35,7 @@ export class TemplateService {
   @Log(TemplateService.logger)
   async create(
     input: CreateTemplateInput,
-    errors: RouterErrorMap<typeof templates.create>,
+    errors: RouterErrors<typeof templates.create>,
   ): Promise<CreateTemplateOutput> {
     try {
       const templateId = uuidv4();
@@ -72,7 +72,7 @@ export class TemplateService {
   }
 
   @Log(TemplateService.logger)
-  async get(input: GetTemplateInput, errors: RouterErrorMap<typeof templates.get>): Promise<GetTemplateOutput> {
+  async get(input: GetTemplateInput, errors: RouterErrors<typeof templates.get>): Promise<GetTemplateOutput> {
     const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.id));
 
     if (!template) {
@@ -95,7 +95,7 @@ export class TemplateService {
   }
 
   @Log(TemplateService.logger)
-  async delete({ id }: DeleteTemplateInput, errors: RouterErrorMap<typeof templates.delete>): Promise<void> {
+  async delete({ id }: DeleteTemplateInput, errors: RouterErrors<typeof templates.delete>): Promise<void> {
     const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, id));
 
     if (!template) {

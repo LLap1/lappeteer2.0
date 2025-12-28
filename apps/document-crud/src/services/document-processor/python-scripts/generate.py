@@ -210,7 +210,7 @@ def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values:
         else:
             process_shape(shape, slide, text_values, image_values)
 
-def generate(file_path: str, placeholder_data: list[dict], slides_to_remove: list[int] = None) -> str:
+def generate(file_path: str, placeholder_data: list[dict], output_path: str, slides_to_remove: list[int] = None) -> str:
     prs = Presentation(file_path)
     text_values, image_values = prepare_data(placeholder_data)
 
@@ -225,9 +225,7 @@ def generate(file_path: str, placeholder_data: list[dict], slides_to_remove: lis
                 prs.part.drop_rel(slide_id.rId)
                 prs.slides._sldIdLst.remove(slide_id)
 
-    with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.pptx') as tmp:
-        prs.save(tmp)
-        return tmp.name
+    prs.save(output_path)
 
 def main():
     if len(sys.argv) < 3:
@@ -236,13 +234,13 @@ def main():
     
     file_path = sys.argv[1]
     json_data = sys.argv[2]
-    slides_to_remove_json = sys.argv[3] if len(sys.argv) > 3 else '[]'
+    output_path = sys.argv[3]
+    slides_to_remove_json = sys.argv[4] if len(sys.argv) > 3 else '[]'
 
     try:
         placeholder_data = json.loads(json_data)
         slides_to_remove = json.loads(slides_to_remove_json) if slides_to_remove_json else []
-        output_path = generate(file_path, placeholder_data, slides_to_remove)
-        print(output_path)
+        generate(file_path, placeholder_data, output_path, slides_to_remove)
     except Exception as e:
         sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)

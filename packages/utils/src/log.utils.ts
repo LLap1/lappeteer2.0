@@ -14,7 +14,7 @@ function filterFiles(data: any): any {
   }
   if (Array.isArray(data)) {
     return data.map(item => filterFiles(item));
-  } 
+  }
 
   if (typeof data === 'object') {
     const filtered: any = {};
@@ -33,7 +33,7 @@ export function Log(logger: Logger): any {
   return function (_target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = function (...args: any[]) {
+    descriptor.value = async function (...args: any[]) {
       const startTime = Date.now();
       logger.log({
         method: propertyKey,
@@ -42,7 +42,7 @@ export function Log(logger: Logger): any {
         startTime: new Date(startTime).toISOString(),
       });
       try {
-        const result = originalMethod.apply(this, args);
+        const result = await originalMethod.apply(this, args);
         const endTime = Date.now();
         logger.log({
           method: propertyKey,

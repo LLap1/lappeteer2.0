@@ -8,6 +8,7 @@ import { zipFiles } from '@auto-document/utils/file';
 import { DocumentProcessorService } from '../../document-processor/document-processor.service';
 import { GenerateRequest } from '../../document-processor/document-processor.model';
 import { S3File } from 'bun';
+import { chunk } from 'lodash';
 
 type CreateInput = {
   templateFile: S3File;
@@ -31,7 +32,7 @@ export class DocumentCreatorService {
     const placeholders = await this.placeholderCreatorService.create(placeholderParams);
     const generateRequests: GenerateRequest[] = await Promise.all(
       params.map(async param => ({
-        templateFile: new Uint8Array(await templateFile.arrayBuffer()),
+        templateFile,
         data: placeholders
           .filter(p => param.placeholders.some(pp => pp.id === p.id))
           .map(placeholder => ({
@@ -43,11 +44,15 @@ export class DocumentCreatorService {
       })),
     );
 
-    const documents = await Promise.all(
-      generateRequests.map(request => this.documentProcessorService.generate(request)),
-    );
+    const chunks = chunk(generateRequests, 100);
+    const documens: Bun.BunFile[] = [];
+    for (const chunk of chunks) {
+      const documents = await Promise.all(chunk.map(request => this.documentProcessorService.generate(request)));
+      documens.push(...documents);
+    }
 
-    const zipBlob = await zipFiles(documents);
+    const zipBlob = await zipFiles(documens);
+    console.log(zipBlob);
     return new File([zipBlob], zipFilename, { type: zipBlob.type });
   }
 

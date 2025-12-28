@@ -5,14 +5,12 @@ import { DocumentsModule } from './documents/documents.module';
 import { ORPCModule, onError } from '@orpc/nest';
 import { S3Module } from '@auto-document/nest/s3.module';
 import { REQUEST } from '@nestjs/core';
-import { LoggerModule } from '@auto-document/nest/logger.module';
 import { DrizzleModule } from '@auto-document/nest/drizzle.module';
 import path from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
-    LoggerModule.forRoot(config.logger),
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', '..', 'public'),
     }),
