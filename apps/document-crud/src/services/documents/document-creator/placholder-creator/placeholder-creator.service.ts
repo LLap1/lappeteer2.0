@@ -1,12 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { PlaceholderParams } from './placeholder-creator.model';
 import type { Placeholder, PlaceholderType } from '@auto-document/types/document';
-import { forkJoin, map, Observable, of, ReplaySubject, take } from 'rxjs';
 import { DocumentMapCreatorService } from './document-map-creator/document-map-creator.service';
-import { CreateMapsInput } from './document-map-creator/document-map-creator.model';
-import { Feature } from 'geojson';
-import { Geometry } from 'geojson';
-import { PathOptions } from 'leaflet';
+import type { CreateMapsInput } from './document-map-creator/document-map-creator.model';
 
 @Injectable()
 export class PlaceholderCreatorService {
@@ -35,7 +31,7 @@ export class PlaceholderCreatorService {
       height: p.height,
       center: [p.params.center[0], p.params.center[1]],
       zoom: p.params.zoom,
-      geojson: p.params.geojson as Feature<Geometry, { style: PathOptions }>[],
+      geojson: p.params.geojson,
     }));
 
     const maps = await this.documentMapCreatorService.create(createMapsParams);

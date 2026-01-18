@@ -1,9 +1,9 @@
-import { Feature, Polygon } from 'geojson';
-import type { PathOptions } from 'leaflet';
+import type { Feature, Polygon } from 'geojson';
 import {
   CreateDocumentsInputSchema,
   CreatePlaceholderParamsSchema,
 } from '../../services/documents/documents.router.schema';
+import type { GeoJsonStyleOptions } from '../../services/documents/document-creator/placholder-creator/placeholder-creator.model';
 import z from 'zod';
 
 const inlandCities = [
@@ -89,7 +89,7 @@ const createPolygon = (
   center: [number, number],
   size: number,
   color: string,
-): Feature<Polygon, { style: PathOptions }> => {
+): Feature<Polygon, { style: GeoJsonStyleOptions }> => {
   const halfSize = size / 2;
   // GeoJSON uses [lng, lat] format, but center is [lat, lng] from map
   // So we need to create coordinates as [lng, lat]
@@ -119,7 +119,7 @@ const createPolygon = (
   };
 };
 
-function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderParamsSchema> {
+function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePlaceholderParamsSchema> {
   const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)];
   const randomOffsetLat = (Math.random() - 0.5) * 0.3;
   const randomOffsetLng = (Math.random() - 0.5) * 0.3;
@@ -145,6 +145,7 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
   const polygon2 = createPolygon(polygon2Center, polygonSize, color2);
 
   return {
+    id,
     type: 'map',
     key: mapKey,
     params: {
@@ -156,17 +157,19 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
 }
 
 export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: '693d66c8f36a645f1be398ee',
+  templateId: '2d53bbdc-b99a-4ef0-96f8-26070f2bc7b2',
   zipFilename: 'documents.zip',
   params: Array.from({ length: 40 }, (_, index) => ({
     placeholders: [
-      generateRandomMap('מפה'),
+      generateRandomMap('מפה', `map-${index}`),
       {
+        id: `title-${index}`,
         type: 'text',
         key: 'כותרת',
         params: `World Maps ${index + 1}`,
       },
       {
+        id: `description-${index}`,
         type: 'text',
         key: 'תיאור',
         params: `This is a description of the world maps document ${index + 1}`,

@@ -3,7 +3,6 @@ import { config as loadDotenv } from 'dotenv';
 import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
 import { DrizzleConfigSchema } from '@auto-document/nest/drizzle.module';
-import { Cluster } from 'puppeteer-cluster';
 import { ServerConfigSchema } from '@auto-document/bootstrap/crud';
 
 loadDotenv();
@@ -11,19 +10,8 @@ loadDotenv();
 export const EnvironmentSchema = z.enum(['production', 'development', 'test']);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 export const configSchema = z.object({
-  mapCreator: z.object({
-    orthoTileLayerUrl: z.url(),
-    mapPoolUrl: z.string().url(),
-    launchOptions: z.object({
-      timeout: z.coerce.number().optional(),
-      concurrency: z.coerce.number().min(Cluster.CONCURRENCY_PAGE).max(Cluster.CONCURRENCY_BROWSER),
-      maxConcurrency: z.coerce.number(),
-      puppeteerOptions: z.object({
-        headless: z.boolean(),
-        devtools: z.boolean(),
-      }),
-    }),
-    mapsPerPage: z.coerce.number(),
+  documentProcessor: z.object({
+    scriptsPath: z.string(),
   }),
 
   ...S3ConfigSchema.shape,
@@ -67,19 +55,8 @@ const templatedConfig: z.infer<typeof configSchema> = {
   drizzle: {
     connectionString: process.env.DRIZZLE_CONNECTION_STRING!,
   },
-  mapCreator: {
-    orthoTileLayerUrl: process.env.ORTHO_TILE_LAYER_URL!,
-    mapPoolUrl: process.env.MAP_POOL_URL!,
-    launchOptions: {
-      timeout: process.env.PUPPETEER_TIMEOUT ? Number(process.env.PUPPETEER_TIMEOUT) : undefined,
-      concurrency: Number(process.env.PUPPETEER_CONCURRENCY!),
-      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY!),
-      puppeteerOptions: {
-        headless: process.env.PUPPETEER_HEADLESS === 'true',
-        devtools: process.env.PUPPETEER_DEVTOOLS === 'true',
-      },
-    },
-    mapsPerPage: Number(process.env.MAPS_PER_PAGE!),
+  documentProcessor: {
+    scriptsPath: process.env.DOCUMENT_PROCESSOR_SCRIPTS_PATH!,
   },
 };
 

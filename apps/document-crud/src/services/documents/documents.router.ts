@@ -8,8 +8,8 @@ import {
   GetDocumentByIdOutputSchema,
 } from './documents.router.schema';
 import { oc } from '@orpc/contract';
-import { createDocumentInputWithNoMapsExample } from 'src/docs/examples/create-document-input-no-maps';
-import generalErrors from 'src/app.router.errors';
+import { createDocumentInputExample } from '../../docs/examples/create-document-input.example';
+import generalErrors from '../../app.router.errors';
 import documentErrors from './document.router.errors';
 import templateErrors from '../templates/templates.router.errors';
 const root = oc.errors(generalErrors);
@@ -28,7 +28,7 @@ const create = root
   })
   .input(
     CreateDocumentsInputSchema.meta({
-      examples: [createDocumentInputWithNoMapsExample],
+      examples: [createDocumentInputExample],
     }),
   )
   .output(CreateDocumentsOutputSchema);

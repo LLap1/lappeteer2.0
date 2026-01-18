@@ -73,7 +73,6 @@ export class DocumentsService {
         downloadUrl,
       };
     } catch (error) {
-      console.error(error);
       throw errors.DOCUMENT_CREATION_FAILED({ data: { error, templateId: input.templateId } });
     }
   }

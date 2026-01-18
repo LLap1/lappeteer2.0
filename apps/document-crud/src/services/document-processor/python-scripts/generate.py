@@ -2,19 +2,33 @@ import sys
 import json
 import base64
 import tempfile
-from io import BytesIO
+import os
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Pt
 from pptx.enum.text import MSO_AUTO_SIZE
 
-def decode_data_url(data_url: str) -> BytesIO:
+def save_data_url_to_temp(data_url: str, temp_files: list[str]) -> str:
     base64_data = data_url.split(',', 1)[1]
-    return BytesIO(base64.b64decode(base64_data))
+    image_data = base64.b64decode(base64_data)
+    temp_path = tempfile.mktemp(suffix='.png')
+    with open(temp_path, 'wb') as f:
+        f.write(image_data)
+    temp_files.append(temp_path)
+    return temp_path
 
-def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, list[bytes]]]:
+def get_image_path(source: str, temp_files: list[str]) -> str:
+    if source.startswith('data:'):
+        return save_data_url_to_temp(source, temp_files)
+    if not os.path.exists(source):
+        raise FileNotFoundError(f"Image file not found: {source}")
+    temp_files.append(source)
+    return source
+
+def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, list[str]], list[str]]:
     text_values: dict[str, str] = {}
-    image_values: dict[str, list[bytes]] = {}
+    image_values: dict[str, list[str]] = {}
+    temp_files: list[str] = []
 
     for item in placeholder_data:
         key = item['key'].strip()
@@ -24,9 +38,10 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
         if placeholder_type == 'text':
             text_values[key] = value
         elif placeholder_type in ('image', 'map'):
-            image_values[key] = [decode_data_url(url).getvalue() for url in json.loads(value)]
+            sources = json.loads(value)
+            image_values[key] = [get_image_path(source, temp_files) for source in sources]
 
-    return text_values, image_values
+    return text_values, image_values, temp_files
 
 def get_run_color(run) -> RGBColor | None:
     try:
@@ -123,23 +138,22 @@ def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = 
     
     if not modified:
         return
-    
-    if is_cell and cell_width > 0 and cell_height > 0:
-        best_size = calculate_best_font_size(new_text, original_size, cell_width, cell_height)
-        for paragraph in text_frame.paragraphs:
-            for run in paragraph.runs:
-                run.font.size = Pt(best_size)
-    elif not is_cell:
+    try: 
         for size in range(original_size, 1, -1):
             try:
                 text_frame.fit_text(font_family=font_name, max_size=size, bold=False, italic=False)
                 break
             except TypeError:
                 pass
+
+    except:
+        pass
+
+
   
 
 
-def find_image_placeholder_in_shape(shape, image_values: dict[str, list[bytes]]) -> tuple[str, str] | None:
+def find_image_placeholder_in_shape(shape, image_values: dict[str, list[str]]) -> tuple[str, str] | None:
     if not hasattr(shape, 'text_frame'):
         return None
     
@@ -160,18 +174,18 @@ def find_image_placeholder_in_shape(shape, image_values: dict[str, list[bytes]])
     
     return None
 
-def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, list[bytes]]) -> bool:
+def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, list[str]]) -> bool:
     placeholder_info = find_image_placeholder_in_shape(shape, image_values)
     
     if placeholder_info:
         key, _ = placeholder_info
-        images = image_values[key]
+        image_paths = image_values[key]
         left, top, width, height = shape.left, shape.top, shape.width, shape.height
 
         shape.element.getparent().remove(shape.element)
 
-        for image_bytes in images:
-            slide.shapes.add_picture(BytesIO(image_bytes), left, top, width, height)
+        for image_path in image_paths:
+            slide.shapes.add_picture(image_path, left, top, width, height)
 
         return True
 
@@ -181,7 +195,7 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
     return False
 
 
-def process_table(table, text_values: dict[str, str], image_values: dict[str, list[bytes]], slide) -> None:
+def process_table(table, text_values: dict[str, str], image_values: dict[str, list[str]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
@@ -198,7 +212,7 @@ def process_table(table, text_values: dict[str, str], image_values: dict[str, li
                 
                 process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
 
-def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[bytes]]) -> None:
+def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[str]]) -> None:
     shapes_list = list(shapes)
     
     for shape in shapes_list:
@@ -210,9 +224,16 @@ def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values:
         else:
             process_shape(shape, slide, text_values, image_values)
 
+def cleanup_temp_files(temp_files: list[str]) -> None:
+    for file_path in temp_files:
+        try:
+            os.unlink(file_path)
+        except:
+            pass
+
 def generate(file_path: str, placeholder_data: list[dict], output_path: str, slides_to_remove: list[int] = None) -> str:
     prs = Presentation(file_path)
-    text_values, image_values = prepare_data(placeholder_data)
+    text_values, image_values, temp_files = prepare_data(placeholder_data)
 
     for slide in prs.slides:
         process_all_shapes(slide.shapes, slide, text_values, image_values)
@@ -226,6 +247,7 @@ def generate(file_path: str, placeholder_data: list[dict], output_path: str, sli
                 prs.slides._sldIdLst.remove(slide_id)
 
     prs.save(output_path)
+    cleanup_temp_files(temp_files)
 
 def main():
     if len(sys.argv) < 3:

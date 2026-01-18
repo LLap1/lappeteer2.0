@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import path from 'path';
 import { $ } from 'bun';
 import { unlink } from 'fs/promises';
@@ -14,14 +14,14 @@ import { Log } from '@auto-document/utils/log';
 @Injectable()
 export class DocumentProcessorService {
   private static readonly logger = new Logger(DocumentProcessorService.name);
-
+  constructor(@Inject('SCRIPTS_PATH') private readonly scriptsPath: string) {}
   @Log(DocumentProcessorService.logger)
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
-    const pythonPath = path.join(__dirname, 'python-scripts', 'generate.py');
+    const pythonPath = path.join(this.scriptsPath, 'generate.py');
     const tempDir = '/tmp';
     const inputFilePath = path.join(tempDir, `${Date.now()}.pptx`);
     const outputFilePath = path.join(tempDir, request.outputFilename);
-    await Bun.write(inputFilePath, request.templateFile);
+    await Bun.write(inputFilePath, await request.templateFile.arrayBuffer());
 
     const dataString = JSON.stringify(request.data);
     const slidesToRemoveString = request.slidesToRemove ? JSON.stringify(request.slidesToRemove) : '[]';
@@ -33,7 +33,7 @@ export class DocumentProcessorService {
 
   @Log(DocumentProcessorService.logger)
   async analyze(request: AnalyzeRequest): Promise<AnalyzeResponse> {
-    const pythonPath = path.join(__dirname, 'python-scripts', 'parse.py');
+    const pythonPath = path.join(this.scriptsPath, 'parse.py');
     const tempDir = '/tmp';
     const inputFilePath = path.join(tempDir, `${Date.now()}.pptx`);
 

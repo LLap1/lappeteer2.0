@@ -1,87 +1,84 @@
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Page } from 'puppeteer';
-import { Cluster } from 'puppeteer-cluster';
-import { type Config } from 'src/config';
-import { chunk } from 'lodash';
+import { Injectable, Logger } from '@nestjs/common';
 import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.model';
-import { WindowActionSender } from './document-map-creator.model';
-import { Base64DataURL } from '@auto-document/types/file';
 import { Log } from '@auto-document/utils/log';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
+const WMS_BASE_URL = 'http://localhost:8080/geoserver/ne/wms';
+
+@Injectable()
 export class DocumentMapCreatorService {
   private static readonly logger: Logger = new Logger(DocumentMapCreatorService.name);
 
-  private cluster?: Cluster;
-
-  constructor(@Inject('MAP_CREATOR_CONFIG') private readonly config: Config['mapCreator']) {}
-
   @Log(DocumentMapCreatorService.logger)
   async create(request: CreateMapsInput): Promise<CreateMapsOutput> {
-    if (this.cluster === undefined) {
-      this.cluster = await Cluster.launch(this.config.launchOptions);
-    }
-
-    const chunks = chunk(request, this.config.mapsPerPage);
-
-    const maps = (
-      await Promise.all<CreateMapsOutput>(
-        chunks.map(async chunk => {
-          return await this.cluster!.execute(async ({ page }: { page: Page }) => {
-            const actionSender = new WindowActionSender(page);
-            await page.goto(this.config.mapPoolUrl);
-            await actionSender.send({ type: 'createMapPool', params: chunk });
-            return this.createMapCanvases(actionSender, chunk as CreateMapsInput);
-          });
-        }),
-      )
-    ).flat();
-
-    this.cluster?.idle().then(() => {
-      this.cluster?.close();
-      this.cluster = undefined;
-    });
-
+    const maps = await Promise.all(request.map(params => this.createMap(params)));
     return maps;
   }
 
-  private async createMapCanvases(
-    controlSender: WindowActionSender,
-    params: CreateMapsInput,
-  ): Promise<CreateMapsOutput> {
-    const mapTasks = params.map(param => this.createMap(controlSender, param));
-    const maps = await Promise.all(mapTasks);
-    return maps;
-  }
+  private async createMap(params: CreateMapsInput[number]): Promise<CreateMapsOutput[number]> {
+    const { id, width, height, center, zoom } = params;
+    const bbox = this.calculateBbox(center, zoom, width, height);
 
-  private async createMap(
-    windowActionSender: WindowActionSender,
-    params: CreateMapsInput[number],
-  ): Promise<CreateMapsOutput[number]> {
-    await windowActionSender.send({
-      type: 'setView',
-      params: { id: params.id, center: params.center, zoom: params.zoom },
-    });
-
-    await windowActionSender.send({
-      type: 'addTileLayer',
-      params: { id: params.id, url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
-    });
-
-    params.geojson.forEach(
-      async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
-    );
-
-    await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
-    const layerDataUrls: Base64DataURL[] = await windowActionSender.send({
-      type: 'exportMap',
-      params: { id: params.id },
-    });
-
-    await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
+    const wmsUrl = this.buildWmsUrl(bbox, width, height);
+    const filePath = await this.fetchMapAsFile(wmsUrl);
 
     return {
-      id: params.id,
-      layerDataUrls,
+      id,
+      layerDataUrls: [filePath],
     };
+  }
+
+  private calculateBbox(
+    center: [number, number],
+    zoom: number,
+    width: number,
+    height: number,
+  ): { minX: number; minY: number; maxX: number; maxY: number } {
+    const [lat, lng] = center;
+
+    const metersPerPixel = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+
+    const halfWidthMeters = (width / 2) * metersPerPixel;
+    const halfHeightMeters = (height / 2) * metersPerPixel;
+
+    const metersPerDegLng = 111320 * Math.cos((lat * Math.PI) / 180);
+    const metersPerDegLat = 110540;
+
+    const minX = lng - halfWidthMeters / metersPerDegLng;
+    const maxX = lng + halfWidthMeters / metersPerDegLng;
+    const minY = lat - halfHeightMeters / metersPerDegLat;
+    const maxY = lat + halfHeightMeters / metersPerDegLat;
+
+    return { minX, minY, maxX, maxY };
+  }
+
+  private buildWmsUrl(
+    bbox: { minX: number; minY: number; maxX: number; maxY: number },
+    width: number,
+    height: number,
+  ): string {
+    const params = new URLSearchParams({
+      VERSION: '1.3.0',
+      SERVICE: 'WMS',
+      REQUEST: 'GetMap',
+      LAYERS: 'ne:world',
+      STYLES: '',
+      CRS: 'EPSG:4326',
+      BBOX: `${bbox.minY},${bbox.minX},${bbox.maxY},${bbox.maxX}`,
+      WIDTH: String(Math.round(width)),
+      HEIGHT: String(Math.round(height)),
+      FORMAT: 'image/png',
+    });
+
+    return `${WMS_BASE_URL}?${params.toString()}`;
+  }
+
+  private async fetchMapAsFile(url: string): Promise<string> {
+    const response = await fetch(url);
+    const tempDir = '/tmp';
+    const filePath = path.join(tempDir, `map-${uuidv4()}.png`);
+    await Bun.write(filePath, await response.arrayBuffer());
+    return filePath;
   }
 }

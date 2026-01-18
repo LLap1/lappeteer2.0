@@ -16,11 +16,10 @@
     "db:studio": "drizzle-kit studio"
   },
   "exports": {
-    "./router": "./src/logic/app.router.ts"
+    "./router": "./src/app.router.ts"
   },
   "devDependencies": {
     "@auto-document/bootstrap": "workspace:*",
-    "@auto-document/document-map-pool": "workspace:*",
     "@auto-document/types": "workspace:*",
     "@jest/globals": "^30.2.0",
     "@nestjs/cli": "^11.0.10",
@@ -31,7 +30,6 @@
     "@orpc/openapi-client": "^1.10.2",
     "@orpc/zod": "^1.12.2",
     "@types/bun": "^1.3.4",
-    "@types/leaflet": "^1.9.21",
     "@types/lodash": "^4.17.21",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.15.30",
@@ -64,8 +62,6 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "mongoose": "^9.0.0",
-    "puppeteer": "^24.32.1",
-    "puppeteer-cluster": "^0.24.0",
     "lodash": "^4.17.21",
     "postgres": "^3.4.7",
     "rxjs": "^7.8.2",

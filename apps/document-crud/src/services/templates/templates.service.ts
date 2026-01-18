@@ -40,7 +40,9 @@ export class TemplateService {
     try {
       const templateId = uuidv4();
       const filename = path.basename(input.file.name!);
+
       const filePath = path.join('templates', templateId, filename);
+      const pdfFilePath = path.join('templates', templateId, filename);
 
       await this.s3Client.write(filePath, input.file, {
         type: input.file.type,

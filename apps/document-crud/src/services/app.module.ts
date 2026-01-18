@@ -8,7 +8,6 @@ import { REQUEST } from '@nestjs/core';
 import { DrizzleModule } from '@auto-document/nest/drizzle.module';
 import path from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
-
 @Module({
   imports: [
     ServeStaticModule.forRoot({

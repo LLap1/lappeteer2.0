@@ -12,8 +12,8 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
+    "@auto-document/logger": "workspace:*",
     "@auto-document/nest": "workspace:*",
-    "@elastic/ecs-winston-format": "^1.5.3",
     "@grpc/reflection": "^1.0.4",
     "@nestjs/common": "^11.1.9",
     "@nestjs/core": "^11.1.9",
@@ -27,8 +27,6 @@
     "@scalar/api-reference": "^1.40.0",
     "@scalar/nestjs-api-reference": "^1.0.10",
     "nest-winston": "^1.10.2",
-    "winston": "^3.19.0",
-    "winston-elasticsearch": "^0.19.0",
     "zod": "^4.1.11"
   },
   "peerDependencies": {

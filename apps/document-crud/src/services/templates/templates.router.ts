@@ -8,7 +8,7 @@ import {
   ListTemplatesInputSchema,
 } from './templates.router.schema';
 import { oc } from '@orpc/contract';
-import generalErrors from 'src/app.router.errors';
+import generalErrors from '../../app.router.errors';
 import templateErrors from './templates.router.errors';
 
 const root = oc.errors(generalErrors);

@@ -1,15 +1,127 @@
 import { z } from 'zod/v4';
 
-export const PPTX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-export const ZIP_MIME_TYPE = 'application/zip';
-
-export const PptxFileSchema = z.file();
-export const ZipFileSchema = z.file();
-
 export const Base64DataURLSchema = z.string().refine(string => string.startsWith('data:image/png;base64,'), {
   message: 'Invalid base64 data url',
 });
 
-export type PptxFile = z.infer<typeof PptxFileSchema>;
-export type ZipFile = z.infer<typeof ZipFileSchema>;
+export const MimeTypesSchema = z.enum([
+  'application/json',
+  'application/xml',
+  'application/x-www-form-urlencoded',
+  'application/javascript',
+  'application/pdf',
+  'application/zip',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/octet-stream',
+  'application/graphql',
+  'text/html',
+  'text/plain',
+  'text/css',
+  'text/javascript',
+  'text/csv',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/svg+xml',
+  'image/webp',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/wav',
+  'audio/webm',
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'font/woff',
+  'font/woff2',
+  'font/ttf',
+  'font/otf',
+  'multipart/form-data',
+]);
+
+export type MimeType = z.infer<typeof MimeTypesSchema>;
+
+export const FileExtensionSchema = z.enum([
+  'json',
+  'xml',
+  'pdf',
+  'zip',
+  'xls',
+  'xlsx',
+  'doc',
+  'docx',
+  'ppt',
+  'pptx',
+  'html',
+  'htm',
+  'txt',
+  'css',
+  'js',
+  'csv',
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'svg',
+  'webp',
+  'mp3',
+  'ogg',
+  'wav',
+  'webm',
+  'mp4',
+  'woff',
+  'woff2',
+  'ttf',
+  'otf',
+]);
+
+export type FileExtension = z.infer<typeof FileExtensionSchema>;
+
+const mimeTypeToExtensionMap: Record<MimeType, FileExtension> = {
+  'application/json': 'json',
+  'application/xml': 'xml',
+  'application/x-www-form-urlencoded': 'txt',
+  'application/javascript': 'js',
+  'application/pdf': 'pdf',
+  'application/zip': 'zip',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/octet-stream': 'txt',
+  'application/graphql': 'txt',
+  'text/html': 'html',
+  'text/plain': 'txt',
+  'text/css': 'css',
+  'text/javascript': 'js',
+  'text/csv': 'csv',
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'image/webp': 'webp',
+  'audio/mpeg': 'mp3',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/webm': 'webm',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/ogg': 'ogg',
+  'font/woff': 'woff',
+  'font/woff2': 'woff2',
+  'font/ttf': 'ttf',
+  'font/otf': 'otf',
+  'multipart/form-data': 'txt',
+};
+
+export function mimeTypeToExtension(mimeType: string): FileExtension {
+  return mimeTypeToExtensionMap[mimeType as MimeType];
+}
+
 export type Base64DataURL = z.infer<typeof Base64DataURLSchema>;
