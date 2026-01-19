@@ -2,8 +2,8 @@ import type { Feature, Polygon } from 'geojson';
 import {
   CreateDocumentsInputSchema,
   CreatePlaceholderParamsSchema,
-} from '../../services/documents/documents.router.schema';
-import type { GeoJsonStyleOptions } from '../../services/documents/document-creator/placholder-creator/placeholder-creator.model';
+} from '@auto-document/domain/src/document-crud/documents/documents.d.schema';
+import type { GeoJsonStyleOptions } from '../../../../../../apps/document-crud/src/services/documents/document-creator/placholder-creator/placeholder-creator.model';
 import z from 'zod';
 
 const inlandCities = [

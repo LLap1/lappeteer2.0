@@ -7,7 +7,7 @@ import {
   type ListTemplatesOutput,
   type CreateTemplateInput,
   type CreateTemplateOutput,
-} from './templates.router.schema';
+} from '@auto-document/domain/document-crud.schema';
 
 import path from 'path';
 import { type PlaceholderMetadata, type PlaceholderType } from '@auto-document/types/document';
@@ -20,7 +20,7 @@ import { type RouterErrors } from '@auto-document/types/orpc';
 import { DocumentProcessorService } from '../document-processor/document-processor.service';
 import { documentsTable } from 'src/schemas/documents.schema';
 import { S3Client } from 'bun';
-import { templates } from './templates.router';
+import router from '@auto-document/domain/document-crud.router';
 @Injectable()
 export class TemplateService {
   private static readonly logger: Logger = new Logger(TemplateService.name);
@@ -35,14 +35,13 @@ export class TemplateService {
   @Log(TemplateService.logger)
   async create(
     input: CreateTemplateInput,
-    errors: RouterErrors<typeof templates.create>,
+    errors: RouterErrors<typeof router.templates.create>,
   ): Promise<CreateTemplateOutput> {
     try {
       const templateId = uuidv4();
       const filename = path.basename(input.file.name!);
 
       const filePath = path.join('templates', templateId, filename);
-      const pdfFilePath = path.join('templates', templateId, filename);
 
       await this.s3Client.write(filePath, input.file, {
         type: input.file.type,
@@ -74,7 +73,7 @@ export class TemplateService {
   }
 
   @Log(TemplateService.logger)
-  async get(input: GetTemplateInput, errors: RouterErrors<typeof templates.get>): Promise<GetTemplateOutput> {
+  async get(input: GetTemplateInput, errors: RouterErrors<typeof router.templates.get>): Promise<GetTemplateOutput> {
     const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, input.id));
 
     if (!template) {
@@ -97,7 +96,7 @@ export class TemplateService {
   }
 
   @Log(TemplateService.logger)
-  async delete({ id }: DeleteTemplateInput, errors: RouterErrors<typeof templates.delete>): Promise<void> {
+  async delete({ id }: DeleteTemplateInput, errors: RouterErrors<typeof router.templates.delete>): Promise<void> {
     const [template] = await this.db.select().from(templatesTable).where(eq(templatesTable.id, id));
 
     if (!template) {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PlaceholderParams } from './placeholder-creator.model';
+import type { PlaceholderParams } from '@auto-document/domain/document-crud.schema';
 import type { Placeholder, PlaceholderType } from '@auto-document/types/document';
 import { DocumentMapCreatorService } from './document-map-creator/document-map-creator.service';
 import type { CreateMapsInput } from './document-map-creator/document-map-creator.model';

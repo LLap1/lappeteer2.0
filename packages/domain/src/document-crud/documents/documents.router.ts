@@ -6,12 +6,12 @@ import {
   ListDocumentsAllOutputSchema,
   GetDocumentByIdInputSchema,
   GetDocumentByIdOutputSchema,
-} from './documents.router.schema';
+} from './documents.schema';
 import { oc } from '@orpc/contract';
-import { createDocumentInputExample } from '../../docs/examples/create-document-input.example';
-import generalErrors from '../../app.router.errors';
-import documentErrors from './document.router.errors';
-import templateErrors from '../templates/templates.router.errors';
+import generalErrors from '../document-crud.errors';
+import documentErrors from './documents.errors';
+import templateErrors from '../templates/templates.errors';
+import { createDocumentInputExample } from '../docs/examples/create-document-input.example';
 const root = oc.errors(generalErrors);
 
 const create = root

@@ -1,4 +1,3 @@
-import {} from '../../services/documents/documents.router.schema';
 
 export const createDocumentInputWithNoMapsExample = {
   templateId: '1549ed97-9c60-4c67-8f02-cc5b30a35bfd',

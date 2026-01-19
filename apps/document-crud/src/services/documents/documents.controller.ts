@@ -1,26 +1,26 @@
 import { Controller } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
 import { implement, Implement } from '@orpc/nest';
-import { appRouter } from 'src/app.router';
-import { CreateDocumentsInput } from './documents.router.schema';
+import router from '@auto-document/domain/document-crud.router';
+import type { CreateDocumentsInput } from '@auto-document/domain/document-crud.schema';
 
 @Controller()
 export class DocumentsController {
   constructor(private readonly documentService: DocumentsService) {}
 
-  @Implement(appRouter.documents)
+  @Implement(router.documents)
   documents() {
     return {
-      create: implement(appRouter.documents.create).handler(async ({ input, errors }) => {
+      create: implement(router.documents.create).handler(async ({ input, errors }) => {
         return this.documentService.create(input as CreateDocumentsInput, errors);
       }),
-      getById: implement(appRouter.documents.getById).handler(async ({ input, errors }) => {
+      getById: implement(router.documents.getById).handler(async ({ input, errors }) => {
         return this.documentService.getById(input, errors);
       }),
-      list: implement(appRouter.documents.list).handler(async ({ errors }) => {
+      list: implement(router.documents.list).handler(async ({ errors }) => {
         return this.documentService.list(errors);
       }),
-      deleteById: implement(appRouter.documents.deleteById).handler(async ({ input, errors }) => {
+      deleteById: implement(router.documents.deleteById).handler(async ({ input, errors }) => {
         return this.documentService.deleteById(input, errors);
       }),
     };

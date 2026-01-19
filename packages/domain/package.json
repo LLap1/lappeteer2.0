@@ -1,0 +1,23 @@
+{
+  "name": "@auto-document/domain",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "exports": {
+    "./*.router": "./src/*/*.router.ts",
+    "./*.schema": "./src/*/*.schema.ts",
+    "./*.errors": "./src/*/*.errors.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@auto-document/types": "workspace:*",
+    "@orpc/contract": "^1.13.4",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.5"
+  }
+}

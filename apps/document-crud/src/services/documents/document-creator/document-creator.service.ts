@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { CreateDocumentParams } from '../documents.router.schema';
+import type { CreateDocumentParams } from '@auto-document/domain/document-crud.schema';
 import type { PlaceholderMetadata, PlaceholderType } from '@auto-document/types/document';
-import { type PlaceholderParams } from './placholder-creator/placeholder-creator.model';
+import type { PlaceholderParams } from '@auto-document/domain/document-crud.schema';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import { Log } from '@auto-document/utils/log';
 import { zipFiles } from '@auto-document/utils/file';

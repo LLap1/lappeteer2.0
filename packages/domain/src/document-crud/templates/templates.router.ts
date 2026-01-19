@@ -6,10 +6,10 @@ import {
   ListTemplatesOutputSchema,
   DeleteTemplateInputSchema,
   ListTemplatesInputSchema,
-} from './templates.router.schema';
+} from './templates.schema';
 import { oc } from '@orpc/contract';
-import generalErrors from '../../app.router.errors';
-import templateErrors from './templates.router.errors';
+import generalErrors from '../document-crud.errors';
+import templateErrors from './templates.errors';
 
 const root = oc.errors(generalErrors);
 

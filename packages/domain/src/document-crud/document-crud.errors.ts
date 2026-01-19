@@ -9,3 +9,6 @@ export default {
     }),
   },
 };
+
+export * from './documents/documents.errors';
+export * from './templates/templates.errors';
