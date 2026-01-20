@@ -13,7 +13,13 @@ export const configSchema = z.object({
   documentProcessor: z.object({
     scriptsPath: z.string(),
   }),
-
+  overlaysService: z.object({
+    type: z.enum(['mock']),
+  }),
+  wmsService: z.object({
+    type: z.enum(['geoserver']),
+    baseUrl: z.string(),
+  }),
   ...S3ConfigSchema.shape,
   ...ServerConfigSchema.shape,
   ...DrizzleConfigSchema.shape,
@@ -57,6 +63,13 @@ const templatedConfig: z.infer<typeof configSchema> = {
   },
   documentProcessor: {
     scriptsPath: process.env.DOCUMENT_PROCESSOR_SCRIPTS_PATH!,
+  },
+  overlaysService: {
+    type: process.env.OVERLAYS_SERVICE_TYPE! as z.infer<typeof configSchema.shape.overlaysService.shape.type>,
+  },
+  wmsService: {
+    type: process.env.WMS_SERVICE_TYPE! as z.infer<typeof configSchema.shape.wmsService.shape.type>,
+    baseUrl: process.env.WMS_SERVICE_BASE_URL!,
   },
 };
 

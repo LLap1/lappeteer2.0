@@ -63,4 +63,4 @@ export const GeoJsonFeatureSchema = z.object({
   type: z.literal('Feature'),
   geometry: GeoJsonGeometrySchema.or(z.null()),
   properties: GeoJsonPropertiesSchema,
-}) as z.ZodType<Feature<Geometry | null, GeoJsonProperties>>;
+}) as z.ZodType<Feature<Geometry, GeoJsonProperties | null>>;

@@ -29,9 +29,8 @@ export class PlaceholderCreatorService {
       id: p.id,
       width: p.width,
       height: p.height,
-      center: [p.params.center[0], p.params.center[1]],
-      zoom: p.params.zoom,
       geojson: p.params.geojson,
+      overlayId: p.params.overlayId,
     }));
 
     const maps = await this.documentMapCreatorService.create(createMapsParams);

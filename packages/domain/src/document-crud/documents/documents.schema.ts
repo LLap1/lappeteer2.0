@@ -18,12 +18,10 @@ export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = Pla
   params: T extends 'map' ? MapPlaceholderParams : T extends 'text' ? TextPlaceholderParams : ImagePlaceholderParams;
 };
 
-export type MapBounds =
-  | { center: [number, number]; zoom: number }
-  | { bbox: { minX: number; minY: number; maxX: number; maxY: number } };
 
-export type MapPlaceholderParams = MapBounds & {
-  geojson: Feature<Geometry | null, { style?: GeoJsonStyleOptions } | null>[];
+export type MapPlaceholderParams = {
+  geojson: Feature<Geometry, { style?: GeoJsonStyleOptions } | null>[];
+  overlayId: string;
 };
 
 export type TextPlaceholderParams = string;
@@ -42,23 +40,10 @@ export type CreatePlaceholderParams<T extends PlaceholderType = PlaceholderType>
   params: T extends 'map' ? MapPlaceholderParams : T extends 'text' ? TextPlaceholderParams : ImagePlaceholderParams;
 };
 
-const CenterWithZoomSchema = z.object({
-  center: z.tuple([z.coerce.number(), z.coerce.number()]),
-  zoom: z.coerce.number().int().min(1).max(20),
+export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> = z.object({
+  geojson: z.array(GeoJsonFeatureSchema).min(0),
+  overlayId: z.string()
 });
-
-const BboxSchema = z.object({
-  bbox: z.object({
-    minX: z.coerce.number(),
-    minY: z.coerce.number(),
-    maxX: z.coerce.number(),
-    maxY: z.coerce.number(),
-  }),
-});
-
-export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> = z
-  .union([CenterWithZoomSchema, BboxSchema])
-  .and(z.object({ geojson: z.array(GeoJsonFeatureSchema).min(0) }));
 
 export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> = z.string();
 export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.url();

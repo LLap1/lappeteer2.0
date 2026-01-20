@@ -1,16 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.model';
 import { Log } from '@auto-document/utils/log';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
-
-const WMS_BASE_URL = 'http://localhost:8080/geoserver/ne/wms';
+import type { Feature, Geometry } from 'geojson';
+import type { GeoJsonStyleOptions } from '@auto-document/domain/document-crud.schema';
+import { OverlaysService } from 'src/services/overlays';
+import { type BBox } from 'src/services/wms/wms.model';
+import { WmsService } from 'src/services/wms/wms.service';
 
 @Injectable()
 export class DocumentMapCreatorService {
   private static readonly logger: Logger = new Logger(DocumentMapCreatorService.name);
+
+  constructor(
+    private readonly overlaysService: OverlaysService,
+    private readonly wmsService: WmsService,
+  ) {}
 
   @Log(DocumentMapCreatorService.logger)
   async create(request: CreateMapsInput): Promise<CreateMapsOutput> {
@@ -19,25 +25,26 @@ export class DocumentMapCreatorService {
   }
 
   private async createMap(params: CreateMapsInput[number]): Promise<CreateMapsOutput[number]> {
-    const { id, width, height, geojson } = params;
+    const { id, width, height, geojson, overlayId } = params;
+    const overlay = await this.overlaysService.getById({ id: overlayId });
 
     const bboxCoords = this.calculateBboxFromGeojson(geojson);
-    const wmsUrl = this.buildWmsUrl(bboxCoords, width, height);
-    const mapPath = await this.fetchMapAsFile(wmsUrl);
+
+    const { imagePath } = await this.wmsService.getMap({
+      layers: [overlay.id],
+      bbox: bboxCoords,
+      width,
+      height,
+    });
 
     return {
       id,
-      layerDataUrls: [mapPath],
+      layerDataUrls: [imagePath],
     };
   }
 
-  private calculateBboxFromGeojson(geojson: CreateMapsInput[number]['geojson']): {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-  } {
-    const features = featureCollection(geojson);
+  private calculateBboxFromGeojson(geojson: Feature<Geometry, { style?: GeoJsonStyleOptions } | null>[]): BBox {
+    const features = featureCollection<Geometry, { style?: GeoJsonStyleOptions } | null>(geojson);
     const [minX, minY, maxX, maxY] = bbox(features);
 
     const paddingPercent = 0.1;
@@ -50,34 +57,5 @@ export class DocumentMapCreatorService {
       maxX: maxX + widthPadding,
       maxY: maxY + heightPadding,
     };
-  }
-
-  private buildWmsUrl(
-    bbox: { minX: number; minY: number; maxX: number; maxY: number },
-    width: number,
-    height: number,
-  ): string {
-    const params = new URLSearchParams({
-      VERSION: '1.3.0',
-      SERVICE: 'WMS',
-      REQUEST: 'GetMap',
-      LAYERS: 'ne:world',
-      STYLES: '',
-      CRS: 'EPSG:4326',
-      BBOX: `${bbox.minY},${bbox.minX},${bbox.maxY},${bbox.maxX}`,
-      WIDTH: String(Math.round(width)),
-      HEIGHT: String(Math.round(height)),
-      FORMAT: 'image/png',
-    });
-
-    return `${WMS_BASE_URL}?${params.toString()}`;
-  }
-
-  private async fetchMapAsFile(url: string): Promise<string> {
-    const response = await fetch(url);
-    const tempDir = '/tmp';
-    const filePath = path.join(tempDir, `map-${uuidv4()}.png`);
-    await Bun.write(filePath, await response.arrayBuffer());
-    return filePath;
   }
 }
