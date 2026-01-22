@@ -14,10 +14,10 @@ export const configSchema = z.object({
     scriptsPath: z.string(),
   }),
   overlaysService: z.object({
-    type: z.enum(['mock']),
+    type: z.string(),
   }),
   wmsService: z.object({
-    type: z.enum(['geoserver']),
+    type: z.string(),
     baseUrl: z.string(),
   }),
   ...S3ConfigSchema.shape,

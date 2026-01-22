@@ -13,7 +13,16 @@ export type GetMapInput = {
   format: string;
 };
 
+export type BuildWmsUrlInput = {
+  overlayId: string;
+  streamingUrl: string;
+  bbox: BBox;
+  width: number;
+  height: number;
+  format: string;
+};
+
 export type GetMapOutput = {
-  imagePath: string;
+  imageFile: Bun.BunFile;
 };
 

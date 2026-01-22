@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WmsService } from './wms.service';
 import { config, type Config } from '../../config';
-import { GeoserverWmsService } from './implementations/geoserver-wms.service';
+import { GeoserverWmsService } from './implementations/geoserver/geoserver-wms.service';
 import { OverlaysModule } from './overlays/overlays.module';
 
 type WmsServiceType = Config['wmsService']['type'];

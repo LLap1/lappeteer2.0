@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { type GetOverlayByIdInput, type GetOverlayByIdOutput } from '../overlays.model';
+import { type GetOverlayByIdInput, type GetOverlayByIdOutput } from '../../overlays.model';
 import { Log } from '@auto-document/utils/log';
-import { OverlaysService } from '../overlays.service';
+import { OverlaysService } from '../../overlays.service';
 
 @Injectable()
 export class MockOverlaysService extends OverlaysService {

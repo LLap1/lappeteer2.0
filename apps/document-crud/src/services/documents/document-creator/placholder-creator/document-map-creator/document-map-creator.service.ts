@@ -32,7 +32,7 @@ export class DocumentMapCreatorService {
     const { id, width, height, geojson, overlayId } = params;
     const bboxCoords = this.calculateBboxFromGeojson(geojson);
 
-    const { imagePath: baseMapPath } = await this.wmsService.getMap({
+    const { imageFile } = await this.wmsService.getMap({
       overlayId,
       format: 'png',
       bbox: bboxCoords,
@@ -41,7 +41,7 @@ export class DocumentMapCreatorService {
     });
 
     const baseLayer: ImageLayer = {
-      path: baseMapPath,
+      path: imageFile.name!,
       offsetX: 0,
       offsetY: 0,
       width,

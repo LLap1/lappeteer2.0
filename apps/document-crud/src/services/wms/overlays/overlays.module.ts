@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
 import { OverlaysService } from './overlays.service';
-import { config, type Config } from '../../../config';
-import { MockOverlaysService } from './implementations/mock-overlays.service';
+import { config } from '../../../config';
+import { OVERLAYS_MODULES, OVERLAYS_SERVICE_IMPLEMENTATIONS } from './overlays.imports';
 
-type OverlaysServiceType = Config['overlaysService']['type'];
 
-const OVERLAYS_SERVICE_IMPLEMENTATIONS: Record<OverlaysServiceType, new (...args: never[]) => OverlaysService> = {
-  mock: MockOverlaysService,
-};
+
 
 @Module({
+  imports: [...OVERLAYS_MODULES],
   providers: [
-    MockOverlaysService,
     {
       provide: OverlaysService,
       useExisting: OVERLAYS_SERVICE_IMPLEMENTATIONS[config.overlaysService.type],

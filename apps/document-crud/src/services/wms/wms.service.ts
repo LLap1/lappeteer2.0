@@ -1,6 +1,5 @@
-import type { GetMapInput, GetMapOutput } from './wms.model';
+import type { BuildWmsUrlInput, GetMapInput, GetMapOutput } from './wms.model';
 import type { OverlaysService } from './overlays/overlays.service';
-import type { Overlay } from './overlays/overlays.model';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,15 +8,18 @@ export abstract class WmsService {
 
   async getMap(input: GetMapInput): Promise<GetMapOutput> {
     const overlay = await this.overlaysService.getById({ id: input.overlayId });
-    const url = this.buildWmsUrl(overlay, input);
-    const imagePath = await this.fetchAndSaveImage(url);
+    const url = this.buildWmsUrl({
+      ...input,
+      streamingUrl: overlay.streamingUrl,
+    });
+    const imageFile = await this.fetchAndSaveImage(url);
 
-    return { imagePath };
+    return { imageFile };
   }
 
-  protected abstract buildWmsUrl(overlay: Overlay, input: GetMapInput): string;
+  protected abstract buildWmsUrl(input: BuildWmsUrlInput): string;
 
-  protected async fetchAndSaveImage(url: string): Promise<string> {
+  private async fetchAndSaveImage(url: string): Promise<Bun.BunFile> {
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -34,8 +36,9 @@ export abstract class WmsService {
     const tempDir = '/tmp';
     const filePath = path.join(tempDir, `wms-${uuidv4()}.png`);
 
-    await Bun.write(filePath, arrayBuffer);
+    const file =  Bun.file(filePath);
+    await file.write(arrayBuffer);
 
-    return filePath;
+    return file;
   }
 }
