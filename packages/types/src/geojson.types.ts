@@ -57,7 +57,8 @@ export const GeoJsonPropertiesSchema = z.object({
       fillOpacity: z.number().optional(),
     })
     .strict(),
-}) as z.ZodType<{ style?: PathOptions }>;
+    text: z.string().optional(),
+}) as z.ZodType<{ style?: PathOptions, text?: string }>;
 
 export const GeoJsonFeatureSchema = z.object({
   type: z.literal('Feature'),

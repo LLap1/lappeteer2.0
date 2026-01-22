@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.model';
+import type { CreateMapsInput, CreateMapsOutput, ImageLayer } from './document-map-creator.model';
 import { Log } from '@auto-document/utils/log';
 import { featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
+import centroid from '@turf/centroid';
 import type { Feature, Geometry } from 'geojson';
 import type { GeoJsonStyleOptions } from '@auto-document/domain/document-crud.schema';
 import { type BBox } from 'src/services/wms/wms.model';
@@ -11,7 +12,9 @@ import { createCanvas, CanvasRenderingContext2D } from 'canvas';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-type GeoJsonFeature = Feature<Geometry, { style?: GeoJsonStyleOptions } | null>;
+type GeoJsonFeature = Feature<Geometry, { style?: GeoJsonStyleOptions; text?: string } | null>;
+
+type PixelBounds = { minX: number; minY: number; maxX: number; maxY: number };
 
 @Injectable()
 export class DocumentMapCreatorService {
@@ -31,19 +34,27 @@ export class DocumentMapCreatorService {
 
     const { imagePath: baseMapPath } = await this.wmsService.getMap({
       overlayId,
-      format: "png",
+      format: 'png',
       bbox: bboxCoords,
       width,
       height,
     });
 
-    const polygonOverlayPaths = await Promise.all(
+    const baseLayer: ImageLayer = {
+      path: baseMapPath,
+      offsetX: 0,
+      offsetY: 0,
+      width,
+      height,
+    };
+
+    const polygonLayers = await Promise.all(
       geojson.map(feature => this.createPolygonOverlay(feature, bboxCoords, width, height)),
     );
 
     return {
       id,
-      imagePaths: [baseMapPath, ...polygonOverlayPaths],
+      layers: [baseLayer, ...polygonLayers],
     };
   }
 
@@ -143,21 +154,50 @@ export class DocumentMapCreatorService {
     return `rgba(255, 0, 0, ${alpha})`;
   }
 
+  private calculateFeaturePixelBounds(
+    feature: GeoJsonFeature,
+    mapBbox: BBox,
+    mapWidth: number,
+    mapHeight: number,
+    padding: number,
+  ): PixelBounds {
+    const featureBbox = bbox(feature);
+    const [minLng, minLat, maxLng, maxLat] = featureBbox;
+
+    const topLeft = this.latLngToPixel(maxLat, minLng, mapBbox, mapWidth, mapHeight);
+    const bottomRight = this.latLngToPixel(minLat, maxLng, mapBbox, mapWidth, mapHeight);
+
+    return {
+      minX: Math.max(0, Math.floor(topLeft.x - padding)),
+      minY: Math.max(0, Math.floor(topLeft.y - padding)),
+      maxX: Math.min(mapWidth, Math.ceil(bottomRight.x + padding)),
+      maxY: Math.min(mapHeight, Math.ceil(bottomRight.y + padding)),
+    };
+  }
+
   private async createPolygonOverlay(
     feature: GeoJsonFeature,
-    bbox: BBox,
-    width: number,
-    height: number,
-  ): Promise<string> {
-    const canvas = createCanvas(Math.round(width), Math.round(height));
-    const ctx = canvas.getContext('2d');
-
+    mapBbox: BBox,
+    mapWidth: number,
+    mapHeight: number,
+  ): Promise<ImageLayer> {
     const style = feature.properties?.style;
     const strokeColor = style?.color || '#FF0000';
     const fillColor = style?.fillColor || '#FF0000';
     const strokeOpacity = style?.opacity ?? 1;
     const fillOpacity = style?.fillOpacity ?? 0.2;
     const lineWidth = style?.weight || 2;
+
+    const padding = lineWidth + 3;
+    const pixelBounds = this.calculateFeaturePixelBounds(feature, mapBbox, mapWidth, mapHeight, padding);
+
+    const croppedWidth = pixelBounds.maxX - pixelBounds.minX;
+    const croppedHeight = pixelBounds.maxY - pixelBounds.minY;
+
+    const canvas = createCanvas(Math.round(croppedWidth), Math.round(croppedHeight));
+    const ctx = canvas.getContext('2d');
+
+    ctx.translate(-pixelBounds.minX, -pixelBounds.minY);
 
     ctx.strokeStyle = this.colorToRgba(strokeColor, strokeOpacity);
     ctx.fillStyle = this.colorToRgba(fillColor, fillOpacity);
@@ -167,23 +207,28 @@ export class DocumentMapCreatorService {
     if (geometry) {
       if (geometry.type === 'Point') {
         const [lng, lat] = geometry.coordinates as [number, number];
-        const { x, y } = this.latLngToPixel(lat, lng, bbox, width, height);
+        const { x, y } = this.latLngToPixel(lat, lng, mapBbox, mapWidth, mapHeight);
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
       } else if (geometry.type === 'Polygon') {
         const coordinates = (geometry.coordinates as number[][][])[0];
-        this.drawPolygonOnCanvas(ctx, coordinates, bbox, width, height);
+        this.drawPolygonOnCanvas(ctx, coordinates, mapBbox, mapWidth, mapHeight);
         ctx.fill();
         ctx.stroke();
       } else if (geometry.type === 'MultiPolygon') {
         for (const polygon of geometry.coordinates as number[][][][]) {
           const coordinates = polygon[0];
-          this.drawPolygonOnCanvas(ctx, coordinates, bbox, width, height);
+          this.drawPolygonOnCanvas(ctx, coordinates, mapBbox, mapWidth, mapHeight);
           ctx.fill();
           ctx.stroke();
         }
+      }
+
+      const text = feature.properties?.text;
+      if (text) {
+        this.drawTextAtCenter(ctx, feature, mapBbox, mapWidth, mapHeight, text, strokeColor);
       }
     }
 
@@ -193,6 +238,39 @@ export class DocumentMapCreatorService {
     const outputPath = path.join(tempDir, `map-overlay-${uuidv4()}.png`);
     await Bun.write(outputPath, overlayBuffer);
 
-    return outputPath;
+    return {
+      path: outputPath,
+      offsetX: pixelBounds.minX,
+      offsetY: pixelBounds.minY,
+      width: croppedWidth,
+      height: croppedHeight,
+    };
+  }
+
+  private drawTextAtCenter(
+    ctx: CanvasRenderingContext2D,
+    feature: GeoJsonFeature,
+    bbox: BBox,
+    width: number,
+    height: number,
+    text: string,
+    color: string,
+  ): void {
+    const center = centroid(feature as Feature<Geometry>);
+    const [lng, lat] = center.geometry.coordinates;
+    const { x, y } = this.latLngToPixel(lat, lng, bbox, width, height);
+
+    const fontSize = Math.max(12, Math.min(width, height) / 20);
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = 'white';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'white';
+    ctx.strokeText(text, x, y);
+
+    ctx.fillStyle = this.colorToRgba(color, 1);
+    ctx.fillText(text, x, y);
   }
 }

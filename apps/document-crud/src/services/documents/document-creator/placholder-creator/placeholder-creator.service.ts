@@ -42,7 +42,7 @@ export class PlaceholderCreatorService {
       if (!mapResult) {
         throw new Error(`Map not found for placeholder ${param.id}`);
       }
-      return { ...param, value: mapResult.imagePaths };
+      return { ...param, value: mapResult.layers };
     });
   }
 

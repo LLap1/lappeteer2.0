@@ -89,7 +89,7 @@ const createPolygon = (
   center: [number, number],
   size: number,
   color: string,
-): Feature<Polygon, { style: GeoJsonStyleOptions }> => {
+): Feature<Polygon, { style: GeoJsonStyleOptions, text: string }> => {
   const halfSize = size / 2;
   // GeoJSON uses [lng, lat] format, but center is [lat, lng] from map
   // So we need to create coordinates as [lng, lat]
@@ -108,6 +108,7 @@ const createPolygon = (
       coordinates: [coordinates],
     },
     properties: {
+      text: "A",
       style: {
         color,
         fillColor: color,
@@ -119,7 +120,7 @@ const createPolygon = (
   };
 };
 
-function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePlaceholderParamsSchema> {
+function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderParamsSchema> {
   const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)]!;
   const randomOffsetLat = (Math.random() - 0.5) * 0.3;
   const randomOffsetLng = (Math.random() - 0.5) * 0.3;
@@ -145,7 +146,6 @@ function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePla
   const polygon2 = createPolygon(polygon2Center, polygonSize, color2);
 
   return {
-    id,
     type: 'map',
     key: mapKey,
     params: {
@@ -160,15 +160,13 @@ export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSche
   zipFilename: 'documents.zip',
   params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
-      generateRandomMap('מפה', `map-${index}`),
+      generateRandomMap('מפה'),
       {
-        id: `title-${index}`,
         type: 'text',
         key: 'כותרת',
         params: `World Maps ${index + 1}`,
       },
       {
-        id: `description-${index}`,
         type: 'text',
         key: 'תיאור',
         params: `This is a description of the world maps document ${index + 1}`,

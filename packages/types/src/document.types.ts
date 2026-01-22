@@ -21,7 +21,15 @@ export type PlaceholderData<T extends PlaceholderType> = T extends 'map'
   ? ImagePlaceholderData
   : never;
 
-export type MapPlaceholderData = string[];
+export type ImageLayer = {
+  path: string;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+};
+
+export type MapPlaceholderData = ImageLayer[];
 export type TextPlaceholderData = string;
 export type ImagePlaceholderData = {
   url: string;

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { CreateDocumentParams } from '@auto-document/domain/document-crud.schema';
-import type { PlaceholderMetadata, PlaceholderType, Placeholder } from '@auto-document/types/document';
+import type { PlaceholderMetadata, PlaceholderType, Placeholder, ImageLayer } from '@auto-document/types/document';
 import type { PlaceholderParams } from '@auto-document/domain/document-crud.schema';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import { Log } from '@auto-document/utils/log';
@@ -10,6 +10,9 @@ import { GenerateRequest } from '../../document-processor/document-processor.mod
 import { S3File } from 'bun';
 import { chunk } from 'lodash';
 import { unlink } from 'fs/promises';
+
+const isImageLayerArray = (value: unknown): value is ImageLayer[] =>
+  Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'path' in value[0];
 
 type CreateInput = {
   templateFile: S3File;
@@ -37,14 +40,14 @@ export class DocumentCreatorService {
         data: placeholders
           .filter(p => param.placeholders.some(pp => pp.id === p.id))
           .map(placeholder => {
-            if (Array.isArray(placeholder.value)) {
+            if (isImageLayerArray(placeholder.value)) {
               return { ...placeholder, value: JSON.stringify(placeholder.value) };
             }
             if (typeof placeholder.value === 'object' && placeholder.value !== null) {
               const imageValue = placeholder.value as { url: string; rotation?: number };
               return {
                 ...placeholder,
-                value: JSON.stringify([imageValue.url]),
+                value: JSON.stringify([{ path: imageValue.url, offsetX: 0, offsetY: 0, width: 0, height: 0 }]),
                 rotation: imageValue.rotation,
               };
             }
@@ -72,8 +75,8 @@ export class DocumentCreatorService {
     const filePaths: string[] = [];
 
     for (const p of placeholders) {
-      if (p.type === 'map' && Array.isArray(p.value)) {
-        filePaths.push(...p.value);
+      if (p.type === 'map' && isImageLayerArray(p.value)) {
+        filePaths.push(...p.value.map(layer => layer.path));
       } else if (p.type === 'image' && typeof p.value === 'object' && p.value !== null) {
         const imageValue = p.value as { url: string; rotation?: number };
         if (imageValue.url.startsWith('/tmp/')) {

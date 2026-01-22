@@ -25,9 +25,17 @@ def get_image_path(source: str) -> tuple[str, bool]:
         raise FileNotFoundError(f"Image file not found: {source}")
     return source, False
 
-def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, tuple[list[str], int | None]], list[str]]:
+class ImageLayer:
+    def __init__(self, path: str, offset_x: float, offset_y: float, width: float, height: float):
+        self.path = path
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.width = width
+        self.height = height
+
+def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, tuple[list[ImageLayer], int | None]], list[str]]:
     text_values: dict[str, str] = {}
-    image_values: dict[str, tuple[list[str], int | None]] = {}
+    image_values: dict[str, tuple[list[ImageLayer], int | None]] = {}
     temp_files_to_cleanup: list[str] = []
 
     for item in placeholder_data:
@@ -39,15 +47,25 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
         if placeholder_type == 'text':
             text_values[key] = value
         elif placeholder_type in ('image', 'map'):
-            sources = json.loads(value)
-            layer_paths = []
-            for source in sources:
-                file_path, should_cleanup = get_image_path(source)
-                layer_paths.append(file_path)
+            layers_data = json.loads(value)
+            layers = []
+            for layer_data in layers_data:
+                if isinstance(layer_data, str):
+                    file_path, should_cleanup = get_image_path(layer_data)
+                    layers.append(ImageLayer(file_path, 0, 0, 0, 0))
+                else:
+                    file_path, should_cleanup = get_image_path(layer_data['path'])
+                    layers.append(ImageLayer(
+                        file_path,
+                        layer_data.get('offsetX', 0),
+                        layer_data.get('offsetY', 0),
+                        layer_data.get('width', 0),
+                        layer_data.get('height', 0),
+                    ))
                 if should_cleanup:
                     temp_files_to_cleanup.append(file_path)
             
-            image_values[key] = (layer_paths, rotation)
+            image_values[key] = (layers, rotation)
 
     return text_values, image_values, temp_files_to_cleanup
 
@@ -161,7 +179,7 @@ def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = 
   
 
 
-def find_image_placeholder_in_shape(shape, image_values: dict[str, tuple[list[str], int | None]]) -> tuple[str, str] | None:
+def find_image_placeholder_in_shape(shape, image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> tuple[str, str] | None:
     if not hasattr(shape, 'text_frame'):
         return None
     
@@ -198,24 +216,50 @@ def move_shape_to_z_index(shape, z_index: int) -> None:
     parent.remove(shape.element)
     parent.insert(z_index, shape.element)
 
-def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]]) -> bool:
+def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> bool:
     placeholder_info = find_image_placeholder_in_shape(shape, image_values)
     
     if placeholder_info:
         key, _ = placeholder_info
-        layer_paths, rotation = image_values[key]
-        left, top, width, height = shape.left, shape.top, shape.width, shape.height
+        layers, rotation = image_values[key]
+        placeholder_left = shape.left
+        placeholder_top = shape.top
+        placeholder_width = shape.width
+        placeholder_height = shape.height
 
         z_index = get_shape_z_index(shape)
         shape.element.getparent().remove(shape.element)
         
-        for i, image_path in enumerate(layer_paths):
+        base_layer = layers[0] if layers else None
+        if not base_layer or base_layer.width == 0:
+            map_width = placeholder_width
+            map_height = placeholder_height
+            scale_x = 1.0
+            scale_y = 1.0
+        else:
+            map_width = base_layer.width
+            map_height = base_layer.height
+            scale_x = placeholder_width / map_width
+            scale_y = placeholder_height / map_height
+
+        for i, layer in enumerate(layers):
+            if layer.width == 0 or layer.height == 0:
+                layer_left = placeholder_left
+                layer_top = placeholder_top
+                layer_width = placeholder_width
+                layer_height = placeholder_height
+            else:
+                layer_left = placeholder_left + int(layer.offset_x * scale_x)
+                layer_top = placeholder_top + int(layer.offset_y * scale_y)
+                layer_width = int(layer.width * scale_x)
+                layer_height = int(layer.height * scale_y)
+
             if rotation:
-                rotated_path = rotate_image(image_path, rotation)
-                picture = slide.shapes.add_picture(rotated_path, left, top, width, height)
+                rotated_path = rotate_image(layer.path, rotation)
+                picture = slide.shapes.add_picture(rotated_path, layer_left, layer_top, layer_width, layer_height)
                 os.unlink(rotated_path)
             else:
-                picture = slide.shapes.add_picture(image_path, left, top, width, height)
+                picture = slide.shapes.add_picture(layer.path, layer_left, layer_top, layer_width, layer_height)
             
             move_shape_to_z_index(picture, z_index + i)
 
@@ -227,7 +271,7 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
     return False
 
 
-def process_table(table, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]], slide) -> None:
+def process_table(table, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
@@ -244,7 +288,7 @@ def process_table(table, text_values: dict[str, str], image_values: dict[str, tu
                 
                 process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
 
-def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]]) -> None:
+def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> None:
     shapes_list = list(shapes)
     
     for shape in shapes_list:

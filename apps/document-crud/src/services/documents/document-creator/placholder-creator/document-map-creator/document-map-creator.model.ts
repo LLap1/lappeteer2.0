@@ -5,11 +5,19 @@ export type CreateMapsInput = {
   id: string;
   width: number;
   height: number;
-  geojson: Feature<Geometry, { style?: GeoJsonStyleOptions } | null>[];
+  geojson: Feature<Geometry, { style?: GeoJsonStyleOptions; text?: string } | null>[];
   overlayId: string;
 }[];
 
+export type ImageLayer = {
+  path: string;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+};
+
 export type CreateMapsOutput = {
   id: string;
-  imagePaths: string[];
+  layers: ImageLayer[];
 }[];
