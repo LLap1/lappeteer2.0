@@ -156,9 +156,9 @@ function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePla
 }
 
 export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: 'c9543f6c-bdd9-476f-9678-ccab39bdeeb0',
+  templateId: '45f57fc2-8a96-4a85-9e80-f4a00a5be0b7',
   zipFilename: 'documents.zip',
-  params: Array.from({ length: 40 }, (_, index) => ({
+  params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
       generateRandomMap('מפה', `map-${index}`),
       {
@@ -173,6 +173,14 @@ export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSche
         key: 'תיאור',
         params: `This is a description of the world maps document ${index + 1}`,
       },
+      {
+        type: 'image',
+        key: 'תמונה',
+        params: {
+          url: 'https://thumbs.dreamstime.com/b/magnetic-compass-8529055.jpg',
+          rotation: 45,
+        },
+      }
     ],
     documentFilename: `world_maps_${index + 1}.pptx`,
   })),

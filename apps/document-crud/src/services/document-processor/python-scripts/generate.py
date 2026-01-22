@@ -183,8 +183,8 @@ def find_image_placeholder_in_shape(shape, image_values: dict[str, tuple[list[st
     return None
 
 def rotate_image(image_path: str, rotation: int) -> str:
-    img = Image.open(image_path)
-    rotated = img.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
+    img = Image.open(image_path).convert('RGBA')
+    rotated = img.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC, fillcolor=(0, 0, 0, 0))
     temp_path = tempfile.mktemp(suffix='.png')
     rotated.save(temp_path, 'PNG')
     return temp_path
