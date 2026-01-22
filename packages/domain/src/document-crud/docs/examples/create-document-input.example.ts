@@ -2,9 +2,9 @@ import type { Feature, Polygon } from 'geojson';
 import {
   CreateDocumentsInputSchema,
   CreatePlaceholderParamsSchema,
-} from '@auto-document/domain/src/document-crud/documents/documents.d.schema';
-import type { GeoJsonStyleOptions } from '../../../../../../apps/document-crud/src/services/documents/document-creator/placholder-creator/placeholder-creator.model';
-import z from 'zod';
+  type GeoJsonStyleOptions,
+} from '../../documents/documents.schema';
+import z from 'zod/v4';
 
 const inlandCities = [
   [52.52, 13.405], // Berlin
@@ -120,10 +120,10 @@ const createPolygon = (
 };
 
 function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePlaceholderParamsSchema> {
-  const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)];
+  const randomCity = inlandCities[Math.floor(Math.random() * inlandCities.length)]!;
   const randomOffsetLat = (Math.random() - 0.5) * 0.3;
   const randomOffsetLng = (Math.random() - 0.5) * 0.3;
-  const center: [number, number] = [randomCity[0] + randomOffsetLat, randomCity[1] + randomOffsetLng];
+  const center: [number, number] = [randomCity[0]! + randomOffsetLat, randomCity[1]! + randomOffsetLng];
 
   const zoom = Math.floor(Math.random() * 7) + 10;
 
@@ -131,11 +131,11 @@ function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePla
   const polygonSize = Math.max(0.02, Math.min(0.15, zoomBasedSize * 0.002));
   const polygonOffset = Math.min(polygonSize * 1.2, 0.05);
 
-  const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'pink', 'cyan'];
-  const color1 = colors[Math.floor(Math.random() * colors.length)];
-  let color2 = colors[Math.floor(Math.random() * colors.length)];
+  const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'pink', 'cyan'] as const;
+  const color1 = colors[Math.floor(Math.random() * colors.length)]!;
+  let color2 = colors[Math.floor(Math.random() * colors.length)]!;
   while (color2 === color1) {
-    color2 = colors[Math.floor(Math.random() * colors.length)];
+    color2 = colors[Math.floor(Math.random() * colors.length)]!;
   }
 
   const polygon1Center: [number, number] = [center[0] - polygonOffset, center[1] - polygonOffset];
@@ -149,15 +149,14 @@ function generateRandomMap(mapKey: string, id: string): z.infer<typeof CreatePla
     type: 'map',
     key: mapKey,
     params: {
-      center,
-      zoom,
+      overlayId: 'ne:world',
       geojson: [polygon1, polygon2],
     },
   };
 }
 
 export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: '2d53bbdc-b99a-4ef0-96f8-26070f2bc7b2',
+  templateId: 'c9543f6c-bdd9-476f-9678-ccab39bdeeb0',
   zipFilename: 'documents.zip',
   params: Array.from({ length: 40 }, (_, index) => ({
     placeholders: [

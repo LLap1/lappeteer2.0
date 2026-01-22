@@ -23,6 +23,9 @@ export type PlaceholderData<T extends PlaceholderType> = T extends 'map'
 
 export type MapPlaceholderData = string[];
 export type TextPlaceholderData = string;
-export type ImagePlaceholderData = string;
+export type ImagePlaceholderData = {
+  url: string;
+  rotation?: number;
+};
 
 export const PlaceholderTypeSchema: z.ZodType<PlaceholderType> = z.literal(['map', 'text', 'image']);

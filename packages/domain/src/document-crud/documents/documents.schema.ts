@@ -25,7 +25,10 @@ export type MapPlaceholderParams = {
 };
 
 export type TextPlaceholderParams = string;
-export type ImagePlaceholderParams = string;
+export type ImagePlaceholderParams = {
+  url: string;
+  rotation?: number;
+};
 
 export type CreateDocumentParams = {
   placeholders: CreatePlaceholderParams<PlaceholderType>[];
@@ -46,7 +49,10 @@ export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> =
 });
 
 export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> = z.string();
-export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.url();
+export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.object({
+  url: z.url(),
+  rotation: z.number().optional(),
+});
 
 //@ts-ignore id is present...
 export const CreatePlaceholderParamsSchema: z.ZodType<CreatePlaceholderParams> = z

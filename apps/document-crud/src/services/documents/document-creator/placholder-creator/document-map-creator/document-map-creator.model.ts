@@ -11,5 +11,5 @@ export type CreateMapsInput = {
 
 export type CreateMapsOutput = {
   id: string;
-  layerDataUrls: string[];
+  imagePaths: string[];
 }[];

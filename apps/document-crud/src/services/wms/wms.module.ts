@@ -1,26 +1,22 @@
 import { Module } from '@nestjs/common';
 import { WmsService } from './wms.service';
-import { config } from '../../config';
-import { GeoserverWmsService, GEOSERVER_WMS_BASE_URL } from './implementations/geoserver-wms.service';
+import { config, type Config } from '../../config';
+import { GeoserverWmsService } from './implementations/geoserver-wms.service';
+import { OverlaysModule } from './overlays/overlays.module';
+
+type WmsServiceType = Config['wmsService']['type'];
+
+const WMS_SERVICE_IMPLEMENTATIONS: Record<WmsServiceType, new (...args: never[]) => WmsService> = {
+  geoserver: GeoserverWmsService,
+};
 
 @Module({
+  imports: [OverlaysModule],
   providers: [
-    {
-      provide: GEOSERVER_WMS_BASE_URL,
-      useValue: config.wmsService.baseUrl,
-    },
     GeoserverWmsService,
     {
       provide: WmsService,
-      useFactory: (geoserverWmsService: GeoserverWmsService) => {
-        switch (config.wmsService.type) {
-          case 'geoserver':
-            return geoserverWmsService;
-          default:
-            throw new Error(`Unsupported WMS service type: ${config.wmsService.type}`);
-        }
-      },
-      inject: [GeoserverWmsService],
+      useExisting: WMS_SERVICE_IMPLEMENTATIONS[config.wmsService.type],
     },
   ],
   exports: [WmsService],

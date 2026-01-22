@@ -6,13 +6,11 @@ export type BBox = {
 };
 
 export type GetMapInput = {
-  layers: string[];
+  overlayId: string;
   bbox: BBox;
   width: number;
   height: number;
-  crs?: string;
-  format?: string;
-  styles?: string[];
+  format: string;
 };
 
 export type GetMapOutput = {

@@ -12,6 +12,7 @@ export interface PlaceholderData {
   value: string;
   width: number;
   height: number;
+  rotation?: number;
 }
 
 export interface MapValue {

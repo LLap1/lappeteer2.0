@@ -3,45 +3,53 @@ import json
 import base64
 import tempfile
 import os
+from io import BytesIO
+from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.util import Pt
 from pptx.enum.text import MSO_AUTO_SIZE
 
-def save_data_url_to_temp(data_url: str, temp_files: list[str]) -> str:
+def save_data_url_to_temp(data_url: str) -> tuple[str, bool]:
     base64_data = data_url.split(',', 1)[1]
     image_data = base64.b64decode(base64_data)
     temp_path = tempfile.mktemp(suffix='.png')
     with open(temp_path, 'wb') as f:
         f.write(image_data)
-    temp_files.append(temp_path)
-    return temp_path
+    return temp_path, True
 
-def get_image_path(source: str, temp_files: list[str]) -> str:
+def get_image_path(source: str) -> tuple[str, bool]:
     if source.startswith('data:'):
-        return save_data_url_to_temp(source, temp_files)
+        return save_data_url_to_temp(source)
     if not os.path.exists(source):
         raise FileNotFoundError(f"Image file not found: {source}")
-    temp_files.append(source)
-    return source
+    return source, False
 
-def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, list[str]], list[str]]:
+def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, tuple[list[str], int | None]], list[str]]:
     text_values: dict[str, str] = {}
-    image_values: dict[str, list[str]] = {}
-    temp_files: list[str] = []
+    image_values: dict[str, tuple[list[str], int | None]] = {}
+    temp_files_to_cleanup: list[str] = []
 
     for item in placeholder_data:
         key = item['key'].strip()
         placeholder_type = item['type']
         value = item['value']
+        rotation = item.get('rotation')
 
         if placeholder_type == 'text':
             text_values[key] = value
         elif placeholder_type in ('image', 'map'):
             sources = json.loads(value)
-            image_values[key] = [get_image_path(source, temp_files) for source in sources]
+            layer_paths = []
+            for source in sources:
+                file_path, should_cleanup = get_image_path(source)
+                layer_paths.append(file_path)
+                if should_cleanup:
+                    temp_files_to_cleanup.append(file_path)
+            
+            image_values[key] = (layer_paths, rotation)
 
-    return text_values, image_values, temp_files
+    return text_values, image_values, temp_files_to_cleanup
 
 def get_run_color(run) -> RGBColor | None:
     try:
@@ -153,7 +161,7 @@ def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = 
   
 
 
-def find_image_placeholder_in_shape(shape, image_values: dict[str, list[str]]) -> tuple[str, str] | None:
+def find_image_placeholder_in_shape(shape, image_values: dict[str, tuple[list[str], int | None]]) -> tuple[str, str] | None:
     if not hasattr(shape, 'text_frame'):
         return None
     
@@ -174,18 +182,42 @@ def find_image_placeholder_in_shape(shape, image_values: dict[str, list[str]]) -
     
     return None
 
-def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, list[str]]) -> bool:
+def rotate_image(image_path: str, rotation: int) -> str:
+    img = Image.open(image_path)
+    rotated = img.rotate(-rotation, expand=True, resample=Image.Resampling.BICUBIC)
+    temp_path = tempfile.mktemp(suffix='.png')
+    rotated.save(temp_path, 'PNG')
+    return temp_path
+
+def get_shape_z_index(shape) -> int:
+    parent = shape.element.getparent()
+    return list(parent).index(shape.element)
+
+def move_shape_to_z_index(shape, z_index: int) -> None:
+    parent = shape.element.getparent()
+    parent.remove(shape.element)
+    parent.insert(z_index, shape.element)
+
+def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]]) -> bool:
     placeholder_info = find_image_placeholder_in_shape(shape, image_values)
     
     if placeholder_info:
         key, _ = placeholder_info
-        image_paths = image_values[key]
+        layer_paths, rotation = image_values[key]
         left, top, width, height = shape.left, shape.top, shape.width, shape.height
 
+        z_index = get_shape_z_index(shape)
         shape.element.getparent().remove(shape.element)
-
-        for image_path in image_paths:
-            slide.shapes.add_picture(image_path, left, top, width, height)
+        
+        for i, image_path in enumerate(layer_paths):
+            if rotation:
+                rotated_path = rotate_image(image_path, rotation)
+                picture = slide.shapes.add_picture(rotated_path, left, top, width, height)
+                os.unlink(rotated_path)
+            else:
+                picture = slide.shapes.add_picture(image_path, left, top, width, height)
+            
+            move_shape_to_z_index(picture, z_index + i)
 
         return True
 
@@ -195,7 +227,7 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
     return False
 
 
-def process_table(table, text_values: dict[str, str], image_values: dict[str, list[str]], slide) -> None:
+def process_table(table, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
@@ -212,7 +244,7 @@ def process_table(table, text_values: dict[str, str], image_values: dict[str, li
                 
                 process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
 
-def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, list[str]]) -> None:
+def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[str], int | None]]) -> None:
     shapes_list = list(shapes)
     
     for shape in shapes_list:

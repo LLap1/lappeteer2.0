@@ -3,6 +3,8 @@ import type { PlaceholderParams } from '@auto-document/domain/document-crud.sche
 import type { Placeholder, PlaceholderType } from '@auto-document/types/document';
 import { DocumentMapCreatorService } from './document-map-creator/document-map-creator.service';
 import type { CreateMapsInput } from './document-map-creator/document-map-creator.model';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class PlaceholderCreatorService {
@@ -40,7 +42,7 @@ export class PlaceholderCreatorService {
       if (!mapResult) {
         throw new Error(`Map not found for placeholder ${param.id}`);
       }
-      return { ...param, value: mapResult.layerDataUrls };
+      return { ...param, value: mapResult.imagePaths };
     });
   }
 
@@ -49,6 +51,36 @@ export class PlaceholderCreatorService {
   }
 
   private async createImagePlaceholders(params: PlaceholderParams<'image'>[]): Promise<Placeholder<'image'>[]> {
-    return params.map(p => ({ ...p, value: p.params }));
+    return Promise.all(
+      params.map(async p => {
+        const filePath = await this.downloadImage(p.params.url);
+        return {
+          ...p,
+          value: {
+            url: filePath,
+            rotation: p.params.rotation,
+          },
+        };
+      }),
+    );
+  }
+
+  private async downloadImage(url: string): Promise<string> {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const extension = contentType.includes('jpeg') || contentType.includes('jpg') ? '.jpg' : '.png';
+
+    const arrayBuffer = await response.arrayBuffer();
+    const tempDir = '/tmp';
+    const filePath = path.join(tempDir, `image-${uuidv4()}${extension}`);
+
+    await Bun.write(filePath, arrayBuffer);
+
+    return filePath;
   }
 }
