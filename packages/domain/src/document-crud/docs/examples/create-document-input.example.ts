@@ -156,7 +156,7 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
 }
 
 export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: '45f57fc2-8a96-4a85-9e80-f4a00a5be0b7',
+  templateId: 'cd7043ed-73a0-4242-87ca-3c2fa08ba645',
   zipFilename: 'documents.zip',
   params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
@@ -169,7 +169,12 @@ export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSche
       {
         type: 'text',
         key: 'תיאור',
-        params: `This is a description of the world maps document ${index + 1}`,
+        params:  `This is a description of the world maps document ${index + 1}`,
+      },
+      {
+        type: 'text',
+        key: 'תיאורר',
+        params:  `This is a description of the world maps document ${index + 1}`,
       },
       {
         type: 'image',

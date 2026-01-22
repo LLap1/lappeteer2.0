@@ -48,7 +48,7 @@ export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> =
   overlayId: z.string()
 });
 
-export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> = z.string();
+export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> =  z.string()
 export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.object({
   url: z.url(),
   rotation: z.number().optional(),

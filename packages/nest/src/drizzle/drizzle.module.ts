@@ -1,7 +1,7 @@
 import { type DynamicModule } from '@nestjs/common';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const DRIZZLE = Symbol('DRIZZLE');
 

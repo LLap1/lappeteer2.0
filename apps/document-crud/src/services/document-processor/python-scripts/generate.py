@@ -33,8 +33,13 @@ class ImageLayer:
         self.width = width
         self.height = height
 
-def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, tuple[list[ImageLayer], int | None]], list[str]]:
-    text_values: dict[str, str] = {}
+class TextValue:
+    def __init__(self, text: str, fit_mode: str = 'shrink'):
+        self.text = text
+        self.fit_mode = fit_mode
+
+def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, TextValue], dict[str, tuple[list[ImageLayer], int | None]], list[str]]:
+    text_values: dict[str, TextValue] = {}
     image_values: dict[str, tuple[list[ImageLayer], int | None]] = {}
     temp_files_to_cleanup: list[str] = []
 
@@ -45,7 +50,11 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str
         rotation = item.get('rotation')
 
         if placeholder_type == 'text':
-            text_values[key] = value
+            text_data = json.loads(value)
+            text_values[key] = TextValue(
+                text_data.get('text', ''),
+                text_data.get('fitMode', 'shrink'),
+            )
         elif placeholder_type in ('image', 'map'):
             layers_data = json.loads(value)
             layers = []
@@ -131,7 +140,7 @@ def calculate_best_font_size(text: str, original_size: int, width_pt: float, hei
     
     return min_size
 
-def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = False, cell_width: float = 0, cell_height: float = 0) -> None:
+def process_text_frame(text_frame, text_values: dict[str, TextValue], is_cell: bool = False, cell_width: float = 0, cell_height: float = 0) -> None:
     font_name = 'Arial'
     original_size = 18
     modified = False
@@ -154,29 +163,15 @@ def process_text_frame(text_frame, text_values: dict[str, str], is_cell: bool = 
             
             font_name = get_font_name(run, paragraph)
             original_size = get_original_font_size(run)
-            new_text = text_values[key]
+            text_value = text_values[key]
+            new_text = text_value.text
+            fit_mode = text_value.fit_mode
             run.text = new_text
             run.font.bold = False
             run.font.italic = False
             run.font.underline = False
             run.font.color.rgb = RGBColor(0, 0, 0)
-            modified = True
-    
-    if not modified:
-        return
-    try: 
-        for size in range(original_size, 1, -1):
-            try:
-                text_frame.fit_text(font_family=font_name, max_size=size, bold=False, italic=False)
-                break
-            except TypeError:
-                pass
-
-    except:
-        pass
-
-
-  
+   
 
 
 def find_image_placeholder_in_shape(shape, image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> tuple[str, str] | None:
@@ -216,7 +211,7 @@ def move_shape_to_z_index(shape, z_index: int) -> None:
     parent.remove(shape.element)
     parent.insert(z_index, shape.element)
 
-def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> bool:
+def process_shape(shape, slide, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> bool:
     placeholder_info = find_image_placeholder_in_shape(shape, image_values)
     
     if placeholder_info:
@@ -271,7 +266,7 @@ def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[
     return False
 
 
-def process_table(table, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]], slide) -> None:
+def process_table(table, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
@@ -288,7 +283,7 @@ def process_table(table, text_values: dict[str, str], image_values: dict[str, tu
                 
                 process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
 
-def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> None:
+def process_all_shapes(shapes, slide, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> None:
     shapes_list = list(shapes)
     
     for shape in shapes_list:

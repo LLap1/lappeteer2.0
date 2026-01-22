@@ -5,14 +5,14 @@ import { featureCollection } from '@turf/helpers';
 import bbox from '@turf/bbox';
 import centroid from '@turf/centroid';
 import type { Feature, Geometry } from 'geojson';
-import type { GeoJsonStyleOptions } from '@auto-document/domain/document-crud.schema';
 import { type BBox } from 'src/services/wms/wms.model';
 import { WmsService } from 'src/services/wms/wms.service';
 import { createCanvas, CanvasRenderingContext2D } from 'canvas';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import type { PathOptions } from 'leaflet';
 
-type GeoJsonFeature = Feature<Geometry, { style?: GeoJsonStyleOptions; text?: string } | null>;
+type GeoJsonFeature = Feature<Geometry, { style?: PathOptions; text?: string } | null>;
 
 type PixelBounds = { minX: number; minY: number; maxX: number; maxY: number };
 
@@ -59,7 +59,7 @@ export class DocumentMapCreatorService {
   }
 
   private calculateBboxFromGeojson(geojson: GeoJsonFeature[]): BBox {
-    const features = featureCollection<Geometry, { style?: GeoJsonStyleOptions } | null>(geojson);
+    const features = featureCollection<Geometry, { style?: PathOptions } | null>(geojson);
     const [minX, minY, maxX, maxY] = bbox(features);
 
     const paddingPercent = 0.1;

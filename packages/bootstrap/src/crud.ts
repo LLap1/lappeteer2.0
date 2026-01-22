@@ -6,7 +6,7 @@ import { ZodToJsonSchemaConverter } from '@orpc/zod/zod4';
 import { OpenAPIGenerator, type OpenAPIGeneratorGenerateOptions } from '@orpc/openapi';
 import { WinstonModule } from 'nest-winston';
 import { createLogger } from '@auto-document/logger/winston.logger';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const ServerConfigSchema = z.object({
   server: z.object({

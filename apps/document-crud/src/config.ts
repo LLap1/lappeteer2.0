@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { config as loadDotenv } from 'dotenv';
 import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';

@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { S3Client, type S3Options } from 'bun';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 const S3OptionsSchema: z.ZodType<S3Options> = z.object({
   accessKeyId: z.string(),

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import type { Feature, Geometry, GeoJsonProperties, Position } from 'geojson';
 import type { PathOptions } from 'leaflet';
 
@@ -55,6 +55,7 @@ export const GeoJsonPropertiesSchema = z.object({
       weight: z.number().optional(),
       opacity: z.number().optional(),
       fillOpacity: z.number().optional(),
+      dashArray: z.array(z.number()).optional(),
     })
     .strict(),
     text: z.string().optional(),
