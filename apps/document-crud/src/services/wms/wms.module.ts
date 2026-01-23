@@ -1,22 +1,14 @@
 import { Module } from '@nestjs/common';
 import { WmsService } from './wms.service';
-import { config, type Config } from '../../config';
 import { GeoserverWmsService } from './implementations/geoserver/geoserver-wms.service';
-import { OverlaysModule } from './overlays/overlays.module';
-
-type WmsServiceType = Config['wmsService']['type'];
-
-const WMS_SERVICE_IMPLEMENTATIONS: Record<WmsServiceType, new (...args: never[]) => WmsService> = {
-  geoserver: GeoserverWmsService,
-};
+import { GeoserverWmsModule } from './implementations/geoserver/geoserver-wms.module';
 
 @Module({
-  imports: [OverlaysModule],
+  imports: [GeoserverWmsModule],
   providers: [
-    GeoserverWmsService,
     {
       provide: WmsService,
-      useExisting: WMS_SERVICE_IMPLEMENTATIONS[config.wmsService.type],
+      useExisting: GeoserverWmsService,
     },
   ],
   exports: [WmsService],

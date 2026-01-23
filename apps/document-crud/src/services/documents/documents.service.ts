@@ -59,7 +59,6 @@ export class DocumentsService {
       });
 
       const downloadUrl = this.s3Client.presign(filePath, {
-        expiresIn: 7 * 24 * 60 * 60, // 7 days
         acl: 'public-read',
         type: zipFile.type,
       });
@@ -90,7 +89,9 @@ export class DocumentsService {
 
     return {
       ...document,
-      downloadUrl: this.s3Client.file(document.filePath).presign(),
+      downloadUrl: this.s3Client.file(document.filePath).presign({
+          acl: 'public-read',
+        }),
     };
   }
 
@@ -101,7 +102,9 @@ export class DocumentsService {
       console.log(documents);
       return documents.map(document => ({
         ...document,
-        downloadUrl: this.s3Client.file(document.filePath).presign(),
+        downloadUrl: this.s3Client.file(document.filePath).presign({
+          acl: 'public-read',
+        }),
       }));
     } catch (error) {
       throw errors.DOCUMENT_LIST_ALL_FAILED({ data: { error } });

@@ -63,7 +63,9 @@ export class TemplateService {
 
       return {
         ...template,
-        downloadUrl: this.s3Client.file(template.filePath).presign(),
+        downloadUrl: this.s3Client.file(template.filePath).presign({
+          acl: 'public-read',
+        }),
       };
     } catch (error) {
       throw errors.TEMPLATE_UPLOAD_FAILED({
@@ -81,8 +83,10 @@ export class TemplateService {
     }
 
     return {
-      ...template,
-      downloadUrl: this.s3Client.file(template.filePath).presign(),
+        ...template,
+        downloadUrl: this.s3Client.file(template.filePath).presign({
+          acl: 'public-read',
+        }),
     };
   }
 
@@ -91,7 +95,9 @@ export class TemplateService {
     const result = await this.db.select().from(templatesTable);
     return result.map(template => ({
       ...template,
-      downloadUrl: this.s3Client.file(template.filePath).presign(),
+      downloadUrl: this.s3Client.file(template.filePath).presign({
+        acl: 'public-read',
+      }),
     }));
   }
 

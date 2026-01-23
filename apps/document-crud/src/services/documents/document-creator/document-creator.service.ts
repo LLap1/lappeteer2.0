@@ -1,18 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { CreateDocumentParams } from '@auto-document/domain/document-crud.schema';
-import type { PlaceholderMetadata, PlaceholderType, Placeholder, ImageLayer } from '@auto-document/types/document';
+import type { PlaceholderMetadata, PlaceholderType, Placeholder, ImageLayer, ImagePlaceholderData } from '@auto-document/types/document';
 import type { PlaceholderParams } from '@auto-document/domain/document-crud.schema';
 import { PlaceholderCreatorService } from './placholder-creator/placeholder-creator.service';
 import { Log } from '@auto-document/utils/log';
 import { zipFiles } from '@auto-document/utils/file';
 import { DocumentProcessorService } from '../../document-processor/document-processor.service';
-import { GenerateRequest } from '../../document-processor/document-processor.model';
+import { GenerateRequest, PlaceholderData } from '../../document-processor/document-processor.model';
 import { S3File } from 'bun';
 import { chunk } from 'lodash';
 import { unlink } from 'fs/promises';
-
-const isImageLayerArray = (value: unknown): value is ImageLayer[] =>
-  Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'path' in value[0];
 
 type CreateInput = {
   templateFile: S3File;
@@ -34,29 +31,14 @@ export class DocumentCreatorService {
   async create({ templateFile, params, placeholderMetadata, zipFilename }: CreateInput): Promise<File> {
     const placeholderParams = this.buildPlaceholderParams(params, placeholderMetadata);
     const placeholders = await this.placeholderCreatorService.create(placeholderParams);
-    const generateRequests: GenerateRequest[] = await Promise.all(
-      params.map(async param => ({
-        templateFile,
-        data: placeholders
-          .filter(p => param.placeholders.some(pp => pp.id === p.id))
-          .map(placeholder => {
-            if (isImageLayerArray(placeholder.value)) {
-              return { ...placeholder, value: JSON.stringify(placeholder.value) };
-            }
-            if (typeof placeholder.value === 'object' && placeholder.value !== null) {
-              const imageValue = placeholder.value as { url: string; rotation?: number };
-              return {
-                ...placeholder,
-                value: JSON.stringify([{ path: imageValue.url, offsetX: 0, offsetY: 0, width: 0, height: 0 }]),
-                rotation: imageValue.rotation,
-              };
-            }
-            return { ...placeholder, value: placeholder.value };
-          }),
-        outputFilename: param.documentFilename,
-        slidesToRemove: param.slidesToRemove,
-      })),
-    );
+    const generateRequests: GenerateRequest[] = params.map(param => ({
+      templateFile,
+      data: placeholders
+        .filter(p => param.placeholders.some(pp => pp.id === p.id))
+        .map(placeholder => placeholder as PlaceholderData),
+      outputFilename: param.documentFilename,
+      slidesToRemove: param.slidesToRemove,
+    }));
 
     const chunks = chunk(generateRequests, 100);
     const documens: Bun.BunFile[] = [];
@@ -72,20 +54,18 @@ export class DocumentCreatorService {
   }
 
   private async cleanupTempFiles(placeholders: Placeholder<PlaceholderType>[]): Promise<void> {
-    const filePaths: string[] = [];
-
-    for (const p of placeholders) {
-      if (p.type === 'map' && isImageLayerArray(p.value)) {
-        filePaths.push(...p.value.map(layer => layer.path));
-      } else if (p.type === 'image' && typeof p.value === 'object' && p.value !== null) {
-        const imageValue = p.value as { url: string; rotation?: number };
-        if (imageValue.url.startsWith('/tmp/')) {
-          filePaths.push(imageValue.url);
-        }
+    const filePaths = placeholders.flatMap(p => {
+      if (p.type === 'map') {
+        return (p.value as ImageLayer[]).map(layer => layer.path);
       }
-    }
+      if (p.type === 'image') {
+        const { url } = p.value as ImagePlaceholderData;
+        return url.startsWith('/tmp/') ? [url] : [];
+      }
+      return [];
+    });
 
-    await Promise.all(filePaths.map(filePath => unlink(filePath).catch(() => {})));
+    await Promise.all(filePaths.map(path => unlink(path).catch(() => {})));
   }
 
   private buildPlaceholderParams(

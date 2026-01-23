@@ -10,7 +10,7 @@ import {
   type GenerateResponse,
 } from './document-processor.model';
 import { Log } from '@auto-document/utils/log';
-
+import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class DocumentProcessorService {
   private static readonly logger = new Logger(DocumentProcessorService.name);
@@ -19,7 +19,7 @@ export class DocumentProcessorService {
   async generate(request: GenerateRequest): Promise<GenerateResponse> {
     const pythonPath = path.join(this.scriptsPath, 'generate.py');
     const tempDir = '/tmp';
-    const inputFilePath = path.join(tempDir, `${Date.now()}.pptx`);
+    const inputFilePath = path.join(tempDir, `${uuidv4()}.pptx`);
     const outputFilePath = path.join(tempDir, request.outputFilename);
     await Bun.write(inputFilePath, await request.templateFile.arrayBuffer());
 
@@ -35,7 +35,7 @@ export class DocumentProcessorService {
   async analyze(request: AnalyzeRequest): Promise<AnalyzeResponse> {
     const pythonPath = path.join(this.scriptsPath, 'parse.py');
     const tempDir = '/tmp';
-    const inputFilePath = path.join(tempDir, `${Date.now()}.pptx`);
+    const inputFilePath = path.join(tempDir, `${uuidv4()}.pptx`);
 
     try {
       await Bun.write(inputFilePath, request);

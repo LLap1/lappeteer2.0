@@ -15,10 +15,6 @@ export interface PlaceholderData {
   rotation?: number;
 }
 
-export interface MapValue {
-  layerDataUrls: string[];
-}
-
 export type GenerateResponse = Bun.BunFile;
 
 export type AnalyzeRequest = Uint8Array;

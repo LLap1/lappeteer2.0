@@ -21,6 +21,10 @@ dist
 dist-ssr
 *.local
 
+
+*wms.module.ts
+*overlays.module.ts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
