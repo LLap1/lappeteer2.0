@@ -144,27 +144,26 @@ export class DocumentMapCreatorService {
   ): Promise<string> {
     const outputPath = path.join('/tmp', `rotated-${uuidv4()}.png`);
 
-    const image = sharp(imagePath);
+    const rotatedBuffer = await sharp(imagePath)
+      .rotate(Math.round(rotationDegrees), {
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .toBuffer({ resolveWithObject: true });
 
-    const rotatedImage = image.rotate(rotationDegrees, {
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    });
-
-    const rotatedMeta = await rotatedImage.clone().toBuffer({ resolveWithObject: true });
-    const rotatedWidth = rotatedMeta.info.width;
-    const rotatedHeight = rotatedMeta.info.height;
+    const rotatedWidth = rotatedBuffer.info.width;
+    const rotatedHeight = rotatedBuffer.info.height;
 
     const left = Math.floor((rotatedWidth - targetWidth) / 2);
     const top = Math.floor((rotatedHeight - targetHeight) / 2);
 
-    await rotatedImage
+    await sharp(rotatedBuffer.data)
       .extract({
-        left: Math.max(0, left),
-        top: Math.max(0, top),
-        width: Math.min(targetWidth, rotatedWidth),
-        height: Math.min(targetHeight, rotatedHeight),
+        left: Math.round(Math.max(0, left)),
+        top: Math.round(Math.max(0, top)),
+        width: Math.round(Math.min(targetWidth, rotatedWidth - Math.max(0, left))),
+        height: Math.round(Math.min(targetHeight, rotatedHeight - Math.max(0, top))),
       })
-      .resize(targetWidth, targetHeight, { fit: 'fill' })
+      .resize(Math.round(targetWidth), Math.round(targetHeight), { fit: 'fill' })
       .toFile(outputPath);
 
     return outputPath;
@@ -222,8 +221,8 @@ export class DocumentMapCreatorService {
     mapHeight: number,
   ): Promise<ImageLayer> {
     const style = feature.properties?.style;
-    const strokeColor = style?.color || '#FF0000';
-    const fillColor = style?.fillColor || '#FF0000';
+    const strokeColor = style?.color || '#000000';
+    const fillColor = style?.fillColor || '#000000';
     const strokeOpacity = style?.opacity ?? 1;
     const fillOpacity = style?.fillOpacity ?? 0.2;
     const lineWidth = style?.weight || 2;

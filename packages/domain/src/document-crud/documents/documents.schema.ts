@@ -16,6 +16,7 @@ export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = Pla
 export type MapPlaceholderParams = {
   geojson: Feature<Geometry, { style?: PathOptions } | null>[];
   overlayId: string;
+  rotation?: number;
 };
 
 export type TextPlaceholderParams = string;

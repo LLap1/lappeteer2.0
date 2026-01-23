@@ -149,7 +149,7 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
     type: 'map',
     key: mapKey,
     params: {
-      rotation: Math.random() * 360,
+      rotation: Math.round(Math.random() * 360),
       overlayId: 'ne:world',
       geojson: [polygon1, polygon2],
     },
