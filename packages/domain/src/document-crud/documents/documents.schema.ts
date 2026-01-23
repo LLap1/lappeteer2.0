@@ -4,14 +4,8 @@ import { type PlaceholderType, PlaceholderTypeSchema } from '@auto-document/type
 import { v4 as uuidv4 } from 'uuid';
 import type { PlaceholderMetadata } from '@auto-document/types/document';
 import type { Feature, Geometry } from 'geojson';
+import type { PathOptions } from 'leaflet';
 
-export type GeoJsonStyleOptions = {
-  color?: string;
-  fillColor?: string;
-  weight?: number;
-  opacity?: number;
-  fillOpacity?: number;
-};
 
 export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = PlaceholderMetadata<T> & {
   id: string;
@@ -20,7 +14,7 @@ export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = Pla
 
 
 export type MapPlaceholderParams = {
-  geojson: Feature<Geometry, { style?: GeoJsonStyleOptions } | null>[];
+  geojson: Feature<Geometry, { style?: PathOptions } | null>[];
   overlayId: string;
 };
 
@@ -45,7 +39,8 @@ export type CreatePlaceholderParams<T extends PlaceholderType = PlaceholderType>
 
 export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> = z.object({
   geojson: z.array(GeoJsonFeatureSchema).min(0),
-  overlayId: z.string()
+  overlayId: z.string(),
+  rotation: z.number().optional(),
 });
 
 export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> =  z.string()

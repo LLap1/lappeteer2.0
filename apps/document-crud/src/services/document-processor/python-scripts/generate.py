@@ -3,12 +3,9 @@ import json
 import base64
 import tempfile
 import os
-from io import BytesIO
 from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.util import Pt
-from pptx.enum.text import MSO_AUTO_SIZE
 
 def save_data_url_to_temp(data_url: str) -> tuple[str, bool]:
     base64_data = data_url.split(',', 1)[1]
@@ -33,13 +30,8 @@ class ImageLayer:
         self.width = width
         self.height = height
 
-class TextValue:
-    def __init__(self, text: str, fit_mode: str = 'shrink'):
-        self.text = text
-        self.fit_mode = fit_mode
-
-def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, TextValue], dict[str, tuple[list[ImageLayer], int | None]], list[str]]:
-    text_values: dict[str, TextValue] = {}
+def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, str], dict[str, tuple[list[ImageLayer], int | None]], list[str]]:
+    text_values: dict[str, str] = {}
     image_values: dict[str, tuple[list[ImageLayer], int | None]] = {}
     temp_files_to_cleanup: list[str] = []
 
@@ -50,11 +42,7 @@ def prepare_data(placeholder_data: list[dict]) -> tuple[dict[str, TextValue], di
         rotation = item.get('rotation')
 
         if placeholder_type == 'text':
-            text_data = json.loads(value)
-            text_values[key] = TextValue(
-                text_data.get('text', ''),
-                text_data.get('fitMode', 'shrink'),
-            )
+            text_values[key] = value
         elif placeholder_type in ('image', 'map'):
             layers_data = json.loads(value)
             layers = []
@@ -105,47 +93,7 @@ def is_placeholder_run(run) -> bool:
     font = run.font
     return font.bold and font.italic and font.underline
 
-def get_font_name(run, paragraph) -> str:
-    if run.font.name:
-        return run.font.name
-    if paragraph.font.name:
-        return paragraph.font.name
-    return 'Arial'
-
-def get_original_font_size(run) -> int:
-    if run.font.size:
-        return int(run.font.size.pt)
-    return 18
-
-def estimate_text_needs_wrap(text: str, font_size_pt: float, width_pt: float) -> int:
-    avg_char_width = font_size_pt * 0.5
-    chars_per_line = max(1, int(width_pt / avg_char_width))
-    num_lines = max(1, (len(text) + chars_per_line - 1) // chars_per_line)
-    return num_lines
-
-def estimate_text_height(num_lines: int, font_size_pt: float) -> float:
-    line_height = font_size_pt * 1.1
-    return num_lines * line_height
-
-def calculate_best_font_size(text: str, original_size: int, width_pt: float, height_pt: float, min_size: int = 6) -> int:
-    if width_pt <= 0 or height_pt <= 0:
-        return original_size
-    
-    for size in range(original_size, min_size - 1, -1):
-        num_lines = estimate_text_needs_wrap(text, size, width_pt)
-        text_height = estimate_text_height(num_lines, size)
-        
-        if text_height <= height_pt:
-            return size
-    
-    return min_size
-
-def process_text_frame(text_frame, text_values: dict[str, TextValue], is_cell: bool = False, cell_width: float = 0, cell_height: float = 0) -> None:
-    font_name = 'Arial'
-    original_size = 18
-    modified = False
-    new_text = ""
-
+def process_text_frame(text_frame, text_values: dict[str, str]) -> None:
     for paragraph in text_frame.paragraphs:
         for run in paragraph.runs:
             if not is_placeholder_run(run):
@@ -161,12 +109,7 @@ def process_text_frame(text_frame, text_values: dict[str, TextValue], is_cell: b
             if placeholder_type != 'text':
                 continue
             
-            font_name = get_font_name(run, paragraph)
-            original_size = get_original_font_size(run)
-            text_value = text_values[key]
-            new_text = text_value.text
-            fit_mode = text_value.fit_mode
-            run.text = new_text
+            run.text = text_values[key]
             run.font.bold = False
             run.font.italic = False
             run.font.underline = False
@@ -211,7 +154,7 @@ def move_shape_to_z_index(shape, z_index: int) -> None:
     parent.remove(shape.element)
     parent.insert(z_index, shape.element)
 
-def process_shape(shape, slide, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> bool:
+def process_shape(shape, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> bool:
     placeholder_info = find_image_placeholder_in_shape(shape, image_values)
     
     if placeholder_info:
@@ -266,24 +209,13 @@ def process_shape(shape, slide, text_values: dict[str, TextValue], image_values:
     return False
 
 
-def process_table(table, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]], slide) -> None:
+def process_table(table, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]], slide) -> None:
     for row_idx, row in enumerate(table.rows):
         for col_idx, cell in enumerate(row.cells):
             if hasattr(cell, 'text_frame'):
-                cell_width = 0
-                cell_height = 0
-                
-                try:
-                    if table.columns[col_idx].width:
-                        cell_width = table.columns[col_idx].width.pt - 12
-                    if row.height:
-                        cell_height = row.height.pt - 12
-                except Exception:
-                    pass
-                
-                process_text_frame(cell.text_frame, text_values, is_cell=True, cell_width=cell_width, cell_height=cell_height)
+                process_text_frame(cell.text_frame, text_values)
 
-def process_all_shapes(shapes, slide, text_values: dict[str, TextValue], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> None:
+def process_all_shapes(shapes, slide, text_values: dict[str, str], image_values: dict[str, tuple[list[ImageLayer], int | None]]) -> None:
     shapes_list = list(shapes)
     
     for shape in shapes_list:
@@ -321,14 +253,14 @@ def generate(file_path: str, placeholder_data: list[dict], output_path: str, sli
     cleanup_temp_files(temp_files)
 
 def main():
-    if len(sys.argv) < 3:
-        sys.stderr.write("Usage: python generate.py <file_path> <json_data> [slides_to_remove_json]\n")
+    if len(sys.argv) < 4:
+        sys.stderr.write("Usage: python generate.py <file_path> <json_data> <output_path> [slides_to_remove_json]\n")
         sys.exit(1)
     
     file_path = sys.argv[1]
     json_data = sys.argv[2]
     output_path = sys.argv[3]
-    slides_to_remove_json = sys.argv[4] if len(sys.argv) > 3 else '[]'
+    slides_to_remove_json = sys.argv[4] if len(sys.argv) > 4 else None
 
     try:
         placeholder_data = json.loads(json_data)

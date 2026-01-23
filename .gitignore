@@ -20,7 +20,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+*.example
 
 *wms.module.ts
 *overlays.module.ts

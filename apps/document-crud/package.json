@@ -30,9 +30,11 @@
     "@orpc/openapi-client": "^1.10.2",
     "@orpc/zod": "^1.12.2",
     "@types/bun": "^1.3.4",
+    "@types/leaflet": "^1.9.21",
     "@types/lodash": "^4.17.21",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.15.30",
+    "@types/turf": "^3.5.32",
     "drizzle-kit": "^0.31.8",
     "geojson": "^0.5.0",
     "typescript": "^5.9.3",
@@ -63,6 +65,7 @@
     "@turf/centroid": "^7.3.2",
     "@turf/destination": "^7.3.2",
     "@turf/helpers": "^7.3.2",
+    "@turf/turf": "^7.3.2",
     "bun": "^1.3.2",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
@@ -71,6 +74,7 @@
     "postgres": "^3.4.7",
     "rxjs": "^7.8.2",
     "sharp": "^0.34.5",
+    "turf": "^3.0.14",
     "uuid": "^13.0.0"
   }
 }

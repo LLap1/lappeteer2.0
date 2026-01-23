@@ -1,12 +1,13 @@
 import type { Feature, Geometry } from 'geojson';
-import type { GeoJsonStyleOptions } from '@auto-document/domain/document-crud.schema';
+import type { PathOptions } from 'leaflet';
 
 export type CreateMapsInput = {
   id: string;
   width: number;
   height: number;
-  geojson: Feature<Geometry, { style?: GeoJsonStyleOptions; text?: string } | null>[];
+  geojson: Feature<Geometry, { style?: PathOptions; text?: string } | null>[];
   overlayId: string;
+  rotation?: number;
 }[];
 
 export type ImageLayer = {

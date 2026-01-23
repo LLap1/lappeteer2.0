@@ -35,7 +35,7 @@ export class DocumentCreatorService {
       templateFile,
       data: placeholders
         .filter(p => param.placeholders.some(pp => pp.id === p.id))
-        .map(placeholder => placeholder as PlaceholderData),
+        .map(placeholder => this.toPlaceholderData(placeholder)),
       outputFilename: param.documentFilename,
       slidesToRemove: param.slidesToRemove,
     }));
@@ -66,6 +66,19 @@ export class DocumentCreatorService {
     });
 
     await Promise.all(filePaths.map(path => unlink(path).catch(() => {})));
+  }
+
+  private toPlaceholderData(placeholder: Placeholder<PlaceholderType>): PlaceholderData {
+    const base = { id: placeholder.id, key: placeholder.key, type: placeholder.type, width: placeholder.width, height: placeholder.height };
+
+    if (placeholder.type === 'map') {
+      return { ...base, value: JSON.stringify(placeholder.value) };
+    }
+    if (placeholder.type === 'image') {
+      const { url, rotation } = placeholder.value as ImagePlaceholderData;
+      return { ...base, value: JSON.stringify([url]), rotation };
+    }
+    return { ...base, value: placeholder.value as string };
   }
 
   private buildPlaceholderParams(
