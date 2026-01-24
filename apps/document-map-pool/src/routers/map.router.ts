@@ -1,5 +1,5 @@
 import type { Dispatch } from 'react';
-import { MapUtils } from '../models/map.model.js';
+import { MapUtils } from '../models/map.utils.js';
 import type { Router } from '../models/router.model.js';
 import type { MapPoolAction, MapPoolObject, MapPoolState } from '../reducers/map-pool.reducer.js';
 import type { Feature, Geometry } from 'geojson';

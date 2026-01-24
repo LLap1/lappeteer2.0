@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DocumentMapCreatorService } from './document-map-creator.service';
-import { OverlaysModule } from 'src/services/wms/overlays/overlays.module';
+import { OverlaysModule } from 'src/services/overlays/overlays.module';
 
 @Module({
   imports: [OverlaysModule],

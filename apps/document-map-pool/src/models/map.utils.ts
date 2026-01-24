@@ -4,7 +4,16 @@ import type { Layer, PathOptions } from 'leaflet';
 import 'leaflet-rotate';
 export namespace MapUtils {
   export async function rotateMap({ map, rotation }: { map: LeafletMap; rotation: number }): Promise<void> {
-    map.setBearing(rotation);
+    return new Promise<void>(resolve => {
+      const originalBearing = map.getBearing();
+      const id = setInterval(() => {
+        if (map.getBearing() !== originalBearing) {
+          clearInterval(id);
+          resolve();
+        }
+      }, 500);
+      map.setBearing(rotation);
+    });
   }
 
   export async function addTileLayer({ url, map }: { url: string; map: LeafletMap }): Promise<void> {

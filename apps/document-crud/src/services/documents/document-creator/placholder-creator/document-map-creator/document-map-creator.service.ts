@@ -9,7 +9,8 @@ import { config } from 'src/config';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import bbox from '@turf/bbox';
-import { OverlaysService } from 'src/services/wms/overlays/overlays.service';
+import { OverlaysService } from 'src/services/overlays/overlays.service';
+import { featureCollection } from '@turf/helpers';
 
 @Injectable()
 export class DocumentMapCreatorService {
@@ -66,22 +67,38 @@ export class DocumentMapCreatorService {
     params: CreateMapsInput[number],
   ): Promise<CreateMapsOutput[number]> {
     const { id, width, height, intrestPolygonCollection } = params;
-    const geoBbox = bbox(intrestPolygonCollection);
+
+    const overlay = await this.overlaysService.getById({ id: params.overlayId });
+    const tileUrl = overlay.pixelTileUrl;
+    const pixelInterestPolygonCollection = featureCollection(
+      await Promise.all(
+        intrestPolygonCollection.features.map(async feature => {
+          const pixelGeometry = await this.overlaysService.groundToImage({
+            overlayId: params.overlayId,
+            geometry: feature.geometry,
+          });
+          return {
+            ...feature,
+            geometry: pixelGeometry,
+          };
+        }),
+      ),
+    );
+
+    const pixelBbox = bbox(pixelInterestPolygonCollection);
 
     await windowActionSender.send({
       type: 'setView',
-      params: { id, bounds: [geoBbox[1], geoBbox[0], geoBbox[3], geoBbox[2]] },
+      params: { id, bounds: [pixelBbox[1], pixelBbox[0], pixelBbox[3], pixelBbox[2]] },
     });
 
     if (params.rotation) {
       await windowActionSender.send({ type: 'rotateMap', params: { id, rotation: params.rotation } });
     }
 
-    const overlay = await this.overlaysService.getById({ id: params.overlayId });
-    const tileUrl = overlay.tileUrl;
     await windowActionSender.send({ type: 'addTileLayer', params: { id, url: tileUrl } });
 
-    for (const feature of intrestPolygonCollection.features) {
+    for (const feature of pixelInterestPolygonCollection.features) {
       await windowActionSender.send({
         type: 'addGeoJsonLayer',
         params: { id, geojson: feature as any },
