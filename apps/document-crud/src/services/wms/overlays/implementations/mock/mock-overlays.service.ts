@@ -17,7 +17,7 @@ export class MockOverlaysService extends OverlaysService {
   async getById(request: GetOverlayByIdInput): Promise<GetOverlayByIdOutput> {
     return {
       id: request.id,
-      streamingUrl: `http://localhost:8080/geoserver/ne/wms`,
+      tileUrl: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`,
       gridUrl: `http://localhost:8080/geoserver/ne/wms`,
     };
   }

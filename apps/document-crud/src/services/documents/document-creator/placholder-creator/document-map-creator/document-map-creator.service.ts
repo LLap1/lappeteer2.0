@@ -1,34 +1,42 @@
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
-import { type Config } from 'src/config';
 import { chunk } from 'lodash';
-import type { CreateMapsInput, CreateMapsOutput } from './document-map-creator.model';
+import type { CreateMapsInput, CreateMapsOutput, ImageLayer } from './document-map-creator.model';
 import { WindowActionSender } from './document-map-creator.model';
-import { Base64DataURL } from '@auto-document/types/file';
 import { Log } from '@auto-document/utils/log';
+import { config } from 'src/config';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import bbox from '@turf/bbox';
+import { OverlaysService } from 'src/services/wms/overlays/overlays.service';
 
+@Injectable()
 export class DocumentMapCreatorService {
   private static readonly logger: Logger = new Logger(DocumentMapCreatorService.name);
-
   private cluster?: Cluster;
 
-  constructor(@Inject('MAP_CREATOR_CONFIG') private readonly config: Config['mapCreator']) {}
+  constructor(private readonly overlaysService: OverlaysService) {}
 
   @Log(DocumentMapCreatorService.logger)
   async create(request: CreateMapsInput): Promise<CreateMapsOutput> {
     if (this.cluster === undefined) {
-      this.cluster = await Cluster.launch(this.config.launchOptions);
+      this.cluster = await Cluster.launch(config.documentMapCreator.launchOptions);
+      this.cluster.idle().then(() => {
+        this.cluster?.close();
+        this.cluster = undefined;
+      });
     }
 
-    const chunks = chunk(request, this.config.mapsPerPage);
+    const chunks = chunk(request, 100);
 
     const maps = (
       await Promise.all<CreateMapsOutput>(
         chunks.map(async chunk => {
           return await this.cluster!.execute(async ({ page }: { page: Page }) => {
             const actionSender = new WindowActionSender(page);
-            await page.goto(this.config.mapPoolUrl);
+            await page.goto(config.documentMapCreator.mapPoolUrl);
+
             await actionSender.send({ type: 'createMapPool', params: chunk });
             return this.createMapCanvases(actionSender, chunk as CreateMapsInput);
           });
@@ -57,31 +65,65 @@ export class DocumentMapCreatorService {
     windowActionSender: WindowActionSender,
     params: CreateMapsInput[number],
   ): Promise<CreateMapsOutput[number]> {
+    const { id, width, height, intrestPolygonCollection } = params;
+    const geoBbox = bbox(intrestPolygonCollection);
+
     await windowActionSender.send({
       type: 'setView',
-      params: { id: params.id, center: params.center, zoom: params.zoom },
+      params: { id, bounds: [geoBbox[1], geoBbox[0], geoBbox[3], geoBbox[2]] },
     });
 
-    await windowActionSender.send({
-      type: 'addTileLayer',
-      params: { id: params.id, url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' },
-    });
+    if (params.rotation) {
+      await windowActionSender.send({ type: 'rotateMap', params: { id, rotation: params.rotation } });
+    }
 
-    params.geojson.forEach(
-      async geojson => await windowActionSender.send({ type: 'addGeoJsonLayer', params: { id: params.id, geojson } }),
-    );
+    const overlay = await this.overlaysService.getById({ id: params.overlayId });
+    const tileUrl = overlay.tileUrl;
+    await windowActionSender.send({ type: 'addTileLayer', params: { id, url: tileUrl } });
 
-    await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id: params.id } });
-    const layerDataUrls: Base64DataURL[] = await windowActionSender.send({
+    for (const feature of intrestPolygonCollection.features) {
+      await windowActionSender.send({
+        type: 'addGeoJsonLayer',
+        params: { id, geojson: feature as any },
+      });
+    }
+
+    await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id } });
+
+    const layerDataUrls: string[] = await windowActionSender.send({
       type: 'exportMap',
-      params: { id: params.id },
+      params: { id },
     });
 
-    await windowActionSender.send({ type: 'removeLayers', params: { id: params.id } });
+    await windowActionSender.send({ type: 'removeLayers', params: { id } });
 
-    return {
-      id: params.id,
-      layerDataUrls,
-    };
+    const layers = await this.saveDataUrlsToFiles(layerDataUrls, width, height);
+
+    return { id, layers };
+  }
+
+  private async saveDataUrlsToFiles(dataUrls: string[], width: number, height: number): Promise<ImageLayer[]> {
+    const layers: ImageLayer[] = [];
+
+    for (const dataUrl of dataUrls) {
+      const filePath = await this.dataUrlToFile(dataUrl);
+      layers.push({
+        path: filePath,
+        offsetX: 0,
+        offsetY: 0,
+        width,
+        height,
+      });
+    }
+
+    return layers;
+  }
+
+  private async dataUrlToFile(dataUrl: string): Promise<string> {
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filePath = path.join('/tmp', `map-layer-${uuidv4()}.png`);
+    await Bun.write(filePath, buffer);
+    return filePath;
   }
 }

@@ -1,6 +1,7 @@
-import type { Feature, FeatureCollection, Geometry } from 'geojson';
+import type { FeatureCollection, Geometry } from 'geojson';
 import type { PathOptions } from 'leaflet';
-import type { WindowAction } from '@auto-document/document-map-pool/routers/root';
+import type { WindowAction } from '@auto-document/document-map-pool/router';
+import type { Page } from 'puppeteer';
 
 export type CreateMapsInput = {
   id: string;
@@ -29,6 +30,7 @@ export class WindowActionSender {
 
   async send(action: WindowAction): Promise<any> {
     const result = await this.page.evaluate((action: WindowAction) => {
+      // @ts-ignore
       return window[action.type](action.params);
     }, action);
     return result as never;

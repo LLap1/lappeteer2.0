@@ -2,7 +2,7 @@ import { Geometry } from 'geojson';
 
 export type Overlay = {
   id: string;
-  streamingUrl: string;
+  tileUrl: string;
   gridUrl: string;
 };
 

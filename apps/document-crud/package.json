@@ -15,10 +15,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
-  "exports": {
-    "./router": "./src/app.router.ts"
-  },
   "devDependencies": {
+    "@auto-document/document-map-pool": "workspace:*",
     "@auto-document/bootstrap": "workspace:*",
     "@auto-document/types": "workspace:*",
     "@jest/globals": "^30.2.0",
@@ -74,6 +72,7 @@
     "lodash": "^4.17.21",
     "mongoose": "^9.0.0",
     "postgres": "^3.4.7",
+    "puppeteer": "^24.36.0",
     "puppeteer-cluster": "^0.25.0",
     "rxjs": "^7.8.2",
     "sharp": "^0.34.5",

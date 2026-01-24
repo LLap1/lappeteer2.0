@@ -3,6 +3,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "tsx": true
   }
 }

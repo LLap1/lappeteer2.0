@@ -4,6 +4,7 @@ import packageJson from '../package.json';
 import { S3ConfigSchema } from '@auto-document/nest/s3.module';
 import { DrizzleConfigSchema } from '@auto-document/nest/drizzle.module';
 import { ServerConfigSchema } from '@auto-document/bootstrap/crud';
+import type { ClusterOptions } from 'puppeteer-cluster';
 
 loadDotenv();
 
@@ -19,6 +20,20 @@ export const configSchema = z.object({
   wmsService: z.object({
     type: z.string(),
     baseUrl: z.string(),
+  }),
+
+  documentMapCreator: z.object({
+    mapPoolUrl: z.string(),
+    mapsPerPage: z.number(),
+    launchOptions: z.object({
+      timeout: z.number(),
+      concurrency: z.number(),
+      maxConcurrency: z.number(),
+      puppeteerOptions: z.object({
+        headless: z.boolean(),
+        devtools: z.boolean(),
+      }),
+    }),
   }),
   ...S3ConfigSchema.shape,
   ...ServerConfigSchema.shape,
@@ -70,6 +85,19 @@ const templatedConfig: z.infer<typeof configSchema> = {
   wmsService: {
     type: process.env.WMS_SERVICE_TYPE! as z.infer<typeof configSchema.shape.wmsService.shape.type>,
     baseUrl: process.env.WMS_SERVICE_BASE_URL!,
+  },
+  documentMapCreator: {
+    mapPoolUrl: process.env.MAP_POOL_URL!,
+    mapsPerPage: Number(process.env.MAPS_PER_PAGE!),
+    launchOptions: {
+      timeout: Number(process.env.PUPPETEER_TIMEOUT!),
+      concurrency: Number(process.env.PUPPETEER_CONCURRENCY!),
+      maxConcurrency: Number(process.env.PUPPETEER_MAX_CONCURRENCY!),
+      puppeteerOptions: {
+        headless: process.env.PUPPETEER_HEADLESS! === 'true',
+        devtools: process.env.PUPPETEER_DEVTOOLS! === 'true',
+      },
+    },
   },
 };
 
