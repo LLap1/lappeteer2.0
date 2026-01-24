@@ -89,7 +89,7 @@ const createPolygon = (
   center: [number, number],
   size: number,
   color: string,
-): Feature<Polygon, { style: GeoJsonStyleOptions, text: string }> => {
+): Feature<Polygon, { style: GeoJsonStyleOptions; text: string }> => {
   const halfSize = size / 2;
   // GeoJSON uses [lng, lat] format, but center is [lat, lng] from map
   // So we need to create coordinates as [lng, lat]
@@ -108,7 +108,7 @@ const createPolygon = (
       coordinates: [coordinates],
     },
     properties: {
-      text: "A",
+      text: 'A',
       style: {
         color,
         fillColor: color,
@@ -157,7 +157,7 @@ function generateRandomMap(mapKey: string): z.infer<typeof CreatePlaceholderPara
 }
 
 export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSchema> = {
-  templateId: 'cd7043ed-73a0-4242-87ca-3c2fa08ba645',
+  templateId: '15885f58-c693-4684-b595-18b9413f555b',
   zipFilename: 'documents.zip',
   params: Array.from({ length: 1 }, (_, index) => ({
     placeholders: [
@@ -170,13 +170,9 @@ export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSche
       {
         type: 'text',
         key: 'תיאור',
-        params:  `This is a description of the world maps document ${index + 1}`,
+        params: `This is a description of the world maps document ${index + 1}`,
       },
-      {
-        type: 'text',
-        key: 'תיאורר',
-        params:  `This is a description of the world maps document ${index + 1}`,
-      },
+
       {
         type: 'image',
         key: 'תמונה',
@@ -184,7 +180,7 @@ export const createDocumentInputExample: z.infer<typeof CreateDocumentsInputSche
           url: 'https://thumbs.dreamstime.com/b/magnetic-compass-8529055.jpg',
           rotation: 45,
         },
-      }
+      },
     ],
     documentFilename: `world_maps_${index + 1}.pptx`,
   })),

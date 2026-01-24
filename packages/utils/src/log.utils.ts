@@ -38,7 +38,6 @@ export function Log(logger: Logger): any {
       logger.log({
         method: propertyKey,
         message: `start`,
-        args: filterFiles(args),
         startTime: new Date(startTime).toISOString(),
       });
       try {
@@ -47,7 +46,6 @@ export function Log(logger: Logger): any {
         logger.log({
           method: propertyKey,
           message: `finish`,
-          result: filterFiles(result),
           endTime: new Date(endTime).toISOString(),
           executionTime: `${endTime - startTime} ms`,
         });

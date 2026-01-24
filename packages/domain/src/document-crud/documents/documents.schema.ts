@@ -16,19 +16,19 @@ export type PlaceholderParams<T extends PlaceholderType = PlaceholderType> = Pla
 export type MapPlaceholderParams = {
   geojson: Feature<Geometry, { style?: PathOptions } | null>[];
   overlayId: string;
-  rotation?: number;
+  rotation: number;
 };
 
 export type TextPlaceholderParams = string;
 export type ImagePlaceholderParams = {
   url: string;
-  rotation?: number;
+  rotation: number;
 };
 
 export type CreateDocumentParams = {
   placeholders: CreatePlaceholderParams<PlaceholderType>[];
   documentFilename: string;
-  slidesToRemove?: number[];
+  slidesToRemove: number[];
 };
 
 export type CreatePlaceholderParams<T extends PlaceholderType = PlaceholderType> = {
@@ -41,13 +41,13 @@ export type CreatePlaceholderParams<T extends PlaceholderType = PlaceholderType>
 export const CreateMapPlaceholderParamsSchema: z.ZodType<MapPlaceholderParams> = z.object({
   geojson: z.array(GeoJsonFeatureSchema).min(0),
   overlayId: z.string(),
-  rotation: z.number().optional(),
+  rotation: z.number().default(0),
 });
 
 export const CreateTextPlaceholderParamsSchema: z.ZodType<TextPlaceholderParams> =  z.string()
 export const CreateImagePlaceholderParamsSchema: z.ZodType<ImagePlaceholderParams> = z.object({
   url: z.url(),
-  rotation: z.number().optional(),
+  rotation: z.number().default(0),
 });
 
 //@ts-ignore id is present...
@@ -74,7 +74,7 @@ export const CreateDocumentParamsSchema = z
   .object({
     placeholders: z.array(CreatePlaceholderParamsSchema),
     documentFilename: z.string(),
-    slidesToRemove: z.array(z.number().int().nonnegative()).optional(),
+    slidesToRemove: z.array(z.number().int().nonnegative()).default([]),
   })
   .strict();
 

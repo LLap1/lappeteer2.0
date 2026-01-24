@@ -50,19 +50,20 @@ export const GeoJsonGeometrySchema = z.discriminatedUnion('type', [
 export const GeoJsonPropertiesSchema = z.object({
   style: z
     .object({
-      color: z.string().optional(),
-      fillColor: z.string().optional(),
-      weight: z.number().optional(),
-      opacity: z.number().optional(),
-      fillOpacity: z.number().optional(),
-      dashArray: z.array(z.number()).optional(),
-    })
-    .strict(),
-    text: z.string().optional(),
-}) as z.ZodType<{ style?: PathOptions, text?: string }>;
+      color: z.string().default('#000000'),
+      fillColor: z.string().default('#000000'),
+      weight: z.number().default(1),
+      opacity: z.number().default(1),
+      fillOpacity: z.number().default(0.2),
+      dashArray: z.array(z.number()).default([]),
+    }),
+    text: z.string().nullable().default(null),
+}) as z.ZodType<{ style: PathOptions, text: string | null}>;
 
 export const GeoJsonFeatureSchema = z.object({
   type: z.literal('Feature'),
-  geometry: GeoJsonGeometrySchema.or(z.null()),
+  geometry: GeoJsonGeometrySchema,
   properties: GeoJsonPropertiesSchema,
 }) as z.ZodType<Feature<Geometry, GeoJsonProperties | null>>;
+
+export type GeoJsonFeature = z.infer<typeof GeoJsonFeatureSchema>;
