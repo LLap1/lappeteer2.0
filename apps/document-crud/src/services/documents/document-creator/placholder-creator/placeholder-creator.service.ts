@@ -5,7 +5,9 @@ import { DocumentMapCreatorService } from './document-map-creator/document-map-c
 import type { CreateMapsInput } from './document-map-creator/document-map-creator.model';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-
+import { FeatureCollection, Geometry } from 'geojson';
+import { PathOptions } from 'leaflet';
+import { featureCollection } from '@turf/helpers';
 @Injectable()
 export class PlaceholderCreatorService {
   constructor(private readonly documentMapCreatorService: DocumentMapCreatorService) {}
@@ -31,7 +33,7 @@ export class PlaceholderCreatorService {
       id: p.id,
       width: p.width,
       height: p.height,
-      geojson: p.params.geojson,
+      intrestPolygonCollection: featureCollection(p.params.geojson),
       overlayId: p.params.overlayId,
       rotation: p.params.rotation,
     }));
