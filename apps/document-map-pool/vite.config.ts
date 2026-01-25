@@ -12,6 +12,7 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+
   resolve: {
     alias: {
       react: 'preact/compat',
@@ -20,5 +21,17 @@ export default defineConfig({
   },
   server: {
     port: config.server.port,
+    proxy: {
+      '/ows': {
+        target: 'http://localhost:8080/geoserver/ows',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/wms': {
+        target: 'http://localhost:8080/geoserver/ne/wms',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

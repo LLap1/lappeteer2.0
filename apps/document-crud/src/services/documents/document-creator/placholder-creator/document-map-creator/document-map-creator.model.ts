@@ -29,6 +29,7 @@ export class WindowActionSender {
   constructor(private readonly page: Page) {}
 
   async send(action: WindowAction): Promise<any> {
+    console.log(action);
     const result = await this.page.evaluate((action: WindowAction) => {
       // @ts-ignore
       return window[action.type](action.params);

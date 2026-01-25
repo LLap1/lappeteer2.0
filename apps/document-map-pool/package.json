@@ -19,7 +19,6 @@
     "@types/geojson": "^7946.0.16",
     "dotenv": "^17.2.3",
     "geojson": "^0.5.0",
-    "import": "^0.0.6",
     "leaflet": "^1.9.4",
     "leaflet-rotate": "^0.2.8",
     "preact": "^10.26.0",

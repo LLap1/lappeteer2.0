@@ -3,7 +3,7 @@ import { MapUtils } from '../models/map.utils.js';
 import type { Router } from '../models/router.model.js';
 import type { MapPoolAction, MapPoolObject, MapPoolState } from '../reducers/map-pool.reducer.js';
 import type { Feature, Geometry } from 'geojson';
-import type { PathOptions } from 'leaflet';
+import type { PathOptions, WMSOptions } from 'leaflet';
 
 export type MapRouterActions =
   | {
@@ -27,12 +27,24 @@ export type MapRouterActions =
       params: { id: string };
     }
   | {
-      type: 'exportMap';
-      params: { id: string };
+      type: 'addWmsLayer';
+      params: { id: string; wmsUrl: string; options: WMSOptions };
+    }
+  | {
+      type: 'hidePane';
+      params: { id: string; pane: string };
+    }
+  | {
+      type: 'revealPane';
+      params: { id: string; pane: string };
     }
   | {
       type: 'setView';
       params: { id: string; bounds: [number, number, number, number] };
+    }
+  | {
+      type: 'removeGeoJsonLayer';
+      params: { id: string };
     }
   | {
       type: 'addGeoJsonLayer';
@@ -46,12 +58,33 @@ export type MapRouterActions =
 type MapRouterDependencies = { maps: MapPoolState; dispatch: Dispatch<MapPoolAction> };
 
 export const mapRouter: Router<MapRouterActions, MapRouterDependencies> = {
+  hidePane: async (params, dependencies) => {
+    const map = dependencies.maps.find(map => map.id === params.id)?.map;
+    if (!map) {
+      throw new Error(`Map with id ${params.id} not found`);
+    }
+    return MapUtils.hidePane({ map, pane: params.pane });
+  },
+  revealPane: async (params, dependencies) => {
+    const map = dependencies.maps.find(map => map.id === params.id)?.map;
+    if (!map) {
+      throw new Error(`Map with id ${params.id} not found`);
+    }
+    return MapUtils.revealPane({ map, pane: params.pane });
+  },
   addTileLayer: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
     if (!map) {
       throw new Error(`Map with id ${params.id} not found`);
     }
     return MapUtils.addTileLayer({ map, url: params.url });
+  },
+  addWmsLayer: async (params, dependencies) => {
+    const map = dependencies.maps.find(map => map.id === params.id)?.map;
+    if (!map) {
+      throw new Error(`Map with id ${params.id} not found`);
+    }
+    return MapUtils.addWmsLayer({ map, wmsUrl: params.wmsUrl, options: params.options });
   },
   waitForTilelayersToLoad: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
@@ -66,13 +99,6 @@ export const mapRouter: Router<MapRouterActions, MapRouterDependencies> = {
       throw new Error(`Map with id ${params.id} not found`);
     }
     return MapUtils.removeLayers({ map });
-  },
-  exportMap: async (params, dependencies) => {
-    const map = dependencies.maps.find(map => map.id === params.id)?.map;
-    if (!map) {
-      throw new Error(`Map with id ${params.id} not found`);
-    }
-    return MapUtils.exportMap({ map });
   },
   setView: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
@@ -90,17 +116,23 @@ export const mapRouter: Router<MapRouterActions, MapRouterDependencies> = {
     return MapUtils.rotateMap({ map, rotation: params.rotation });
   },
 
+  removeGeoJsonLayer: async (params, dependencies) => {
+    const map = dependencies.maps.find(map => map.id === params.id)?.map;
+    if (!map) {
+      throw new Error(`Map with id ${params.id} not found`);
+    }
+    return MapUtils.removeGeoJsonLayer({ map });
+  },
   addGeoJsonLayer: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;
     if (!map) {
       throw new Error(`Map with id ${params.id} not found`);
     }
-    return MapUtils.addGeoJsonLayer({ map: map, geojson: params.geojson });
+    return MapUtils.addGeoJsonLayer({ map, geojson: params.geojson });
   },
-
   createMapPool: async (params, dependencies) => {
     dependencies.dispatch({ type: 'create', params: params.map(param => ({ ...param, map: null })) });
-    await new Promise(res => setTimeout(res, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000)); // wainting for maps to be created
   },
   removeMap: async (params, dependencies) => {
     const map = dependencies.maps.find(map => map.id === params.id)?.map;

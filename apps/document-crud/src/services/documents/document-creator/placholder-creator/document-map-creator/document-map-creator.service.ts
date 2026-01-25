@@ -37,9 +37,8 @@ export class DocumentMapCreatorService {
           return await this.cluster!.execute(async ({ page }: { page: Page }) => {
             const actionSender = new WindowActionSender(page);
             await page.goto(config.documentMapCreator.mapPoolUrl);
-
             await actionSender.send({ type: 'createMapPool', params: chunk });
-            return this.createMapCanvases(actionSender, chunk as CreateMapsInput);
+            return this.createMapCanvases(actionSender, page, chunk as CreateMapsInput);
           });
         }),
       )
@@ -55,21 +54,32 @@ export class DocumentMapCreatorService {
 
   private async createMapCanvases(
     controlSender: WindowActionSender,
+    page: Page,
     params: CreateMapsInput,
   ): Promise<CreateMapsOutput> {
-    const mapTasks = params.map(param => this.createMap(controlSender, param));
+    const mapTasks = params.map(param => this.createMap(controlSender, page, param));
     const maps = await Promise.all(mapTasks);
     return maps;
   }
 
   private async createMap(
     windowActionSender: WindowActionSender,
+    page: Page,
     params: CreateMapsInput[number],
   ): Promise<CreateMapsOutput[number]> {
     const { id, width, height, intrestPolygonCollection } = params;
 
     const overlay = await this.overlaysService.getById({ id: params.overlayId });
-    const tileUrl = overlay.pixelTileUrl;
+
+    const wmsUrl = await this.overlaysService.buildPixelWmsUrl({
+      overlayId: params.overlayId,
+      bbox: bbox(intrestPolygonCollection),
+      width: Math.round(width),
+      height: Math.round(height),
+      layers: [overlay.id],
+      format: 'image/png',
+    });
+
     const pixelInterestPolygonCollection = featureCollection(
       await Promise.all(
         intrestPolygonCollection.features.map(async feature => {
@@ -87,6 +97,10 @@ export class DocumentMapCreatorService {
 
     const pixelBbox = bbox(pixelInterestPolygonCollection);
 
+    await page.evaluate(() => {
+      document.querySelector('.leaflet-control-container')?.remove();
+    });
+
     await windowActionSender.send({
       type: 'setView',
       params: { id, bounds: [pixelBbox[1], pixelBbox[0], pixelBbox[3], pixelBbox[2]] },
@@ -96,51 +110,55 @@ export class DocumentMapCreatorService {
       await windowActionSender.send({ type: 'rotateMap', params: { id, rotation: params.rotation } });
     }
 
-    await windowActionSender.send({ type: 'addTileLayer', params: { id, url: tileUrl } });
-
-    for (const feature of pixelInterestPolygonCollection.features) {
-      await windowActionSender.send({
-        type: 'addGeoJsonLayer',
-        params: { id, geojson: feature as any },
-      });
-    }
+    await windowActionSender.send({
+      type: 'addWmsLayer',
+      params: { id, wmsUrl, options: { format: 'image/png', layers: overlay.id } },
+    });
 
     await windowActionSender.send({ type: 'waitForTilelayersToLoad', params: { id } });
+    const mapElement = await page.$(`[id="${id}"]`);
 
-    const layerDataUrls: string[] = await windowActionSender.send({
-      type: 'exportMap',
-      params: { id },
+    await windowActionSender.send({ type: 'hidePane', params: { id, pane: 'tooltipPane' } });
+    await windowActionSender.send({ type: 'hidePane', params: { id, pane: 'popupPane' } });
+    await windowActionSender.send({ type: 'hidePane', params: { id, pane: 'overlayPane' } });
+
+    const tilesOnlyFilePath = path.join('/tmp', `map-tiles-only-${id}.png`);
+    await mapElement!.screenshot({
+      path: tilesOnlyFilePath,
+      omitBackground: true,
     });
+
+    const layers: ImageLayer[] = [{ path: tilesOnlyFilePath, offsetX: 0, offsetY: 0, width, height }];
+
+    await windowActionSender.send({ type: 'revealPane', params: { id, pane: 'overlayPane' } });
+    await windowActionSender.send({ type: 'hidePane', params: { id, pane: 'tilePane' } });
+
+    await windowActionSender.send({
+      type: 'addGeoJsonLayer',
+      params: { id, geojson: pixelInterestPolygonCollection as any },
+    });
+
+    const geoJsonSvgs = await page.$$(
+      `[id="${id}"] > div.leaflet-pane.leaflet-map-pane > div.leaflet-pane.leaflet-rotate-pane > div.leaflet-pane.leaflet-overlay-pane > svg > g > path`,
+    );
+
+    for (const geoJsonSvg of geoJsonSvgs) {
+      await geoJsonSvg.evaluate(el => {
+        (el as HTMLElement).hidden = true;
+      });
+      const overlayFilePath = path.join('/tmp', `map-overlay-${id}-${uuidv4()}.png`);
+      await mapElement!.screenshot({
+        path: overlayFilePath,
+        omitBackground: true,
+      });
+      layers.push({ path: overlayFilePath, offsetX: 0, offsetY: 0, width, height });
+      await geoJsonSvg.evaluate(el => {
+        (el as HTMLElement).hidden = false;
+      });
+    }
 
     await windowActionSender.send({ type: 'removeLayers', params: { id } });
 
-    const layers = await this.saveDataUrlsToFiles(layerDataUrls, width, height);
-
     return { id, layers };
-  }
-
-  private async saveDataUrlsToFiles(dataUrls: string[], width: number, height: number): Promise<ImageLayer[]> {
-    const layers: ImageLayer[] = [];
-
-    for (const dataUrl of dataUrls) {
-      const filePath = await this.dataUrlToFile(dataUrl);
-      layers.push({
-        path: filePath,
-        offsetX: 0,
-        offsetY: 0,
-        width,
-        height,
-      });
-    }
-
-    return layers;
-  }
-
-  private async dataUrlToFile(dataUrl: string): Promise<string> {
-    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
-    const filePath = path.join('/tmp', `map-layer-${uuidv4()}.png`);
-    await Bun.write(filePath, buffer);
-    return filePath;
   }
 }

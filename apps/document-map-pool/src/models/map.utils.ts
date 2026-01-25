@@ -1,8 +1,45 @@
-import { geoJSON, Map as LeafletMap, tileLayer, TileLayer } from 'leaflet';
+import { geoJSON, Map as LeafletMap, tileLayer, TileLayer, CRS, type WMSOptions } from 'leaflet';
 import type { Feature, Geometry } from 'geojson';
-import type { Layer, PathOptions } from 'leaflet';
+import { Layer, type PathOptions } from 'leaflet';
 import 'leaflet-rotate';
+
 export namespace MapUtils {
+  export async function addWmsLayer({
+    map,
+    wmsUrl,
+    options,
+  }: {
+    map: LeafletMap;
+    wmsUrl: string;
+    options?: WMSOptions;
+  }): Promise<void> {
+    const layer = tileLayer.wms(wmsUrl, { crossOrigin: true, crs: CRS.EPSG4326, ...options });
+    const waitForLayerToLoad = new Promise<void>(async resolve => {
+      layer.on('load', async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        resolve();
+      });
+    });
+    layer.addTo(map);
+    await waitForLayerToLoad;
+  }
+
+  export async function hidePane({ map, pane }: { map: LeafletMap; pane: string }): Promise<void> {
+    const paneElement = map.getPane(pane);
+    if (!paneElement) {
+      throw new Error(`Pane ${pane} not found`);
+    }
+    paneElement.style.display = 'none';
+  }
+
+  export async function revealPane({ map, pane }: { map: LeafletMap; pane: string }): Promise<void> {
+    const paneElement = map.getPane(pane);
+    if (!paneElement) {
+      throw new Error(`Pane ${pane} not found`);
+    }
+    paneElement.style.display = 'block';
+  }
+
   export async function rotateMap({ map, rotation }: { map: LeafletMap; rotation: number }): Promise<void> {
     return new Promise<void>(resolve => {
       const originalBearing = map.getBearing();
@@ -11,14 +48,21 @@ export namespace MapUtils {
           clearInterval(id);
           resolve();
         }
-      }, 500);
+      }, 1000);
       map.setBearing(rotation);
     });
   }
 
   export async function addTileLayer({ url, map }: { url: string; map: LeafletMap }): Promise<void> {
     const layer = tileLayer(url, { crossOrigin: 'anonymous' });
+    const waitForLayerToLoad = new Promise<void>(async resolve => {
+      layer.on('load', async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        resolve();
+      });
+    });
     layer.addTo(map);
+    await waitForLayerToLoad;
   }
 
   export async function removeLayers({ map }: { map: LeafletMap }): Promise<void> {
@@ -32,11 +76,15 @@ export namespace MapUtils {
     map.eachLayer(function (layer: Layer) {
       if (layer instanceof TileLayer) {
         tileLayersLoadPromises.push(
-          new Promise<void>(resolve => {
+          new Promise<void>(async resolve => {
             if (!layer.isLoading()) {
+              await new Promise(resolve => setTimeout(resolve, 500));
               resolve();
             } else {
-              layer.on('load', () => resolve());
+              layer.on('load', async () => {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                resolve();
+              });
             }
           }),
         );
@@ -44,102 +92,6 @@ export namespace MapUtils {
     });
 
     await Promise.all(tileLayersLoadPromises);
-  }
-
-  export async function exportMap({ map }: { map: LeafletMap }): Promise<string[]> {
-    const mapContainer = map.getContainer()!;
-    const mapRect = mapContainer.getBoundingClientRect();
-    const layerExports: Array<string> = [];
-
-    const panes = map.getPanes();
-    if (!panes) {
-      return layerExports;
-    }
-
-    const tilePane = panes.tilePane;
-    const tileImages = Array.from(tilePane.getElementsByTagName('img') ?? []) as HTMLImageElement[];
-
-    if (tilePane && tileImages.length > 0) {
-      const canvas = document.createElement('canvas');
-      canvas.width = mapContainer.clientWidth;
-      canvas.height = mapContainer.clientHeight;
-      const ctx = canvas.getContext('2d')!;
-
-      const tilePromises = tileImages.map(function (tileImg) {
-        return new Promise<{ img: HTMLImageElement; rect: DOMRect }>(resolve => {
-          const tileRect = tileImg.getBoundingClientRect();
-          const relativeX = tileRect.left - mapRect.left;
-          const relativeY = tileRect.top - mapRect.top;
-
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-
-          img.onload = function () {
-            resolve({
-              img,
-              rect: new DOMRect(relativeX, relativeY, tileRect.width, tileRect.height),
-            });
-          };
-
-          img.onerror = function () {
-            console.error(new Error(`Failed to load image: ${tileImg.src}`));
-            resolve({
-              img: new Image(),
-              rect: new DOMRect(0, 0, 0, 0),
-            });
-          };
-
-          img.src = tileImg.src;
-        });
-      });
-
-      const loadedTileImages = await Promise.all(tilePromises);
-
-      loadedTileImages.forEach(function ({ img, rect }) {
-        ctx.drawImage(img, rect.x, rect.y, rect.width, rect.height);
-      });
-
-      layerExports.push(canvas.toDataURL('image/png', 1.0));
-    }
-
-    const overlayPane = panes.overlayPane;
-    const overlaySvg = overlayPane?.querySelector('svg') as SVGElement | null;
-
-    if (overlayPane && overlaySvg) {
-      const canvas = document.createElement('canvas');
-      canvas.width = mapContainer.clientWidth;
-      canvas.height = mapContainer.clientHeight;
-      const ctx = canvas.getContext('2d')!;
-
-      const serializer = new XMLSerializer();
-      const svgString = serializer.serializeToString(overlaySvg);
-      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-      const svgUrl = URL.createObjectURL(svgBlob);
-
-      await new Promise<void>(resolve => {
-        const svgImage = new Image();
-
-        svgImage.onload = function () {
-          ctx.drawImage(svgImage, 0, 0, canvas.width, canvas.height);
-          URL.revokeObjectURL(svgUrl);
-          resolve();
-        };
-
-        svgImage.onerror = function () {
-          URL.revokeObjectURL(svgUrl);
-          console.error(new Error('Failed to render GeoJSON overlay'));
-          resolve();
-        };
-
-        svgImage.src = svgUrl;
-      }).catch(error => {
-        console.error('Failed to render GeoJSON overlay:', error);
-      });
-
-      layerExports.push(canvas.toDataURL('image/png', 1.0));
-    }
-
-    return layerExports;
   }
 
   export async function setView({
@@ -164,5 +116,13 @@ export namespace MapUtils {
   }): Promise<void> {
     const geoJsonLayer = geoJSON(geojson);
     geoJsonLayer.addTo(map);
+  }
+
+  export async function removeGeoJsonLayer({ map }: { map: LeafletMap }): Promise<void> {
+    map.eachLayer(function (layer: Layer) {
+      if (!(layer instanceof TileLayer)) {
+        layer.remove();
+      }
+    });
   }
 }
